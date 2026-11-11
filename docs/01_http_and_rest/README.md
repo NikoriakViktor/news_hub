@@ -10,7 +10,7 @@
 | [Методи HTTP: безпечність, ідемпотентність, кеш](http_methods.md) | `examples/http_anatomy/methods_app.py` | готово |
 | [Коди відповідей](status_codes.md) | `examples/http_anatomy/codes_app.py` | готово |
 | Які бувають API | `examples/meteo_api/meteo_api/grpc_meteo.py`, `meteo.proto` | у роботі |
-| Принципи REST | — | у роботі |
+| [Принципи REST](rest_principles.md) | `examples/http_anatomy/cache_app.py`, `cache_demo.py` | готово |
 | Кейс: API v1 → v2 | `meteo_api/legacy/` | у роботі |
 | Архітектура: API, клієнт і карта | `examples/meteo_api` | у роботі |
 

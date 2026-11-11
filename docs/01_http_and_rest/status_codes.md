@@ -159,6 +159,6 @@ www-authenticate: Bearer
 
 ## Що далі { #next }
 
-[Частина I. HTTP і дизайн REST API](README.md) — решта розділів частини. Формат помилок `422` зсередини — [Маршрути, параметри і валідація](../03_fastapi_core/routes_and_validation.md).
+[Принципи REST](rest_principles.md). Формат помилок `422` зсередини — [Маршрути, параметри і валідація](../03_fastapi_core/routes_and_validation.md).
 
 **Джерела:** [RFC 9110 — HTTP Semantics, §15 Status Codes](https://www.rfc-editor.org/rfc/rfc9110#name-status-codes); [RFC 6585 — 429 Too Many Requests](https://www.rfc-editor.org/rfc/rfc6585#section-4); FastAPI — [Handling Errors](https://fastapi.tiangolo.com/tutorial/handling-errors/), [Response Status Code](https://fastapi.tiangolo.com/tutorial/response-status-code/); [Starlette — Status codes](https://www.starlette.io/status/); [MDN — HTTP response status codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status).
