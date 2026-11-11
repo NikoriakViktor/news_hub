@@ -37,7 +37,7 @@ SQLAlchemy 2. Для кожного прикладу напиши, який ви
 - [x] Версіонування API: у шляху, заголовку, параметрі. Як організувати версії через `APIRouter(prefix=...)` у FastAPI?
 - [x] Формат помилок: RFC 9457 (Problem Details) проти стандартного `detail` у FastAPI. Як підмінити обробник `RequestValidationError` і `HTTPException`?
 - [x] REST, gRPC, GraphQL, WebSocket, SSE, webhook: для яких задач кожен, як кожен підтримує FastAPI або Starlette?
-- [ ] CORS: що це, коли браузер робить preflight, як налаштувати `CORSMiddleware` і які налаштування небезпечні (`allow_origins=["*"]` з `allow_credentials`).
+- [x] CORS: що це, коли браузер робить preflight, як налаштувати `CORSMiddleware` і які налаштування небезпечні (`allow_origins=["*"]` з `allow_credentials`).
 
 ## Частина II. Типи й Pydantic
 

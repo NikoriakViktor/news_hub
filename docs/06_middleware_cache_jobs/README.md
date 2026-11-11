@@ -7,6 +7,7 @@
 | Розділ | Код | Стан |
 |---|---|---|
 | Middleware | `steps/04/news_hub/middleware.py` | у роботі |
+| [CORS](cors.md) | `examples/cors/cors_app.py`, `cors_demo.py` | готово |
 | Кеш у Redis | `steps/04/news_hub/cache.py` | у роботі |
 | Rate limit | — | у роботі |
 | Фонові задачі | `steps/04/news_hub/jobs.py` | у роботі |
