@@ -208,7 +208,7 @@ class NewsPatchSafe(BaseModel):
 
 1. **Працює, але з попередженням** — старі методи `.dict()`, `.json()`, `.parse_obj()`, `.copy()`, `.schema()`, `@validator`. Попередження `PydanticDeprecatedSince20`, видалення обіцяно в Pydantic 3. Заміна — механічна, за таблицею вище.
 2. **Змінилося мовчки** — без попередження, лише інший результат:
-    - **`int` більше не стає рядком** (`string_type`), а `1.5` не обрізається до `1` (`int_from_float`). Рядок `"5"` у ціле й `True` в `1` Pydantic 2 і далі перетворює (докладніше — режими lax і strict);
+    - **`int` більше не стає рядком** (`string_type`), а `1.5` не обрізається до `1` (`int_from_float`). Рядок `"5"` у ціле й `True` в `1` Pydantic 2 і далі перетворює (докладніше — [Режими lax і strict](strict_mode.md));
     - **`Optional[str]` без значення за замовчуванням тепер обов'язкове.** У Pydantic 1 `Optional` сам додавав `= None`;
     - **підклас віддає лише поля оголошеного типу**;
     - **`model_copy(update=...)` не перевіряє значення**: поле `qty: int` отримало рядок `'2'`. `.copy` у Pydantic 1 теж не перевіряв, але від `model_*` цього легко чекати. Для перевірки — `Model.model_validate({**old.model_dump(), **changes})`.
@@ -276,6 +276,6 @@ class NewsPatchSafe(BaseModel):
 
 ## Що далі { #next }
 
-[Частина II. Типи і Pydantic](README.md) — решта розділів частини.
+[Режими lax і strict](strict_mode.md).
 
 **Джерела:** Pydantic — [Models](https://docs.pydantic.dev/latest/concepts/models/), [Fields](https://docs.pydantic.dev/latest/concepts/fields/), [Serialization](https://docs.pydantic.dev/latest/concepts/serialization/) (розділи «model_dump», «Serializing with duck-typing / SerializeAsAny»), [Validators](https://docs.pydantic.dev/latest/concepts/validators/), [Conversion Table](https://docs.pydantic.dev/latest/concepts/conversion_table/), [Migration Guide](https://docs.pydantic.dev/latest/migration/); FastAPI — [Body — Updates: Partial updates with PATCH](https://fastapi.tiangolo.com/tutorial/body-updates/).
