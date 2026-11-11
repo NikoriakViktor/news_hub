@@ -45,7 +45,7 @@ SQLAlchemy 2. Для кожного прикладу напиши, який ви
 - [x] Pydantic 2: `BaseModel`, `Field` (обмеження), `model_validate`, `model_dump`, `model_dump(mode="json")`, `exclude_unset`. Різниця з Pydantic 1 для тих, хто мігрує.
 - [x] Режими перевірки: lax і strict. Які перетворення типів Pydantic робить сам (`"5"` → `5`), як їх вимкнути?
 - [x] `field_validator`, `model_validator` (before/after), `computed_field`: коли що, приклади.
-- [ ] Типи Pydantic для URL, email, дат: `HttpUrl`, `AnyUrl`, `EmailStr`, `AwareDatetime`. Що повертає `HttpUrl` у Pydantic 2 і як його серіалізувати?
+- [x] Типи Pydantic для URL, email, дат: `HttpUrl`, `AnyUrl`, `EmailStr`, `AwareDatetime`. Що повертає `HttpUrl` у Pydantic 2 і як його серіалізувати?
 - [ ] `ValidationError`: структура помилки (`type`, `loc`, `msg`, `input`, `ctx`), як її показати користувачу.
 - [ ] `pydantic-settings`: налаштування зі змінних середовища й `.env`, `SecretStr`, пріоритет джерел.
 - [ ] `ConfigDict`: `extra="forbid"`, `frozen`, `from_attributes` (для об'єктів ORM).

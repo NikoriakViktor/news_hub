@@ -10,6 +10,7 @@
 | [Моделі Pydantic 2](pydantic_models.md) | `examples/pydantic_v2/models_demo.py`, `migration_demo.py` | готово |
 | [Режими lax і strict](strict_mode.md) | `examples/pydantic_v2/strict_demo.py` | готово |
 | [Валідатори і `computed_field`](validators.md) | `examples/pydantic_v2/validators_demo.py` | готово |
+| [URL, email і дати](special_types.md) | `examples/pydantic_v2/types_demo.py` | готово |
 | Межа довіри | — | у роботі |
 
 ## На практиці — Zero to Hero

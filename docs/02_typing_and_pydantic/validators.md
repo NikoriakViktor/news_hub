@@ -241,6 +241,6 @@ class Booking(BaseModel):
 
 ## Що далі { #next }
 
-[Частина II. Типи і Pydantic](README.md) — решта розділів частини.
+[URL, email і дати: `HttpUrl`, `EmailStr`, `AwareDatetime`](special_types.md).
 
 **Джерела:** Pydantic — [Validators](https://docs.pydantic.dev/latest/concepts/validators/) (розділи «Field validators», «Model validators», «Ordering of validators», «Raising validation errors»), [Fields — The computed_field decorator](https://docs.pydantic.dev/latest/concepts/fields/#the-computed_field-decorator), [JSON Schema — mode](https://docs.pydantic.dev/latest/concepts/json_schema/); FastAPI — [Separate Input and Output Schemas](https://fastapi.tiangolo.com/how-to/separate-openapi-schemas/).
