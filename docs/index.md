@@ -30,6 +30,7 @@ flowchart LR
 
 | Хто ти | Маршрут |
 |---|---|
+| Ніколи не писав API | [Крок 0. Що таке API](tutorials/00_first_api/index.md): клієнт і сервер, перший API на 13 рядків, перевірка знань |
 | Починаєш FastAPI | [Як користуватися](00_getting_started/README.md) → [Zero to Hero](tutorials/README.md), крок за кроком; теорію — з частин книги, на які посилається крок |
 | Знаєш Django | [Частина III. Ядро FastAPI](03_fastapi_core/README.md) → [Zero to Hero](tutorials/README.md) з кроку 2 |
 | Шукаєш конкретну тему | [Книга FastAPI](01_http_and_rest/README.md) — частини I–X |

@@ -28,6 +28,7 @@ flowchart TD
 
 | Крок | Що додається | Тестів |
 |---|---|---|
+| [0. Що таке API](00_first_api/index.md) | клієнт і сервер, перший API на 13 рядків, перевірка знань | — |
 | [1. Типи і Pydantic](01_typing_pydantic/index.md) | анотації типів, `NewsItem`, `validate_news` | 12 |
 | [2. Перший API на FastAPI](02_fastapi_basics/index.md) | `GET /api/news`, `POST /api/scrape`, `Depends`, `/docs`, Postman | 23 |
 | [3. SQLAlchemy і Alembic](03_sqlalchemy_alembic/index.md) | база, репозиторій, CRUD, міграції | 32 |
@@ -43,4 +44,4 @@ flowchart TD
 
 «Тестів» — скільки проходить `pytest -q` у папці кроку (без тестів, що потребують Docker або справжнього LLM).
 
-Перед стартом — [Налаштування](../00_getting_started/local_setup.md).
+Ніколи не писав API? Почни з [кроку 0](00_first_api/index.md): там пояснено простими словами, що таке клієнт, сервер і API, ти запустиш перший сервер на 13 рядків і [перевіриш себе](00_first_api/readiness.md) перед кроком 1. Перед стартом — [Налаштування](../00_getting_started/local_setup.md).

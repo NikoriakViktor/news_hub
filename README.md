@@ -36,6 +36,7 @@ git diff --no-index steps/04_middleware_redis steps/05_api_testing
 
 Ще приклади:
 
+- [`examples/first_api`](examples/first_api) — крок 0: перший API на 13 рядків;
 - [`examples/meteo_api`](examples/meteo_api) — REST API метеостанцій (дизайн REST, REST vs gRPC/GraphQL/WebSocket);
 - [`examples/fastapi_vs_drf`](examples/fastapi_vs_drf) — той самий API нотаток на FastAPI, щоб порівняти з DRF;
 - [`examples/frameworks_compared`](examples/frameworks_compared) — той самий API на FastAPI, Flask і Django;
