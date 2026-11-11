@@ -134,7 +134,7 @@ class TelegramFilter(BaseModel):
 # ─────────────────────────────────────────────────────────────────────────────
 app = FastAPI(
     title="Meteo Telegram API",
-    description="Навчальний REST API — Урок 31: HTTP & requests",
+    description="Навчальний REST API: HTTP & requests",
     version="1.0.0",
 )
 

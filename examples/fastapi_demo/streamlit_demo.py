@@ -810,5 +810,5 @@ with tab4:
 
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.divider()
-st.caption("FastAPI Concurrency Demo · Урок 34 — Asyncio · Module 4")
+st.caption("FastAPI Concurrency Demo · async чи blocking")
 st.caption(f"Internal API: {host}  |  Browser: {BROWSER_HOST}  |  Swagger UI: {BROWSER_HOST}/docs")

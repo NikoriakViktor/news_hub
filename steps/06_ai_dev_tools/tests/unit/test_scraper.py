@@ -1,4 +1,4 @@
-"""Мережа під моком: fetch_one без інтернету (урок 41).
+"""Мережа під моком: fetch_one без інтернету (крок 5).
 
 Правило «patch where used» (MOCKING_AND_PATCHING.md): підміняємо ім'я там,
 де його *шукає* код, що тестується. scraper.py робить `from .parser import parse_rbc_news` —

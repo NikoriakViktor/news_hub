@@ -1,4 +1,4 @@
-"""Урок 48: /health (процес живий) і /health/ready (база й Redis доступні).
+"""Крок 10: /health (процес живий) і /health/ready (база й Redis доступні).
 
 Docker перевіряє /health (HEALTHCHECK образу), балансувальник і Compose — /health/ready.
 Недоступну базу імітуємо SQLite-файлом у каталозі, якого немає; Redis — портом, де ніхто не слухає.

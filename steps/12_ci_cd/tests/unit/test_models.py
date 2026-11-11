@@ -24,7 +24,7 @@ def test_empty_time_is_none():
 @pytest.mark.parametrize(("field", "value", "loc"), [
     ("title", "Коротко", "title"),
     ("url", "https://example.com/ukr/news/x.html", "url"),
-    ("url", "https://www.fakerbc.ua/ukr/news/x.html", "url"),       # урок 41: endswith("rbc.ua") його пропускав
+    ("url", "https://www.fakerbc.ua/ukr/news/x.html", "url"),       # крок 5: endswith("rbc.ua") його пропускав
     ("url", "не посилання", "url"),
     ("datetime", "25:99", "published_time"),
 ])
@@ -53,7 +53,7 @@ def test_snapshot_is_valid():
 
 @pytest.mark.parametrize(("value", "expected"), [
     ("14:19", "14:19:00"),
-    ("2024-05-08T10:30:00", "10:30:00"),       # атрибут <time datetime> — знайдено тестом конвеєра (урок 41)
+    ("2024-05-08T10:30:00", "10:30:00"),       # атрибут <time datetime> — знайдено тестом конвеєра (крок 5)
     ("", None),
 ])
 def test_published_time_formats(value, expected):

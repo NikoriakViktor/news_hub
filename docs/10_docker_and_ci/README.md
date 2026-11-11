@@ -4,13 +4,13 @@
 
 ## Розділи
 
-| Розділ | Джерело | Стан |
+| Розділ | Код | Стан |
 |---|---|---|
-| Docker-образ | урок 49; `steps/10/Dockerfile`, `.dockerignore` | у роботі |
-| Docker Compose | урок 50; `steps/11/docker-compose.yml`, `nginx/` | у роботі |
-| Деплой на сервер | урок 50 «Деплой на сервер»; `fastapi_documentation.md` §10 | у роботі |
-| CI/CD на GitHub Actions | урок 51; `.github/workflows/news_hub.yml` | у роботі |
-| Мікросервіси: коли варто | `fastapi_documentation.md` §9 | у роботі |
+| Docker-образ | `steps/10/Dockerfile`, `.dockerignore` | у роботі |
+| Docker Compose | `steps/11/docker-compose.yml`, `nginx/` | у роботі |
+| Деплой на сервер | — | у роботі |
+| CI/CD на GitHub Actions | `.github/workflows/news_hub.yml` | у роботі |
+| Мікросервіси: коли варто | — | у роботі |
 
 ## На практиці — Zero to Hero
 

@@ -21,7 +21,7 @@ print(sorted(schema["components"]["schemas"]))
 ```
 
 ```text
-3.1.0 | news_hub API 0.37.0
+3.1.0 | news_hub API 0.2.0
 GET    /health            ['system'] Health
 GET    /api/news          ['news'] Список новин
 DELETE /api/news          ['news'] Delete All News
@@ -80,7 +80,7 @@ pm.collectionVariables.set("total", report.news_total);   // запам'ятал
 $ npx newman run postman/news_hub.postman_collection.json
 newman
 
-news_hub — урок 37
+news_hub — крок 2
 
 → 1. health
   GET http://127.0.0.1:8000/health [200 OK, 140B, 24ms]
@@ -135,8 +135,6 @@ news_hub — урок 37
 │ average response time: 8ms [min: 3ms, max: 24ms, s.d.: 7ms] │
 └─────────────────────────────────────────────────────────────┘
 ```
-
-Ім'я колекції — «news_hub — урок 37»: так її назвали в курсі, а тут вона без змін.
 
 ## Як обрати { #how-to-choose }
 

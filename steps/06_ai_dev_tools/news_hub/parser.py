@@ -1,9 +1,9 @@
 """Парсер стрічки новин rbc.ua.
 
-Стартовий код — функція `parse_rbc_news` з ноутбука про web scraping.
-Рефакторинг уроку 36: анотації типів, `list[dict]` → `list[RawNews]`,
+Стартовий код — проста функція `parse_rbc_news` без типів.
+Рефакторинг кроку 1: анотації типів, `list[dict]` → `list[RawNews]`,
 пошук тегів винесено в `_find_tag`; логіку розбору не змінено.
-Урок 41: прогін тестів на мінімальних версіях залежностей знайшов, що з beautifulsoup4 4.12
+Крок 5: прогін тестів на мінімальних версіях залежностей знайшов, що з beautifulsoup4 4.12
 (requirements дозволяє) `_classes` падав на кожному тезі без атрибута class → виправлено.
 
 Парсер повертає *сирі* рядки з HTML — перевіряє їх `NewsItem` (models.py).
@@ -38,7 +38,7 @@ class RawNews(TypedDict):
 
 
 def _classes(tag: Tag) -> str:
-    # Тег без class: beautifulsoup4 4.12 дає [None] (join падав з TypeError), новіші — [] (урок 41)
+    # Тег без class: beautifulsoup4 4.12 дає [None] (join падав з TypeError), новіші — [] (крок 5)
     return " ".join(cls for cls in tag.get_attribute_list("class") if cls)
 
 

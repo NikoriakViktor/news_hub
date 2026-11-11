@@ -34,7 +34,7 @@ def test_scrape_snapshot_then_filter(client: TestClient) -> None:
     ({"source": "auto.rbc.ua", "lang": "uk"}, 0),                  # фільтри поєднуються через AND
 ])
 def test_filters_combine(client: TestClient, params: dict[str, str], expected: int) -> None:
-    """Урок 41: фільтри category і source не перевіряв жоден тест (покриття: repository.py, рядки 71, 73)."""
+    """Крок 5: фільтри category і source не перевіряв жоден тест (покриття: repository.py, рядки 71, 73)."""
     client.post("/api/scrape", json={"source": "snapshot"})
     assert len(client.get("/api/news", params={**params, "limit": 1000}).json()) == expected
 
@@ -56,7 +56,7 @@ def test_live_scrape_uses_scraper_and_rejects_bad_items(client: TestClient) -> N
     ("get", "/api/news", {"params": {"lang": "en"}}, "lang"),
     ("post", "/api/scrape", {"json": {"mode": "fast"}}, "mode"),
     ("post", "/api/scrape", {"json": {"pages": ["https://example.com/"]}}, "pages"),
-    ("post", "/api/scrape", {"json": {"pages": ["https://fakerbc.ua/"]}}, "pages"),     # урок 41
+    ("post", "/api/scrape", {"json": {"pages": ["https://fakerbc.ua/"]}}, "pages"),     # крок 5
 ])
 def test_bad_input_is_422(client: TestClient, method: str, url: str, kwargs: dict, field: str) -> None:
     response = getattr(client, method)(url, **kwargs)
@@ -74,10 +74,10 @@ def test_openapi_lists_endpoints(client: TestClient) -> None:
     paths = client.get("/openapi.json").json()["paths"]
     assert set(paths) == {"/health", "/health/ready", "/api/news", "/api/news/count", "/api/news/stats", "/api/scrape",
                           "/api/news/{news_id}", "/api/news/search", "/api/scrape/jobs", "/api/scrape/jobs/{job_id}",
-                          "/api/news/{news_id}/analyze", "/api/analyze/jobs", "/api/analyze/jobs/{job_id}",  # урок 43
-                          "/api/admin/token", "/api/sources", "/api/sources/{source_id}",          # урок 46
+                          "/api/news/{news_id}/analyze", "/api/analyze/jobs", "/api/analyze/jobs/{job_id}",  # крок 7
+                          "/api/admin/token", "/api/sources", "/api/sources/{source_id}",          # крок 8
                           "/api/sources/{source_id}/fetch", "/api/webhooks/scrape",
-                          "/api/telegram/webhook"}                                                   # урок 47; ready — 48
+                          "/api/telegram/webhook"}                                                   # крок 9; ready — 48
     assert set(paths["/api/news/{news_id}"]) == {"get", "patch", "delete"}
     assert set(paths["/api/news"]) == {"get", "post", "delete"}
 

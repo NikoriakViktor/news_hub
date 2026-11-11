@@ -1,4 +1,4 @@
-"""sources — RSS-джерела, які додає адмін (урок 46)
+"""sources — RSS-джерела, які додає адмін (крок 8)
 
 Згенеровано `alembic revision --autogenerate` на SQLite; виправлено вручну, як у 0001:
 server_default=sa.func.now() (синтаксис SQLite) → sa.func.now() (кожна база — свій SQL).

@@ -1,6 +1,6 @@
-"""Карта погоди — Streamlit-клієнт до Meteo API v2 (урок 32).
+"""Карта погоди — Streamlit-клієнт до Meteo API v2.
 
-Ідея і «HTTP-інспектор» — з streamlit_app.py викладача (legacy/streamlit_app.py);
+Ідея і «HTTP-інспектор» — з першої версії (legacy/streamlit_app.py);
 тут вони працюють з REST-версією API через MeteoClient.
 
     uvicorn meteo_api.app:app --port 8032                 # термінал 1: API
@@ -23,7 +23,7 @@ API_URL = os.environ.get("METEO_API_URL", "http://127.0.0.1:8032")
 # Діверґентна шкала: холодно (синій) — 0 °C (сірий) — тепло (червоний)
 TEMPERATURE_SCALE = [[0.0, "#2a78d6"], [0.5, "#f0efec"], [1.0, "#e34948"]]
 
-st.set_page_config(page_title="Карта погоди | Урок 32", page_icon="🌦️", layout="wide")
+st.set_page_config(page_title="Карта погоди", page_icon="🌦️", layout="wide")
 st.title("🌦️ Погода на метеостанціях України")
 st.caption(f"Дані: телеграми SYNOP з ogimet.com через Meteo API v2 · API: `{API_URL}`")
 
@@ -71,5 +71,5 @@ with tab_station:
         st.plotly_chart(chart, width="stretch")
 
 with tab_http:
-    st.markdown("Останній запит, який `MeteoClient` надіслав до API, — те саме, що в уроці 31, але з браузера.")
+    st.markdown("Останній запит, який `MeteoClient` надіслав до API, — як у консолі, але в браузері.")
     st.json(client.last_exchange)

@@ -23,13 +23,8 @@ git diff --no-index steps/03_sqlalchemy_alembic/news_hub steps/04_middleware_red
 У PyCharm: виділи дві папки → **Compare Directories** (`Ctrl+D`). У VS Code: правий клік на файлі →
 **Select for Compare**, потім на іншому → **Compare with Selected**.
 
-## Відповідність урокам курсу
+## Приклади поза кроками
 
-Книга виросла з FastAPI-гілки курсу Python. Якщо ти студент курсу — ось який крок відповідає уроку:
-
-| Крок | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Урок | 37 | 38 | 39 | 40 | 42 | 43 | 44 | 47 | 48 | 49 | 50 | 51 |
-
-Урок 33 (дизайн REST) — [Частина I](../01_http_and_rest/README.md) і `examples/meteo_api`;
-урок 36 (DRF і FastAPI) — `examples/fastapi_vs_drf`.
+- `examples/meteo_api` — API метеостанцій для [Частини I](../01_http_and_rest/README.md): дизайн REST, gRPC-версія для порівняння.
+- `examples/fastapi_vs_drf` — той самий API нотаток на FastAPI для порівняння з DRF ([Частина III](../03_fastapi_core/fastapi_vs_drf.md)).
+- `examples/fastapi_demo` — що блокує сервер: [виміри на кроці 2](../tutorials/02_fastapi_basics/async_measurements.md).

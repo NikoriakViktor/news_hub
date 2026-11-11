@@ -26,20 +26,20 @@ flowchart TD
     class S12 success
 ```
 
-| Крок | Що додається | Тестів | Урок курсу |
-|---|---|---|---|
-| [1. Типи і Pydantic](01_typing_pydantic/index.md) | анотації типів, `NewsItem`, `validate_news` | 12 | 37 |
-| [2. Перший API на FastAPI](02_fastapi_basics/index.md) | `GET /api/news`, `POST /api/scrape`, `Depends`, `/docs`, Postman | 23 | 38 |
-| [3. SQLAlchemy і Alembic](03_sqlalchemy_alembic/index.md) | база, репозиторій, CRUD, міграції | 32 | 39 |
-| [4. Middleware, кеш і Redis](04_middleware_redis/index.md) | middleware, кеш, rate limit, фоновий збір | 41 | 40 |
-| [5. Тестування API](05_api_testing/index.md) | unit / integration, фікстури, моки, фейки, покриття | 86 | 42 |
-| [6. AI-інструменти](06_ai_dev_tools/index.md) | Claude Code, RSS-джерело, написане AI за тестами | 107 | 43 |
-| [7. LLM API](07_llm_api/index.md) | аналіз новин Gemini / Anthropic, circuit breaker | 168 | 44 |
-| [8. Безпека](08_security/index.md) | JWT адміна, SSRF, підписані webhook | 279 | 47 |
-| [9. Telegram-бот](09_telegram_bot/index.md) | aiogram, підписки, polling і webhook | 335 | 48 |
-| [10. Docker](10_docker/index.md) | образ, HEALTHCHECK, `/health/ready` | 340 | 49 |
-| [11. Compose і деплой](11_compose_deploy/index.md) | nginx, PostgreSQL, Redis, міграції, бекап | 343 | 50 |
-| [12. CI/CD](12_ci_cd/index.md) | GitHub Actions, mypy, smoke, ghcr.io | 343 | 51 |
+| Крок | Що додається | Тестів |
+|---|---|---|
+| [1. Типи і Pydantic](01_typing_pydantic/index.md) | анотації типів, `NewsItem`, `validate_news` | 12 |
+| [2. Перший API на FastAPI](02_fastapi_basics/index.md) | `GET /api/news`, `POST /api/scrape`, `Depends`, `/docs`, Postman | 23 |
+| [3. SQLAlchemy і Alembic](03_sqlalchemy_alembic/index.md) | база, репозиторій, CRUD, міграції | 32 |
+| [4. Middleware, кеш і Redis](04_middleware_redis/index.md) | middleware, кеш, rate limit, фоновий збір | 41 |
+| [5. Тестування API](05_api_testing/index.md) | unit / integration, фікстури, моки, фейки, покриття | 86 |
+| [6. AI-інструменти](06_ai_dev_tools/index.md) | Claude Code, RSS-джерело, написане AI за тестами | 107 |
+| [7. LLM API](07_llm_api/index.md) | аналіз новин Gemini / Anthropic, circuit breaker | 168 |
+| [8. Безпека](08_security/index.md) | JWT адміна, SSRF, підписані webhook | 279 |
+| [9. Telegram-бот](09_telegram_bot/index.md) | aiogram, підписки, polling і webhook | 335 |
+| [10. Docker](10_docker/index.md) | образ, HEALTHCHECK, `/health/ready` | 340 |
+| [11. Compose і деплой](11_compose_deploy/index.md) | nginx, PostgreSQL, Redis, міграції, бекап | 343 |
+| [12. CI/CD](12_ci_cd/index.md) | GitHub Actions, mypy, smoke, ghcr.io | 343 |
 
 «Тестів» — скільки проходить `pytest -q` у папці кроку (без тестів, що потребують Docker або справжнього LLM).
 

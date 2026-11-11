@@ -1,9 +1,9 @@
-"""Адмін-доступ: пароль (bcrypt) → JWT → `require_admin` на кожному ендпоінті запису. Урок 46.
+"""Адмін-доступ: пароль (bcrypt) → JWT → `require_admin` на кожному ендпоінті запису. Крок 8.
 
-Основа — стартовий `production_bot` (`backend/`):
+Основа — стартовий шаблон бекенду (`backend/`):
 `core/security.py` (хеш пароля, `create_access_token`, `decode_token`), `api/deps.py`
 (`get_current_admin`: 401 — недійсний чи прострочений токен, 403 — не адмін) і `api/admin/auth.py`
-(`POST /admin/auth/token`). Рефакторинг уроку 46:
+(`POST /admin/auth/token`). Рефакторинг кроку 8:
 - налаштування — `AdminSettings` з середовища, без значень «change-me» за замовчуванням: секрет JWT
   коротший за 32 символи — застосунок не стартує; нічого не задано — ендпоінти запису відповідають 503;
 - у середовищі — **хеш** пароля (`ADMIN_PASSWORD_HASH`), а не сам пароль; згенерувати:
@@ -14,7 +14,7 @@
   за часом відповіді не видно, чи вгадали ім'я;
 - алгоритм зафіксовано в коді (HS256), `decode` вимагає `exp`, `sub` і `role`.
 
-JWT (урок 40): header.payload.signature, підпис — HMAC-SHA256(header.payload, JWT_SECRET). Сервер нічого не
+JWT: header.payload.signature, підпис — HMAC-SHA256(header.payload, JWT_SECRET). Сервер нічого не
 зберігає: будь-хто, хто знає секрет, може випустити токен — тому секрет довгий, випадковий і лише в env.
 """
 import argparse
@@ -56,7 +56,7 @@ def load_admin_settings(env: Mapping[str, str] = os.environ) -> AdminSettings | 
         raise RuntimeError(f"JWT_SECRET має бути не коротшим за {MIN_SECRET_LENGTH} символи; "
                            "згенеруй: python -m news_hub.security")
     if not BCRYPT_HASH.fullmatch(password_hash):
-        # Урок 49: не лише «починається з $2» — Compose підставляє $змінні в .env без лапок, і обрізаний
+        # Крок 11: не лише «починається з $2» — Compose підставляє $змінні в .env без лапок, і обрізаний
         # хеш «$2b$12» проходив цю перевірку, а вхід відповідав 500. Тепер — помилка при старті.
         raise RuntimeError("ADMIN_PASSWORD_HASH — bcrypt-хеш ($2b$12$ + 53 символи), а не пароль і не обрізаний "
                            "рядок; у .env для Compose — в одинарних лапках; згенеруй: python -m news_hub.security")
@@ -154,7 +154,7 @@ def env_lines(password: str, quoted: bool = True) -> list[str]:
     """Рядки ADMIN_PASSWORD_HASH і JWT_SECRET.
 
     quoted=True — для `export` у shell і `.env` Compose: у хеші є `$`, одинарні лапки не дають його підставити.
-    quoted=False — для `docker run --env-file` (урок 48): там значення береться буквально, разом з лапками,
+    quoted=False — для `docker run --env-file` (крок 10): там значення береться буквально, разом з лапками,
     і хеш у лапках уже не хеш — застосунок не стартує.
     """
     q = "'" if quoted else ""

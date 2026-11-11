@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Відновити базу news_hub з бекапу. Урок 49.   ./scripts/restore.sh backups/news_hub-….sql.gz
+# Відновити базу news_hub з бекапу. Крок 11.   ./scripts/restore.sh backups/news_hub-….sql.gz
 # Поточні дані в базі буде ЗАМІНЕНО даними з бекапу.
 set -euo pipefail
 

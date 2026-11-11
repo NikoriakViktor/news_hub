@@ -1,4 +1,4 @@
-"""Таблиця `news` — модель SQLAlchemy 2.0 (`Mapped` + `mapped_column`), як `models/user.py` у `production_bot`.
+"""Таблиця `news` — модель SQLAlchemy 2.0 (`Mapped` + `mapped_column`), як `models/user.py` у стартовому шаблоні бекенду.
 
 Дві моделі на одну новину, і це навмисно:
 - `NewsItem` (Pydantic, models.py) — **перевірка** даних з парсера й тіла запиту;

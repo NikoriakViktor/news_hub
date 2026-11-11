@@ -1,8 +1,8 @@
 """Клієнти LLM за одним інтерфейсом: Gemini (основний), Anthropic (другий), FakeLLM (тести й ноутбук).
 
-Основа — `app/services/ai_service.py` зі стартового `ai_bot`:
+Основа — `app/services/ai_service.py` стартового шаблону бота:
 пул моделей Gemini з переходом на наступну при збої й circuit breaker у Redis.
-Рефакторинг уроку 43:
+Рефакторинг кроку 7:
 - один інтерфейс `LLMClient` — решта коду (analysis.py, api.py) не знає, який провайдер відповідає;
 - `client.aio.models.generate_content` — асинхронний клієнт google-genai: запит не блокує цикл подій,
   тож `asyncio.to_thread` і новий `genai.Client` на кожен виклик не потрібні;
@@ -88,7 +88,7 @@ class LLMClient(Protocol):
 
 
 # ---------------------------------------------------------------------------
-# Gemini — основний провайдер курсу (безкоштовний ключ: aistudio.google.com)
+# Gemini — основний провайдер (безкоштовний ключ: aistudio.google.com)
 # ---------------------------------------------------------------------------
 
 class GeminiClient:

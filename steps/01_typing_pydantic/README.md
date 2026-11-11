@@ -1,16 +1,16 @@
 # news_hub — новинний агрегатор (крок 1: типи і Pydantic)
 
-Наскрізний проєкт FastAPI-гілки курсу: парсер новин → перевірені моделі → API → база → кеш → підсумки від Gemini → Telegram-бот → Docker. Кожен урок — рефакторинг проєкту попереднього.
+Наскрізний проєкт книги: парсер новин → перевірені моделі → API → база → кеш → підсумки від Gemini → Telegram-бот → Docker. Кожен крок — рефакторинг проєкту попереднього.
 
-| Урок | Крок |
+| Крок | Що додається |
 |---|---|
-| **37** | **стартовий парсер з анотаціями типів; `NewsItem` на Pydantic** ← ти тут |
-| 38 | FastAPI: `GET /api/news`, `POST /api/scrape`, `/docs`, Postman |
-| 39 | SQLAlchemy: новини в базі, унікальний `url` |
-| 40 | middleware, кеш і rate limit на Redis |
-| 42 | тести API (pytest + httpx) |
-| 44 | Gemini: підсумок, категорія, тональність |
-| 48 | Telegram-бот: `/news`, `/digest` |
+| **1** | **стартовий парсер з анотаціями типів; `NewsItem` на Pydantic** ← ти тут |
+| 2 | FastAPI: `GET /api/news`, `POST /api/scrape`, `/docs`, Postman |
+| 3 | SQLAlchemy: новини в базі, унікальний `url` |
+| 4 | middleware, кеш і rate limit на Redis |
+| 5 | тести API (pytest + httpx) |
+| 7 | Gemini: підсумок, категорія, тональність |
+| 9 | Telegram-бот: `/news`, `/digest` |
 | 48–50 | Docker, Compose, CI/CD |
 
 ## Що тут
@@ -25,8 +25,6 @@ news_hub/
 ├── examples/         ← before_dict.py / after_typed.py — що бачить mypy
 └── tests/            ← pytest: моделі, парсер, знімок
 ```
-
-Джерела коду: `parse_rbc_news` — ноутбук про веб-скрапінг `note_lesson_32_web_scraping.ipynb`; словник категорій — `news_dashboard/app/scraper.py`. Знімок — `rbc_news.json` поруч із тим самим ноутбуком.
 
 ## Запуск
 
@@ -48,4 +46,4 @@ html = requests.get("https://www.rbc.ua/ukr/news/", headers={"User-Agent": "EduS
 valid, rejected = validate_news(parse_rbc_news(html))
 ```
 
-Розбір змін — [Крок 1 у книзі](https://nikoriakviktor.github.io/news_hub/tutorials/01_typing_pydantic/) · урок 37 курсу.
+Розбір змін — [Крок 1 у книзі](https://nikoriakviktor.github.io/news_hub/tutorials/01_typing_pydantic/).

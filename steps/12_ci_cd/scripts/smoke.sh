@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Smoke-тест усього стеку в Compose: так його запускає CI (урок 50), так само можна локально.
+# Smoke-тест усього стеку в Compose: так його запускає CI (крок 12), так само можна локально.
 #   ADMIN_PASSWORD=… ./scripts/smoke.sh        (потрібен .env: python scripts/make_env.py)
 # Піднімає стек, проходить шлях користувача через nginx і завжди прибирає за собою (docker compose down -v).
 set -euo pipefail

@@ -22,4 +22,4 @@ python load_test.py                  # в іншому терміналі: 5 т�
 
 Або `docker compose up --build` — API на http://localhost:8001/docs, Streamlit-панель на http://localhost:8534.
 
-Розбір — [Крок 2 у книзі: async чи blocking](https://nikoriakviktor.github.io/news_hub/tutorials/02_fastapi_basics/async_measurements/) · урок 38 курсу.
+Розбір — [Крок 2 у книзі: async чи blocking](https://nikoriakviktor.github.io/news_hub/tutorials/02_fastapi_basics/async_measurements/).

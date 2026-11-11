@@ -1,6 +1,6 @@
 # Крок 6. AI-інструменти розробника
 
-> **Код кроку:** [`steps/06_ai_dev_tools`](https://github.com/NikoriakViktor/news_hub/tree/main/steps/06_ai_dev_tools) · відповідає уроку 43 курсу.
+> **Код кроку:** [`steps/06_ai_dev_tools`](https://github.com/NikoriakViktor/news_hub/tree/main/steps/06_ai_dev_tools).
 >
 > **Передумови:** [Крок 5. Тестування API](../05_api_testing/index.md).
 
@@ -24,28 +24,28 @@
 news_hub/
 ├── news_hub/
 │   ├── parser.py     ← стартовий parse_rbc_news + типи: HTML → list[RawNews]
-│   ├── rss.py        ← урок 43: parse_pravda_rss — RSS «Української правди» → list[RawNews] (написав Claude Code)
+│   ├── rss.py        ← крок 6: parse_pravda_rss — RSS «Української правди» → list[RawNews] (написав Claude Code)
 │   ├── models.py     ← NewsItem (Pydantic), validate_news, is_allowed_host (rbc.ua, pravda.com.ua, epravda.com.ua)
 │   ├── snapshot.py   ← знімок стрічки: data/rbc_news_snapshot.json → list[RawNews]
-│   ├── scraper.py    ← урок 38: сторінки rbc.ua через aiohttp — разом (gather) або по черзі
-│   ├── db.py         ← урок 39: engine, сесії, get_db (сесія й транзакція на запит)
-│   ├── tables.py     ← урок 39: NewsRow — таблиця news (SQLAlchemy 2.0)
-│   ├── repository.py ← урок 39: NewsRepository — увесь SQL; замінив NewsStore з уроку 38
-│   ├── cache.py      ← урок 40: клієнт Redis, NewsCache (cache-aside з версією)
-│   ├── middleware.py ← урок 40: X-Request-ID / X-Process-Time, rate limit → 429, інвалідація кешу
-│   ├── jobs.py       ← урок 40: фоновий збір, статус задачі в Redis
+│   ├── scraper.py    ← крок 2: сторінки rbc.ua через aiohttp — разом (gather) або по черзі
+│   ├── db.py         ← крок 3: engine, сесії, get_db (сесія й транзакція на запит)
+│   ├── tables.py     ← крок 3: NewsRow — таблиця news (SQLAlchemy 2.0)
+│   ├── repository.py ← крок 3: NewsRepository — увесь SQL; замінив NewsStore з кроку 2
+│   ├── cache.py      ← крок 4: клієнт Redis, NewsCache (cache-aside з версією)
+│   ├── middleware.py ← крок 4: X-Request-ID / X-Process-Time, rate limit → 429, інвалідація кешу
+│   ├── jobs.py       ← крок 4: фоновий збір, статус задачі в Redis
 │   └── api.py        ← FastAPI: /api/news (+ CRUD, кеш), /stats, POST /api/scrape, /api/scrape/jobs
 ├── data/rbc_news_snapshot.json   ← 168 новин, зібраних parse_rbc_news
-├── migrations/       ← урок 39: Alembic — версії схеми бази (0001: таблиця news)
+├── migrations/       ← крок 3: Alembic — версії схеми бази (0001: таблиця news)
 ├── alembic.ini
-├── docker-compose.yml ← PostgreSQL 16 (урок 39) і Redis 7 (урок 40) для розробки
+├── docker-compose.yml ← PostgreSQL 16 (крок 3) і Redis 7 (крок 4) для розробки
 ├── postman/news_hub.postman_collection.json   ← 16 запитів з перевірками
 ├── examples/         ← before_dict.py / after_typed.py — що бачить mypy
-├── CLAUDE.md         ← урок 43: інструкції для AI-асистента — команди, структура, правила проєкту
-├── .claude/          ← урок 43: settings.json (дозволи), hooks/unit_tests.py (pytest -m unit після правок),
+├── CLAUDE.md         ← крок 6: інструкції для AI-асистента — команди, структура, правила проєкту
+├── .claude/          ← крок 6: settings.json (дозволи), hooks/unit_tests.py (pytest -m unit після правок),
 │                       skills/add-news-source/ (/add-news-source)
-├── pytest.ini        ← урок 42: маркери unit / integration, asyncio
-├── .coveragerc       ← урок 42: покриття гілок, concurrency = thread,greenlet (async SQLAlchemy)
+├── pytest.ini        ← крок 5: маркери unit / integration, asyncio
+├── .coveragerc       ← крок 5: покриття гілок, concurrency = thread,greenlet (async SQLAlchemy)
 └── tests/
     ├── conftest.py   ← фікстура html("…"), маркер за папкою
     ├── factories.py  ← make_raw(**зміни) — тестова новина
@@ -55,8 +55,6 @@ news_hub/
     └── integration/  ← API (TestClient і httpx.AsyncClient), CRUD, Redis, справжній get_db,
                         скрапер проти локального aiohttp-сервера
 ```
-
-Джерела коду: Redis-клієнт — `production_bot/backend/core/redis.py`, rate limit — `ai_bot/app/middlewares/rate_limit.py` і `repositories/rate_limit_repo.py`, фоновий збір — `/api/scrape/archive` з `news_dashboard`; база й репозиторій — стартовий `production_bot/backend/core/database.py`, `repositories/base.py`, `migrations/`; API і скрапер — прототип `news_dashboard/app/main.py` і `scraper.py`; `parse_rbc_news` — ноутбук про веб-скрапінг `note_lesson_32_web_scraping.ipynb`; словник категорій — `news_dashboard/app/scraper.py`. Знімок — `rbc_news.json` поруч із тим самим ноутбуком.
 
 ## Запуск
 
@@ -87,7 +85,7 @@ uvicorn news_hub.api:app --reload
 Свіжа стрічка (коли `www.rbc.ua` доступний з мережі) — `POST /api/scrape` з `{}` або
 `{"mode": "sequential"}`; у відповіді — час кожної сторінки й помилки, якщо сторінка не завантажилась.
 
-Урок 43: `rss.py` і зміни в `models.py` написав Claude Code (`claude -p`) за специфікацією `tests/unit/test_pravda.py`.
+Крок 6: `rss.py` і зміни в `models.py` написав Claude Code (`claude -p`) за специфікацією `tests/unit/test_pravda.py`.
 Рецензія його коду — `tests/unit/test_pravda_review.py`.
 
 ## Порівняння з попереднім кроком

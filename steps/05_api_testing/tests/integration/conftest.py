@@ -81,7 +81,7 @@ def client() -> Iterator[TestClient]:
 
 @pytest_asyncio.fixture
 async def aclient() -> AsyncIterator[httpx.AsyncClient]:
-    """Асинхронний клієнт (урок 41): тест і застосунок — в одному циклі подій, без portal.
+    """Асинхронний клієнт (крок 5): тест і застосунок — в одному циклі подій, без portal.
 
     ASGITransport не запускає lifespan — запускаємо його самі, щоб з'явився app.state.redis.
     """

@@ -1,4 +1,4 @@
-"""Урок 39: кеш, middleware, rate limit і фоновий збір (Redis — fakeredis або TEST_REDIS_URL)."""
+"""Крок 4: кеш, middleware, rate limit і фоновий збір (Redis — fakeredis або TEST_REDIS_URL)."""
 from fastapi.testclient import TestClient
 
 from news_hub.api import app, get_scrapers

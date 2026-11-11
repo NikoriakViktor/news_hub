@@ -86,7 +86,7 @@ delete    → 204 []
 
 ## Той самий API: DRF { #drf }
 
-Django-версія — проєкт `crispy_notes_project` уроку 36 курсу ([`hello_app/api.py`](https://github.com/NikoriakViktor/PY-Course-Victor-Nikoriak-11-11-2026/blob/main/module_4/lessons/lesson_36_drf_fastapi/crispy_notes_project/hello_app/api.py)). Два серіалізатори й ViewSet поверх готових services і selectors:
+Django-версія того самого API (застосунок `hello_app`): два серіалізатори й ViewSet поверх готових services і selectors.
 
 ```python title="hello_app/api.py (скорочено)"
 class NoteOutputSerializer(serializers.ModelSerializer):
@@ -195,4 +195,4 @@ News Hub — саме третій випадок: окремий сервіс, 
 
 [Крок 2. Перший API на FastAPI](../tutorials/02_fastapi_basics/index.md) — усе з цієї частини на справжньому проєкті.
 
-**Джерела:** урок 36 курсу; [Django REST Framework](https://www.django-rest-framework.org/); [FastAPI — Body: Updates](https://fastapi.tiangolo.com/tutorial/body-updates/).
+**Джерела:** [Django REST Framework](https://www.django-rest-framework.org/); [FastAPI — Body: Updates](https://fastapi.tiangolo.com/tutorial/body-updates/).

@@ -1,8 +1,8 @@
-"""HTTP API агрегатора: FastAPI поверх парсера й моделі з уроку 36.
+"""HTTP API агрегатора: FastAPI поверх парсера й моделі з кроку 1.
 
-Урок 37: ядро `app/main.py` прототипу `news_dashboard` (`/api/news`, `/stats`, `POST /api/scrape`),
+Крок 2: ядро `app/main.py` прототипу (`/api/news`, `/stats`, `POST /api/scrape`),
 сховище `NewsStore` через `Depends`.
-Урок 38 — рефакторинг сховища:
+Крок 3 — рефакторинг сховища:
 - `NewsStore` у пам'яті → `NewsRepository` над SQLAlchemy (PostgreSQL або SQLite); сесія на запит — `get_db`;
 - у відповіді з'явились `id` і `scraped_at` — їх дає база (`NewsOut`);
 - повний CRUD окремої новини: `GET/PATCH/DELETE /api/news/{news_id}`, `POST /api/news`;
@@ -39,8 +39,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(
     title="news_hub API",
-    description="Новинний агрегатор курсу: парсинг rbc.ua → перевірені `NewsItem` → база → API. Урок 38.",
-    version="0.38.0",
+    description="Новинний агрегатор: парсинг rbc.ua → перевірені `NewsItem` → база → API. Крок 3.",
+    version="0.3.0",
     lifespan=lifespan,
     openapi_tags=[
         {"name": "news", "description": "Новини в базі"},

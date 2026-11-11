@@ -4,11 +4,11 @@
 
 ## Розділи
 
-| Розділ | Джерело | Стан |
+| Розділ | Код | Стан |
 |---|---|---|
-| Анотації типів і `TypedDict` | урок 37 «Рефакторинг 1»; `steps/01/examples/before_dict.py`, `after_typed.py` | у роботі |
-| Моделі Pydantic | урок 37 «Рефакторинг 2»; `steps/01/news_hub/models.py` | у роботі |
-| Межа довіри | урок 37 «Архітектура: межа довіри» | у роботі |
+| Анотації типів і `TypedDict` | `steps/01/examples/before_dict.py`, `after_typed.py` | у роботі |
+| Моделі Pydantic | `steps/01/news_hub/models.py` | у роботі |
+| Межа довіри | — | у роботі |
 
 ## На практиці — Zero to Hero
 

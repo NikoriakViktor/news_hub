@@ -1,6 +1,6 @@
 # Крок 2. Перший API на FastAPI
 
-> **Код кроку:** [`steps/02_fastapi_basics`](https://github.com/NikoriakViktor/news_hub/tree/main/steps/02_fastapi_basics) · відповідає уроку 38 курсу.
+> **Код кроку:** [`steps/02_fastapi_basics`](https://github.com/NikoriakViktor/news_hub/tree/main/steps/02_fastapi_basics).
 >
 > **Передумови:** [Крок 1. Типи і Pydantic](../01_typing_pydantic/index.md) — є `parse_rbc_news` і модель `NewsItem`.
 

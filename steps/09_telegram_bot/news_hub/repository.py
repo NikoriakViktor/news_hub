@@ -1,14 +1,14 @@
 """Репозиторій новин: увесь SQL агрегатора в одному місці.
 
-`BaseRepository` — `backend/repositories/base.py` зі стартового `production_bot` (загальний CRUD
-для будь-якої моделі). `NewsRepository` має **ті самі методи, що `NewsStore` з уроку 37**
+`BaseRepository` — `backend/repositories/base.py` стартового шаблону бекенду (загальний CRUD
+для будь-якої моделі). `NewsRepository` має **ті самі методи, що `NewsStore` з кроку 2**
 (`add_many`, `find`, `count`, `stats`, `clear`) — тому ендпоінти майже не змінились:
 лише `store.find(...)` → `await repo.find(...)`.
 
-Урок 43: аналіз LLM — `save_analysis`, `find_unanalyzed` (для пакетної задачі), фільтри й статистика
+Крок 7: аналіз LLM — `save_analysis`, `find_unanalyzed` (для пакетної задачі), фільтри й статистика
 за темою (`ai_category`) і тональністю.
-Урок 46: `SourceRepository` — RSS-джерела адміна.
-Урок 47: `insert_new` (які саме новини нові — для сповіщень), `latest` (для /news у боті),
+Крок 8: `SourceRepository` — RSS-джерела адміна.
+Крок 9: `insert_new` (які саме новини нові — для сповіщень), `latest` (для /news у боті),
 `SubscriptionRepository` — підписки чатів Telegram на ключові слова.
 """
 from collections.abc import Iterable
@@ -52,7 +52,7 @@ class BaseRepository(Generic[ModelT]):
 
 @dataclass(frozen=True)
 class NewNews:
-    """Щойно збережена новина — те, що потрібно для сповіщення (урок 47)."""
+    """Щойно збережена новина — те, що потрібно для сповіщення (крок 9)."""
     id: int
     title: str
     url: str
@@ -109,7 +109,7 @@ class NewsRepository(BaseRepository[NewsRow]):
     async def search(self, q: str, limit: int = 20) -> list[NewsRow]:
         """Заголовки, що містять q без урахування регістру: WHERE lower(title) LIKE lower('%' || :q || '%').
 
-        q — параметр запиту, а не частина SQL (урок 29); autoescape: % і _ у q — звичайні символи.
+        q — параметр запиту, а не частина SQL; autoescape: % і _ у q — звичайні символи.
         """
         stmt = select(NewsRow).where(NewsRow.title.icontains(q, autoescape=True)).order_by(NewsRow.id).limit(limit)
         return list((await self._session.scalars(stmt)).all())

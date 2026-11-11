@@ -1,4 +1,4 @@
-"""Урок 47: після збору нові новини йдуть підписникам — через API, як це буде в роботі.
+"""Крок 9: після збору нові новини йдуть підписникам — через API, як це буде в роботі.
 
 Збір — `POST /api/scrape` (знімок rbc.ua, 168 новин), розсилка — фонова задача після відповіді.
 """
@@ -81,6 +81,6 @@ async def test_background_job_notifies_too(bot_api: httpx.AsyncClient, twin: Tel
 
 
 async def test_without_bot_nothing_breaks(aclient: httpx.AsyncClient) -> None:
-    """Без BOT_TOKEN бота немає: збір працює, як в уроці 46."""
+    """Без BOT_TOKEN бота немає: збір працює, як в кроці 8."""
     assert app.state.bot is None
     assert (await aclient.post("/api/scrape", json={"source": "snapshot"})).json()["news_saved"] > 0

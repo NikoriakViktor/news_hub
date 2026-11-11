@@ -1,4 +1,4 @@
-"""Урок 47: webhook Telegram у FastAPI — секретний заголовок, обробка після відповіді, lifespan."""
+"""Крок 9: webhook Telegram у FastAPI — секретний заголовок, обробка після відповіді, lifespan."""
 import httpx
 import pytest
 

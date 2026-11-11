@@ -1,4 +1,4 @@
-"""Парсер RSS-стрічки «Української правди» (rss.py). Урок 42.
+"""Парсер RSS-стрічки «Української правди» (rss.py). Крок 6.
 
 Модуль написав Claude Code (`claude -p`) за специфікацією tests/unit/test_pravda.py і правилами CLAUDE.md;
 виправлення після рецензії позначено «Рецензія» (тести — tests/unit/test_pravda_review.py).
@@ -34,7 +34,7 @@ def _clean_description(raw: str) -> str:
 def _kyiv_datetime(pub_date: str) -> str:
     """RFC 2822 (+0300 чи GMT) → місцевий київський час без поясу, як datetime у RawNews rbc.ua.
 
-    Рецензія (урок 42): порожній чи битий pubDate кидав ValueError — і губилася вся стрічка;
+    Рецензія (крок 6): порожній чи битий pubDate кидав ValueError — і губилася вся стрічка;
     тепер у такої новини просто немає часу. «-0000» дає datetime без поясу — це UTC, а не час сервера.
     """
     try:

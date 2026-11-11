@@ -237,4 +237,4 @@ def get_store(request: Request) -> NewsStore:
 
 [OpenAPI: опис API з коду](openapi.md).
 
-**Джерела:** довідник FastAPI курсу, розділ 5; FastAPI — [Dependencies](https://fastapi.tiangolo.com/tutorial/dependencies/), [Dependencies with yield](https://fastapi.tiangolo.com/tutorial/dependencies/dependencies-with-yield/), [Lifespan Events](https://fastapi.tiangolo.com/advanced/events/), [Testing Dependencies with Overrides](https://fastapi.tiangolo.com/advanced/testing-dependencies/); урок 38 курсу.
+**Джерела:** FastAPI — [Dependencies](https://fastapi.tiangolo.com/tutorial/dependencies/), [Dependencies with yield](https://fastapi.tiangolo.com/tutorial/dependencies/dependencies-with-yield/), [Lifespan Events](https://fastapi.tiangolo.com/advanced/events/), [Testing Dependencies with Overrides](https://fastapi.tiangolo.com/advanced/testing-dependencies/).

@@ -5,14 +5,14 @@
     rate_limit        — POST /api/scrape* і аналіз LLM: не більше N запитів за вікно з однієї адреси → 429;
     invalidate_cache  — успішний запис у новини → нова версія кешу (після COMMIT).
 
-Rate limit — `RateLimitRepository` + `RateLimitMiddleware` зі стартового `ai_bot`.
-Рефакторинг уроку 39:
+Rate limit — `RateLimitRepository` + `RateLimitMiddleware` стартового шаблону бота.
+Рефакторинг кроку 4:
 - aiogram-middleware → HTTP-middleware FastAPI; ключ — адреса клієнта + дія, а не user_id Telegram;
 - `INCR`, а потім окремий `EXPIRE` (якщо count == 1) → одна транзакція `INCR` + `EXPIRE … NX`:
   якщо процес упаде між двома командами, ключ без TTL заблокує клієнта назавжди;
 - у старому docstring алгоритм названо «Sliding Window Counter», але це **фіксоване вікно**
-  (лічильник обнуляється разом із ключем) — назву виправлено, різницю показано в уроці.
-Урок 43: аналіз LLM коштує грошей і квоти — свій ліміт (`ANALYZE_RATE_LIMIT`), ключ `rate:analyze:<адреса>`.
+  (лічильник обнуляється разом із ключем) — назву виправлено, різницю пояснено в книзі (крок 4).
+Крок 7: аналіз LLM коштує грошей і квоти — свій ліміт (`ANALYZE_RATE_LIMIT`), ключ `rate:analyze:<адреса>`.
 """
 import logging
 import os
@@ -103,7 +103,7 @@ WRITE_METHODS = {"POST", "PATCH", "PUT", "DELETE"}
 async def invalidate_cache(request: Request, call_next: CallNext) -> Response:
     """Після успішного запису — нова версія кешу.
 
-    Чому тут, а не в ендпоінті: COMMIT робить get_db (урок 38) уже ПІСЛЯ ендпоінта. Інвалідація в
+    Чому тут, а не в ендпоінті: COMMIT робить get_db (крок 3) уже ПІСЛЯ ендпоінта. Інвалідація в
     ендпоінті йшла б до COMMIT, і паралельний GET встиг би закешувати старі дані під новою версією.
     Middleware отримує відповідь, коли COMMIT уже відбувся (scope="function").
     """

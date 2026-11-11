@@ -1,4 +1,4 @@
-"""news table — таблиця новин агрегатора (урок 38)
+"""news table — таблиця новин агрегатора (крок 3)
 
 Згенеровано `alembic revision --autogenerate`; виправлено вручну: server_default=sa.text('now()')
 (працює лише в PostgreSQL) → sa.func.now() (кожна база отримує свій SQL).

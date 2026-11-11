@@ -147,4 +147,4 @@ POST   /api/scrape        ['scrape'] Зібрати новини
 
 [FastAPI і Django REST Framework](fastapi_vs_drf.md).
 
-**Джерела:** [OpenAPI Specification](https://spec.openapis.org/oas/latest.html); FastAPI — [Metadata and Docs URLs](https://fastapi.tiangolo.com/tutorial/metadata/), [Path Operation Configuration](https://fastapi.tiangolo.com/tutorial/path-operation-configuration/), [Additional Responses in OpenAPI](https://fastapi.tiangolo.com/advanced/additional-responses/); уроки 33 і 38 курсу.
+**Джерела:** [OpenAPI Specification](https://spec.openapis.org/oas/latest.html); FastAPI — [Metadata and Docs URLs](https://fastapi.tiangolo.com/tutorial/metadata/), [Path Operation Configuration](https://fastapi.tiangolo.com/tutorial/path-operation-configuration/), [Additional Responses in OpenAPI](https://fastapi.tiangolo.com/advanced/additional-responses/).

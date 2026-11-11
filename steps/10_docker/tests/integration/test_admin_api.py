@@ -1,4 +1,4 @@
-"""Урок 46: хто може писати. Читання — будь-хто; запис, збір, аналіз, джерела — лише адмін з JWT."""
+"""Крок 8: хто може писати. Читання — будь-хто; запис, збір, аналіз, джерела — лише адмін з JWT."""
 from datetime import datetime, timedelta, timezone
 
 import jwt
@@ -13,12 +13,12 @@ from .conftest import ADMIN_PASSWORD
 
 # Єдині ендпоінти без токена адміна. Новий ендпоінт сюди не потрапить сам: або AdminDep, або рішення тут.
 PUBLIC = {
-    ("GET", "/health"), ("GET", "/health/ready"),   # урок 48: перевірки Docker і балансувальника — без токена
+    ("GET", "/health"), ("GET", "/health/ready"),   # крок 10: перевірки Docker і балансувальника — без токена
     ("GET", "/api/news"), ("GET", "/api/news/search"), ("GET", "/api/news/count"),
     ("GET", "/api/news/stats"), ("GET", "/api/news/{news_id}"),
     ("POST", "/api/admin/token"),                   # вхід — пароль
     ("POST", "/api/webhooks/scrape"),               # свій захист — підпис HMAC (test_webhooks_api.py)
-    ("POST", "/api/telegram/webhook"),              # урок 47: свій захист — секретний заголовок Telegram
+    ("POST", "/api/telegram/webhook"),              # крок 9: свій захист — секретний заголовок Telegram
 }
 
 

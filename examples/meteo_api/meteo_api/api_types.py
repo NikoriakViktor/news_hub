@@ -1,4 +1,4 @@
-"""Ті самі метеодані через різні типи API (урок 32, розділ «Які бувають API»).
+"""Ті самі метеодані через різні типи API (Частина I книги: «Які бувають API»).
 
 Кожна функція install_* додає до FastAPI-застосунку один стиль API:
 
@@ -31,7 +31,7 @@ WEBHOOK_SECRET = b"meteo-webhook-secret"      # навчальний; справ
 
 
 def sign(body: bytes) -> str:
-    """Підпис тіла webhook: HMAC-SHA256 (урок 16) — одержувач перевіряє, що лист від нас."""
+    """Підпис тіла webhook: HMAC-SHA256 — одержувач перевіряє, що лист від нас."""
     return hmac.new(WEBHOOK_SECRET, body, hashlib.sha256).hexdigest()
 
 

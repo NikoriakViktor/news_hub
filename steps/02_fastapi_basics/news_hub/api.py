@@ -1,10 +1,10 @@
-"""HTTP API агрегатора: FastAPI поверх парсера й моделі з уроку 36.
+"""HTTP API агрегатора: FastAPI поверх парсера й моделі з кроку 1.
 
-Основа — `app/main.py` прототипу `news_dashboard` (618 рядків: скрапінг, MongoDB, NLP,
-архів, тренди). Рефакторинг уроку 37 лишає ядро — `/health`, `GET /api/news` з фільтрами,
+Основа — `app/main.py` прототипу (618 рядків: скрапінг, MongoDB, NLP,
+архів, тренди). Рефакторинг кроку 2 лишає ядро — `/health`, `GET /api/news` з фільтрами,
 `/api/news/count`, `/api/news/stats`, `POST /api/scrape`, `DELETE /api/news` — і змінює:
-- `NewsItem` у відповіді — модель з уроку 36, а не друга копія полів;
-- MongoDB у кожному ендпоінті → `NewsStore` через `Depends` (урок 38 підставить базу);
+- `NewsItem` у відповіді — модель з кроку 1, а не друга копія полів;
+- MongoDB у кожному ендпоінті → `NewsStore` через `Depends` (крок 3 підставить базу);
 - `@app.on_event("startup")` (застарів) → `lifespan`;
 - рядки з regex (`pattern="^(async|sequential)$"`) → `Literal`;
 - `POST /api/scrape` приймав будь-які URL → лише сторінки rbc.ua; `source="snapshot"` — знімок.
@@ -35,8 +35,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(
     title="news_hub API",
-    description="Новинний агрегатор курсу: парсинг rbc.ua → перевірені `NewsItem` → API. Урок 37.",
-    version="0.37.0",
+    description="Новинний агрегатор: парсинг rbc.ua → перевірені `NewsItem` → API. Крок 2.",
+    version="0.2.0",
     lifespan=lifespan,
     openapi_tags=[
         {"name": "news", "description": "Новини, що вже зібрані"},

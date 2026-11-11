@@ -2,7 +2,7 @@
 
 tests/unit/         — швидкі: одна функція чи клас, без бази, Redis і мережі   → pytest -m unit
 tests/integration/  — API разом з базою й Redis (SQLite/fakeredis або справжні) → pytest -m integration
-tests/docker/       — образ Docker: збірка, користувач, healthcheck, зупинка     → pytest -m docker (урок 48)
+tests/docker/       — образ Docker: збірка, користувач, healthcheck, зупинка     → pytest -m docker (крок 10)
 """
 from collections.abc import Callable
 from pathlib import Path

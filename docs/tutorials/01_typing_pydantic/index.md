@@ -1,6 +1,6 @@
 # Крок 1. Типи і Pydantic
 
-> **Код кроку:** [`steps/01_typing_pydantic`](https://github.com/NikoriakViktor/news_hub/tree/main/steps/01_typing_pydantic) · відповідає уроку 37 курсу.
+> **Код кроку:** [`steps/01_typing_pydantic`](https://github.com/NikoriakViktor/news_hub/tree/main/steps/01_typing_pydantic).
 
 ## Що додаємо
 
@@ -28,8 +28,6 @@ news_hub/
 ├── examples/         ← before_dict.py / after_typed.py — що бачить mypy
 └── tests/            ← pytest: моделі, парсер, знімок
 ```
-
-Джерела коду: `parse_rbc_news` — ноутбук про веб-скрапінг `note_lesson_32_web_scraping.ipynb`; словник категорій — `news_dashboard/app/scraper.py`. Знімок — `rbc_news.json` поруч із тим самим ноутбуком.
 
 ## Запуск
 

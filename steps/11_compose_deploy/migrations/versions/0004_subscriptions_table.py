@@ -1,4 +1,4 @@
-"""subscriptions — підписки чатів Telegram на ключові слова (урок 47)
+"""subscriptions — підписки чатів Telegram на ключові слова (крок 9)
 
 Згенеровано `alembic revision --autogenerate` на SQLite; виправлено вручну, як у 0001 і 0003:
 server_default=sa.func.now() (синтаксис SQLite) → sa.func.now().

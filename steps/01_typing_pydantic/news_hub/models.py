@@ -1,8 +1,8 @@
 """Pydantic-модель новини — межа між «сирим» HTML і рештою застосунку.
 
-Рефакторинг уроку 36: замість словника `{"title": ..., "url": ...}` без жодних гарантій —
+Рефакторинг кроку 1: замість словника `{"title": ..., "url": ...}` без жодних гарантій —
 `NewsItem`, який або перевірений, або не створений (`ValidationError`).
-Далі цю модель використовують FastAPI (урок 37), база (38) і Gemini (43).
+Далі цю модель використовують FastAPI (крок 2), база (крок 3) і LLM (крок 7).
 """
 from datetime import time
 from typing import Any, Literal
@@ -12,7 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field, HttpUrl, ValidationError, fie
 
 from .parser import RawNews
 
-# Розділ сайту в URL → назва категорії (словник — з прототипу news_dashboard)
+# Розділ сайту в URL → назва категорії
 CATEGORIES: dict[str, str] = {
     "news": "Новини", "economic": "Економіка", "economics": "Економіка",
     "politics": "Політика", "society": "Суспільство", "sport": "Спорт",

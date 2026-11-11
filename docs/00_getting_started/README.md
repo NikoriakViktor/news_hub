@@ -32,4 +32,4 @@ flowchart LR
 | [Необхідні знання](prerequisites.md) | що варто знати до початку |
 | [Налаштування](local_setup.md) | Python, venv, залежності кроку, PostgreSQL і Redis |
 | [Структура репозиторію](repository_structure.md) | `steps/`, `examples/`, `docs/`, CI |
-| [Як читати кроки](how_to_use.md) | маршрут, порівняння кроків, зв'язок з уроками курсу |
+| [Як читати кроки](how_to_use.md) | маршрут, порівняння кроків, приклади поза кроками |

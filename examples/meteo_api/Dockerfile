@@ -1,5 +1,5 @@
 # Один образ для API і для Streamlit — різні лише команди запуску (docker-compose.yml).
-# Docker докладно — урок 48; тут — щоб було видно, як частини системи з'єднані.
+# Docker докладно — крок 10 книги; тут — щоб було видно, як частини системи з'єднані.
 FROM python:3.12-slim
 WORKDIR /app
 COPY requirements.txt .

@@ -1,6 +1,6 @@
 """Тестова база й Redis: окремі на кожен тест; клієнти `client` (TestClient) і `aclient` (httpx.AsyncClient).
 
-Урок 46: запис — лише адміну. `client` і `aclient` надсилають токен адміна (так тести уроків 37–43 перевіряють
+Крок 8: запис — лише адміну. `client` і `aclient` надсилають токен адміна (так тести кроків 2–7 перевіряють
 те саме, що й раніше); `anon` — клієнт без токена, як будь-хто в інтернеті.
 
 База — SQLite у пам'яті, таблиці з Base.metadata (без Alembic); Redis — fakeredis у пам'яті процесу.
@@ -13,7 +13,7 @@ import os
 os.environ["REDIS_URL"] = os.getenv("TEST_REDIS_URL", "fakeredis://")      # до імпорту news_hub
 from news_hub.security import hash_password
 
-# Урок 46: налаштування адміна й webhook для тестів — явні тестові значення, не з .env
+# Крок 8: налаштування адміна й webhook для тестів — явні тестові значення, не з .env
 ADMIN_PASSWORD = "test-admin-password"
 os.environ.update({
     "JWT_SECRET": "test-jwt-secret-" + "x" * 32,
@@ -89,11 +89,11 @@ class TestDatabase:
 
 @pytest.fixture
 def anon() -> Iterator[TestClient]:
-    """Урок 46: клієнт без токена — як будь-хто в інтернеті."""
+    """Крок 8: клієнт без токена — як будь-хто в інтернеті."""
     db = TestDatabase()
     db.install()
     with TestClient(app) as c:
-        app.state.llm = FakeLLM()               # урок 43: навіть з GEMINI_API_KEY у середовищі — без платних викликів
+        app.state.llm = FakeLLM()               # крок 7: навіть з GEMINI_API_KEY у середовищі — без платних викликів
         c.portal.call(db.create_tables)         # у циклі подій застосунку, де працюватиме engine
         c.portal.call(app.state.redis.flushdb)  # чистий Redis (для TEST_REDIS_URL — окрема база 15)
         yield c
@@ -110,7 +110,7 @@ def client(anon: TestClient) -> TestClient:
 
 @pytest_asyncio.fixture
 async def aclient() -> AsyncIterator[httpx.AsyncClient]:
-    """Асинхронний клієнт (урок 41): тест і застосунок — в одному циклі подій, без portal.
+    """Асинхронний клієнт (крок 5): тест і застосунок — в одному циклі подій, без portal.
 
     ASGITransport не запускає lifespan — запускаємо його самі, щоб з'явився app.state.redis.
     """
@@ -129,7 +129,7 @@ async def aclient() -> AsyncIterator[httpx.AsyncClient]:
 
 @pytest.fixture
 def fake_llm() -> Iterator[FakeLLM]:
-    """Урок 43: клієнт LLM для API — FakeLLM зі сценарієм: fake_llm.replies.extend([...]); виклики — fake_llm.calls."""
+    """Крок 7: клієнт LLM для API — FakeLLM зі сценарієм: fake_llm.replies.extend([...]); виклики — fake_llm.calls."""
     fake = FakeLLM()
     app.dependency_overrides[get_llm_client] = lambda: fake
     yield fake

@@ -4,14 +4,14 @@ SQLAlchemy 2 в асинхронному режимі, сесія і транз�
 
 ## Розділи
 
-| Розділ | Джерело | Стан |
+| Розділ | Код | Стан |
 |---|---|---|
-| SQLAlchemy 2 async: engine, сесії, таблиці | урок 39 «Рефакторинг 1»; `steps/03/news_hub/db.py`, `tables.py` | у роботі |
-| Патерн Repository | урок 39 «Рефакторинг 2»; `fastapi_documentation.md` §7 | у роботі |
-| Сесія на запит і Unit of Work | урок 39 «Сесія на запит»; `fastapi_documentation.md` §8 | у роботі |
-| Повний CRUD | урок 39 «Рефакторинг 3» | у роботі |
-| Міграції Alembic | урок 39 «Міграції Alembic»; `steps/03/migrations/` | у роботі |
-| Пул з'єднань | `fastapi_documentation.md` §6 | у роботі |
+| SQLAlchemy 2 async: engine, сесії, таблиці | `steps/03/news_hub/db.py`, `tables.py` | у роботі |
+| Патерн Repository | — | у роботі |
+| Сесія на запит і Unit of Work | — | у роботі |
+| Повний CRUD | — | у роботі |
+| Міграції Alembic | `steps/03/migrations/` | у роботі |
+| Пул з'єднань | — | у роботі |
 
 ## На практиці — Zero to Hero
 

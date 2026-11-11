@@ -21,7 +21,7 @@
 | `examples/meteo_api` | passed — 7 |
 
 Не запускалось локально: `pytest -m docker`, `scripts/smoke.sh`, PostgreSQL-прогін, `mypy --strict`,
-`uv --resolution lowest-direct` — це робить `news_hub.yml` у CI (у курсі для того самого коду — зелений).
+`uv --resolution lowest-direct` — це робить `news_hub.yml` у CI.
 
 ## Примітка: рідкісне падіння в кроках 08–09
 

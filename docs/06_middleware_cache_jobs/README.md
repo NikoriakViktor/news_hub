@@ -4,12 +4,12 @@
 
 ## Розділи
 
-| Розділ | Джерело | Стан |
+| Розділ | Код | Стан |
 |---|---|---|
-| Middleware | урок 40 «Рефакторинг 1»; `steps/04/news_hub/middleware.py` | у роботі |
-| Кеш у Redis | урок 40 «Рефакторинг 2»; `steps/04/news_hub/cache.py` | у роботі |
-| Rate limit | урок 40 «Рефакторинг 3» | у роботі |
-| Фонові задачі | урок 40 «Рефакторинг 4»; `steps/04/news_hub/jobs.py` | у роботі |
+| Middleware | `steps/04/news_hub/middleware.py` | у роботі |
+| Кеш у Redis | `steps/04/news_hub/cache.py` | у роботі |
+| Rate limit | — | у роботі |
+| Фонові задачі | `steps/04/news_hub/jobs.py` | у роботі |
 
 ## На практиці — Zero to Hero
 

@@ -1,6 +1,6 @@
 # Крок 3. База даних: SQLAlchemy і Alembic
 
-> **Код кроку:** [`steps/03_sqlalchemy_alembic`](https://github.com/NikoriakViktor/news_hub/tree/main/steps/03_sqlalchemy_alembic) · відповідає уроку 39 курсу.
+> **Код кроку:** [`steps/03_sqlalchemy_alembic`](https://github.com/NikoriakViktor/news_hub/tree/main/steps/03_sqlalchemy_alembic).
 >
 > **Передумови:** [Крок 2. Перший API на FastAPI](../02_fastapi_basics/index.md).
 
@@ -28,21 +28,19 @@ news_hub/
 │   ├── parser.py     ← стартовий parse_rbc_news + типи: HTML → list[RawNews]
 │   ├── models.py     ← NewsItem (Pydantic), validate_news: RawNews → перевірені / відхилені
 │   ├── snapshot.py   ← знімок стрічки: data/rbc_news_snapshot.json → list[RawNews]
-│   ├── scraper.py    ← урок 38: сторінки rbc.ua через aiohttp — разом (gather) або по черзі
-│   ├── db.py         ← урок 39: engine, сесії, get_db (сесія й транзакція на запит)
-│   ├── tables.py     ← урок 39: NewsRow — таблиця news (SQLAlchemy 2.0)
-│   ├── repository.py ← урок 39: NewsRepository — увесь SQL; замінив NewsStore з уроку 38
+│   ├── scraper.py    ← крок 2: сторінки rbc.ua через aiohttp — разом (gather) або по черзі
+│   ├── db.py         ← крок 3: engine, сесії, get_db (сесія й транзакція на запит)
+│   ├── tables.py     ← крок 3: NewsRow — таблиця news (SQLAlchemy 2.0)
+│   ├── repository.py ← крок 3: NewsRepository — увесь SQL; замінив NewsStore з кроку 2
 │   └── api.py        ← FastAPI: /api/news (+ CRUD /api/news/{id}), /stats, POST /api/scrape
 ├── data/rbc_news_snapshot.json   ← 168 новин, зібраних parse_rbc_news
-├── migrations/       ← урок 39: Alembic — версії схеми бази (0001: таблиця news)
+├── migrations/       ← крок 3: Alembic — версії схеми бази (0001: таблиця news)
 ├── alembic.ini
-├── docker-compose.yml ← урок 39: PostgreSQL 16 для розробки
+├── docker-compose.yml ← крок 3: PostgreSQL 16 для розробки
 ├── postman/news_hub.postman_collection.json   ← 13 запитів з перевірками
 ├── examples/         ← before_dict.py / after_typed.py — що бачить mypy
 └── tests/            ← pytest: моделі, парсер, знімок, API і CRUD (TestClient; SQLite або PostgreSQL)
 ```
-
-Джерела коду: база й репозиторій — стартовий `production_bot/backend/core/database.py`, `repositories/base.py`, `migrations/`; API і скрапер — прототип `news_dashboard/app/main.py` і `scraper.py`; `parse_rbc_news` — ноутбук про веб-скрапінг `note_lesson_32_web_scraping.ipynb`; словник категорій — `news_dashboard/app/scraper.py`. Знімок — `rbc_news.json` поруч із тим самим ноутбуком.
 
 ## Запуск
 

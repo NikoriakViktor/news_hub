@@ -1,7 +1,7 @@
 """Репозиторій новин: увесь SQL агрегатора в одному місці.
 
-`BaseRepository` — `backend/repositories/base.py` зі стартового `production_bot` (загальний CRUD
-для будь-якої моделі). `NewsRepository` має **ті самі методи, що `NewsStore` з уроку 37**
+`BaseRepository` — `backend/repositories/base.py` стартового шаблону бекенду (загальний CRUD
+для будь-якої моделі). `NewsRepository` має **ті самі методи, що `NewsStore` з кроку 2**
 (`add_many`, `find`, `count`, `stats`, `clear`) — тому ендпоінти майже не змінились:
 лише `store.find(...)` → `await repo.find(...)`.
 """
@@ -78,7 +78,7 @@ class NewsRepository(BaseRepository[NewsRow]):
     async def search(self, q: str, limit: int = 20) -> list[NewsRow]:
         """Заголовки, що містять q без урахування регістру: WHERE lower(title) LIKE lower('%' || :q || '%').
 
-        q — параметр запиту, а не частина SQL (урок 29); autoescape: % і _ у q — звичайні символи.
+        q — параметр запиту, а не частина SQL; autoescape: % і _ у q — звичайні символи.
         """
         stmt = select(NewsRow).where(NewsRow.title.icontains(q, autoescape=True)).order_by(NewsRow.id).limit(limit)
         return list((await self._session.scalars(stmt)).all())

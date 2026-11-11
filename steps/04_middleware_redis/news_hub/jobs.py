@@ -1,8 +1,8 @@
 """Фоновий збір: POST відповідає одразу `202 Accepted`, збір іде після відповіді.
 
 Основа — `POST /api/scrape/archive` + `GET /api/scrape/archive/{job_id}` з `app/main.py`
-прототипу `news_dashboard`: `BackgroundTasks`, uuid задачі, статус у колекції MongoDB `scrape_jobs`.
-Рефакторинг уроку 39:
+прототипу: `BackgroundTasks`, uuid задачі, статус у колекції MongoDB `scrape_jobs`.
+Рефакторинг кроку 4:
 - статус задачі — hash у Redis `job:<id>` з TTL (добу), а не документ у базі новин;
 - фонова задача відкриває **власну** сесію бази: сесія запиту (get_db) закривається разом із запитом,
   а старий код передавав у задачу `db` запиту;

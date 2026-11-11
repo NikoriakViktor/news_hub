@@ -7,8 +7,11 @@ Guidance for Claude Code in this repository.
 **News Hub** — a FastAPI news aggregator built step by step, and the source of a Ukrainian-language FastAPI book
 (MkDocs + Material for MkDocs + GitHub Pages, `https://nikoriakviktor.github.io/news_hub/`).
 
-It mirrors the Django book `notes_chat_app` (same theme, page templates and rules). The code and the lesson texts come
-from the FastAPI branch of the course `PY-Course-Victor-Nikoriak-11-11-2026` (lessons 33, 36–51).
+It mirrors the Django book `notes_chat_app` (same theme, page templates and rules).
+
+**The book is standalone.** Nothing in docs, READMEs, code comments, CI, Postman collections or commit-visible files
+refers to any course: no «урок NN», no «відповідає уроку», no lesson↔step tables, no links to course repositories.
+Refer to steps («крок N») and parts of the book only. Linking the Django book is fine.
 
 Student-facing documentation is in Ukrainian. Keep code identifiers, commands, API names and paths as they are.
 
@@ -16,26 +19,26 @@ Student-facing documentation is in Ukrainian. Keep code identifiers, commands, A
 
 ```text
 steps/NN_<topic>/    full working project at step NN (each with its own README, requirements, tests, CLAUDE.md)
-examples/meteo_api/       REST API design example (course lesson 33)
-examples/fastapi_vs_drf/  notes API in FastAPI, compared to DRF (course lesson 36)
+examples/meteo_api/       REST API design example (Part I)
+examples/fastapi_vs_drf/  notes API in FastAPI, compared to DRF (Part III)
 docs/                     the book
 docs/_internal/           audit, inventory, progress — never in the public nav
 ```
 
-| Step | Folder | Course lesson |
-|---|---|---|
-| 1 | `steps/01_typing_pydantic` | 37 |
-| 2 | `steps/02_fastapi_basics` | 38 |
-| 3 | `steps/03_sqlalchemy_alembic` | 39 |
-| 4 | `steps/04_middleware_redis` | 40 |
-| 5 | `steps/05_api_testing` | 42 |
-| 6 | `steps/06_ai_dev_tools` | 43 |
-| 7 | `steps/07_llm_api` | 44 |
-| 8 | `steps/08_security` | 47 |
-| 9 | `steps/09_telegram_bot` | 48 |
-| 10 | `steps/10_docker` | 49 |
-| 11 | `steps/11_compose_deploy` | 50 |
-| 12 | `steps/12_ci_cd` | 51 |
+| Step | Folder |
+|---|---|
+| 1 | `steps/01_typing_pydantic` |
+| 2 | `steps/02_fastapi_basics` |
+| 3 | `steps/03_sqlalchemy_alembic` |
+| 4 | `steps/04_middleware_redis` |
+| 5 | `steps/05_api_testing` |
+| 6 | `steps/06_ai_dev_tools` |
+| 7 | `steps/07_llm_api` |
+| 8 | `steps/08_security` |
+| 9 | `steps/09_telegram_bot` |
+| 10 | `steps/10_docker` |
+| 11 | `steps/11_compose_deploy` |
+| 12 | `steps/12_ci_cd` |
 
 Each step is a snapshot: step N+1 = step N + changes. Never edit one step without checking whether the same change
 belongs in the later steps too. `steps/12_ci_cd/CLAUDE.md` holds the app rules (sources, LLM, security, bot, Docker).
@@ -65,7 +68,7 @@ Files with the executable bit (`scripts/*.sh`) live on NTFS with `core.filemode=
 2. Configuration and dependency files of that step.
 3. Its tests.
 4. `docs/`.
-5. The course lesson pages (`docs/modules/m4|m5/lesson_NN.md` in the course repo) — the original texts.
+5. Source texts listed in `docs/_internal/SOURCE_INVENTORY.md` (local authoring file, not committed).
 
 Never invent files, functions, endpoints, fields, settings, environment variables, Docker services, ports,
 test results or command output. Do not report a command as successful unless it actually ran successfully;
@@ -80,12 +83,12 @@ MERGE ≠ DELETE UNIQUE CONTENT
 BOOK STRUCTURE ≠ DIRECTORY LIST
 ```
 
-Moving a lesson into the book keeps its unique explanations, code, diagrams, tables, practice tasks, debugging,
-security and production notes. Record every source → book mapping in `docs/_internal/SOURCE_INVENTORY.md`.
+Moving a source text into the book keeps its unique explanations, code, diagrams, tables, practice tasks, debugging,
+security and production notes. Record every source → book mapping in the local `docs/_internal/SOURCE_INVENTORY.md`.
 
 - Order inside a section: task → change → result → rule.
-- Course-only material (Colab buttons, notebook links, «домашнє завдання до уроку») does not go into the book.
-  Instead: a link to `steps/NN/...` and a note «відповідає уроку NN курсу».
+- Course-only material (Colab buttons, notebook links, homework, lesson numbers) does not go into the book.
+  Instead: a link to `steps/NN/...`.
 - Links to code: `https://github.com/NikoriakViktor/news_hub/blob/main/steps/NN_<topic>/<path>`.
 - Explicit heading anchors `{ #id }` for anything linked from another page (Cyrillic slugs are unreliable).
 

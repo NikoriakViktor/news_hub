@@ -1,4 +1,4 @@
-"""Урок 43: справжні виклики моделі — лише на вимогу й з ключем. Кожен запуск витрачає квоту/гроші.
+"""Крок 7: справжні виклики моделі — лише на вимогу й з ключем. Кожен запуск витрачає квоту/гроші.
 
     GEMINI_API_KEY=… pytest -m llm                       # Gemini
     LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=… ANTHROPIC_MODEL=… pytest -m llm

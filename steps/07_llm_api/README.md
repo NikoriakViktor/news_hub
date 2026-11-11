@@ -1,17 +1,17 @@
 # news_hub — новинний агрегатор (крок 7: аналіз новин LLM)
 
-Наскрізний проєкт FastAPI-гілки курсу: парсер новин → перевірені моделі → API → база → кеш → підсумки від Gemini → Telegram-бот → Docker. Кожен урок — рефакторинг проєкту попереднього.
+Наскрізний проєкт книги: парсер новин → перевірені моделі → API → база → кеш → підсумки від Gemini → Telegram-бот → Docker. Кожен крок — рефакторинг проєкту попереднього.
 
-| Урок | Крок |
+| Крок | Що додається |
 |---|---|
-| 37 | стартовий парсер з анотаціями типів; `NewsItem` на Pydantic |
-| 38 | FastAPI: `GET /api/news`, `POST /api/scrape`, `/docs`, Postman |
-| 39 | SQLAlchemy: новини в базі, унікальний `url`, повний CRUD, Alembic |
-| 40 | middleware, кеш і rate limit на Redis, фоновий збір |
-| 42 | тести: unit / integration, HTML-фікстури, мок і фейк мережі, httpx, покриття |
-| 43 | Claude Code у проєкті: CLAUDE.md, дозволи, hook; друге джерело — RSS «Української правди», написане AI за тестами |
-| **44** | **LLM: підсумок, тема, тональність, ключові слова — Gemini (або Anthropic) за спільним інтерфейсом, перевірка Pydantic, кеш, circuit breaker** ← ти тут |
-| 48 | Telegram-бот: `/news`, `/digest` |
+| 1 | стартовий парсер з анотаціями типів; `NewsItem` на Pydantic |
+| 2 | FastAPI: `GET /api/news`, `POST /api/scrape`, `/docs`, Postman |
+| 3 | SQLAlchemy: новини в базі, унікальний `url`, повний CRUD, Alembic |
+| 4 | middleware, кеш і rate limit на Redis, фоновий збір |
+| 5 | тести: unit / integration, HTML-фікстури, мок і фейк мережі, httpx, покриття |
+| 6 | Claude Code у проєкті: CLAUDE.md, дозволи, hook; друге джерело — RSS «Української правди», написане AI за тестами |
+| **7** | **LLM: підсумок, тема, тональність, ключові слова — Gemini (або Anthropic) за спільним інтерфейсом, перевірка Pydantic, кеш, circuit breaker** ← ти тут |
+| 9 | Telegram-бот: `/news`, `/digest` |
 | 48–50 | Docker, Compose, CI/CD |
 
 ## Що тут
@@ -20,31 +20,31 @@
 news_hub/
 ├── news_hub/
 │   ├── parser.py     ← стартовий parse_rbc_news + типи: HTML → list[RawNews]
-│   ├── rss.py        ← урок 43: parse_pravda_rss — RSS «Української правди» → list[RawNews] (написав Claude Code)
+│   ├── rss.py        ← крок 6: parse_pravda_rss — RSS «Української правди» → list[RawNews] (написав Claude Code)
 │   ├── models.py     ← NewsItem (Pydantic), validate_news, is_allowed_host (rbc.ua, pravda.com.ua, epravda.com.ua)
 │   ├── snapshot.py   ← знімок стрічки: data/rbc_news_snapshot.json → list[RawNews]
-│   ├── scraper.py    ← урок 38: сторінки rbc.ua через aiohttp — разом (gather) або по черзі
-│   ├── db.py         ← урок 39: engine, сесії, get_db (сесія й транзакція на запит)
-│   ├── tables.py     ← урок 39: NewsRow — таблиця news (SQLAlchemy 2.0)
-│   ├── repository.py ← урок 39: NewsRepository — увесь SQL; замінив NewsStore з уроку 38
-│   ├── cache.py      ← урок 40: клієнт Redis, NewsCache (cache-aside з версією)
-│   ├── middleware.py ← урок 40: X-Request-ID / X-Process-Time, rate limit → 429, інвалідація кешу
-│   ├── jobs.py       ← урок 40: фоновий збір, статус задачі в Redis; урок 44: пакетний аналіз LLM
-│   ├── llm.py        ← урок 44: LLMClient — GeminiClient (пул моделей), AnthropicClient, FakeLLM; CircuitBreaker у Redis
-│   ├── analysis.py   ← урок 44: NewsAnalysis (Pydantic), промпт, analyze_news (перевірка + 1 повтор), кеш за хешем тексту
+│   ├── scraper.py    ← крок 2: сторінки rbc.ua через aiohttp — разом (gather) або по черзі
+│   ├── db.py         ← крок 3: engine, сесії, get_db (сесія й транзакція на запит)
+│   ├── tables.py     ← крок 3: NewsRow — таблиця news (SQLAlchemy 2.0)
+│   ├── repository.py ← крок 3: NewsRepository — увесь SQL; замінив NewsStore з кроку 2
+│   ├── cache.py      ← крок 4: клієнт Redis, NewsCache (cache-aside з версією)
+│   ├── middleware.py ← крок 4: X-Request-ID / X-Process-Time, rate limit → 429, інвалідація кешу
+│   ├── jobs.py       ← крок 4: фоновий збір, статус задачі в Redis; крок 7: пакетний аналіз LLM
+│   ├── llm.py        ← крок 7: LLMClient — GeminiClient (пул моделей), AnthropicClient, FakeLLM; CircuitBreaker у Redis
+│   ├── analysis.py   ← крок 7: NewsAnalysis (Pydantic), промпт, analyze_news (перевірка + 1 повтор), кеш за хешем тексту
 │   └── api.py        ← FastAPI: /api/news (+ CRUD, кеш), /stats, POST /api/scrape, /api/scrape/jobs,
 │                       POST /api/news/{id}/analyze, /api/analyze/jobs
 ├── data/rbc_news_snapshot.json   ← 168 новин, зібраних parse_rbc_news
-├── migrations/       ← урок 39: Alembic — версії схеми бази (0001: таблиця news; 0002: колонки аналізу LLM)
+├── migrations/       ← крок 3: Alembic — версії схеми бази (0001: таблиця news; 0002: колонки аналізу LLM)
 ├── alembic.ini
-├── docker-compose.yml ← PostgreSQL 16 (урок 39) і Redis 7 (урок 40) для розробки
+├── docker-compose.yml ← PostgreSQL 16 (крок 3) і Redis 7 (крок 4) для розробки
 ├── postman/news_hub.postman_collection.json   ← 16 запитів з перевірками
 ├── examples/         ← before_dict.py / after_typed.py — що бачить mypy
-├── CLAUDE.md         ← урок 43: інструкції для AI-асистента — команди, структура, правила проєкту
-├── .claude/          ← урок 43: settings.json (дозволи), hooks/unit_tests.py (pytest -m unit після правок),
+├── CLAUDE.md         ← крок 6: інструкції для AI-асистента — команди, структура, правила проєкту
+├── .claude/          ← крок 6: settings.json (дозволи), hooks/unit_tests.py (pytest -m unit після правок),
 │                       skills/add-news-source/ (/add-news-source)
-├── pytest.ini        ← урок 42: маркери unit / integration, asyncio
-├── .coveragerc       ← урок 42: покриття гілок, concurrency = thread,greenlet (async SQLAlchemy)
+├── pytest.ini        ← крок 5: маркери unit / integration, asyncio
+├── .coveragerc       ← крок 5: покриття гілок, concurrency = thread,greenlet (async SQLAlchemy)
 └── tests/
     ├── conftest.py   ← фікстура html("…"), маркер за папкою
     ├── factories.py  ← make_raw(**зміни) — тестова новина
@@ -53,10 +53,8 @@ news_hub/
     │                   test_pravda_review.py — що знайшла рецензія його коду
     ├── integration/  ← API (TestClient і httpx.AsyncClient), CRUD, Redis, справжній get_db,
     │                   скрапер проти локального aiohttp-сервера; test_analyze_api.py — аналіз LLM через API
-    └── live/         ← урок 44: справжні виклики моделі — лише pytest -m llm (потрібен ключ і мережа)
+    └── live/         ← крок 7: справжні виклики моделі — лише pytest -m llm (потрібен ключ і мережа)
 ```
-
-Джерела коду: `llm.py` — `ai_bot/app/services/ai_service.py` (пул моделей Gemini, circuit breaker), `analysis.py` замінює `news_dashboard/app/nlp.py`; Redis-клієнт — `production_bot/backend/core/redis.py`, rate limit — `ai_bot/app/middlewares/rate_limit.py` і `repositories/rate_limit_repo.py`, фоновий збір — `/api/scrape/archive` з `news_dashboard`; база й репозиторій — стартовий `production_bot/backend/core/database.py`, `repositories/base.py`, `migrations/`; API і скрапер — прототип `news_dashboard/app/main.py` і `scraper.py`; `parse_rbc_news` — ноутбук про веб-скрапінг `note_lesson_32_web_scraping.ipynb`; словник категорій — `news_dashboard/app/scraper.py`. Знімок — `rbc_news.json` поруч із тим самим ноутбуком.
 
 ## Запуск
 
@@ -76,7 +74,7 @@ alembic upgrade head        # створити / оновити таблиці
 uvicorn news_hub.api:app --reload
 ```
 
-### Аналіз LLM (урок 44)
+### Аналіз LLM (крок 7)
 
 Ключ — лише змінна середовища, ніколи не в коді й не в git. Без ключа все, крім аналізу, працює;
 `POST /api/news/{id}/analyze` відповідає `503 LLM не налаштовано`.
@@ -109,7 +107,7 @@ Swagger: `POST /api/scrape` (`{"source": "snapshot"}`) → `POST /api/news/1/ana
 Свіжа стрічка (коли `www.rbc.ua` доступний з мережі) — `POST /api/scrape` з `{}` або
 `{"mode": "sequential"}`; у відповіді — час кожної сторінки й помилки, якщо сторінка не завантажилась.
 
-Урок 43: `rss.py` і зміни в `models.py` написав Claude Code (`claude -p`) за специфікацією `tests/unit/test_pravda.py`.
+Крок 6: `rss.py` і зміни в `models.py` написав Claude Code (`claude -p`) за специфікацією `tests/unit/test_pravda.py`.
 Рецензія його коду — `tests/unit/test_pravda_review.py`.
 
-Розбір змін — [Крок 7 у книзі](https://nikoriakviktor.github.io/news_hub/tutorials/07_llm_api/) · урок 44 курсу.
+Розбір змін — [Крок 7 у книзі](https://nikoriakviktor.github.io/news_hub/tutorials/07_llm_api/).

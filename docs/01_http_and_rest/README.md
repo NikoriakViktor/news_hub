@@ -4,12 +4,12 @@
 
 ## Розділи
 
-| Розділ | Джерело | Стан |
+| Розділ | Код | Стан |
 |---|---|---|
-| Які бувають API | урок 33 «Які бувають API»; `examples/meteo_api/meteo_api/grpc_meteo.py`, `meteo.proto` | у роботі |
-| Принципи REST | урок 33 «REST: принципи» | у роботі |
-| Кейс: API v1 → v2 | урок 33 «Кейс: API v1 → v2», `meteo_api/legacy/` | у роботі |
-| Архітектура: API, клієнт і карта | урок 33 «Архітектура», `examples/meteo_api` | у роботі |
+| Які бувають API | `examples/meteo_api/meteo_api/grpc_meteo.py`, `meteo.proto` | у роботі |
+| Принципи REST | — | у роботі |
+| Кейс: API v1 → v2 | `meteo_api/legacy/` | у роботі |
+| Архітектура: API, клієнт і карта | `examples/meteo_api` | у роботі |
 
 ## Код
 

@@ -1,7 +1,7 @@
-"""Завантажити знімок телеграм SYNOP з ogimet.com для станцій уроку.
+"""Завантажити знімок телеграм SYNOP з ogimet.com для станцій прикладу.
 
-Логіка — з TelegramProcessor.get_station_data проєкту викладача
-(https://github.com/NikoriakViktor/ogimet), виправлена за уроком 31:
+Логіка — з TelegramProcessor.get_station_data першої версії проєкту
+(https://github.com/NikoriakViktor/ogimet), виправлена:
 тайм-аут, перевірка статусу, пауза між запитами, чесний User-Agent замість fake_useragent.
 
     python -m meteo_api.fetch_snapshot --days 3        # → meteo_api/data/synop_ua.csv
@@ -15,13 +15,13 @@ import requests
 from .storage import DATA_DIR
 
 GETSYNOP_URL = "https://www.ogimet.com/cgi-bin/getsynop"
-# Станції зі streamlit_app.py викладача: назва → WMO-індекс
+# Станції зі legacy/streamlit_app.py: назва → WMO-індекс
 STATIONS_UA = {
     "Київ": "33345", "Харків": "34300", "Дніпро": "34504", "Львів": "33393",
     "Полтава": "33506", "Одеса": "33837", "Чернігів": "33135", "Суми": "33275",
     "Рівне": "33301", "Житомир": "33325", "Тернопіль": "33415", "Хмельницький": "33429",
 }
-HEADERS = {"User-Agent": "py-course-lesson-32 (educational; github.com/NikoriakViktor)"}
+HEADERS = {"User-Agent": "news-hub-meteo-example (educational; github.com/NikoriakViktor)"}
 
 
 def fetch_station(session, wmo, begin, end):

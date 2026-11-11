@@ -1,4 +1,4 @@
-"""Урок 43: аналіз LLM через API — база, кеш, breaker, rate limit і фонова задача. LLM — FakeLLM."""
+"""Крок 7: аналіз LLM через API — база, кеш, breaker, rate limit і фонова задача. LLM — FakeLLM."""
 import json
 from typing import Any
 

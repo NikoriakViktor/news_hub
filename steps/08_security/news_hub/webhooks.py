@@ -1,11 +1,11 @@
-"""Підписані вхідні webhook: зовнішній планувальник (cron, GitHub Actions) запускає збір новин. Урок 46.
+"""Підписані вхідні webhook: зовнішній планувальник (cron, GitHub Actions) запускає збір новин. Крок 8.
 
 Webhook — це запит **до нас** від іншої системи. Адреса публічна, тож відрізнити справжній запит від
 підробленого можна лише за секретом, який знають обидві сторони.
 
-Основа — `backend/api/webhook.py` зі стартового `production_bot` (Telegram): секрет у шляху
+Основа — `backend/api/webhook.py` стартового шаблону бекенду (Telegram): секрет у шляху
 `/webhook/{SECRET}` + заголовок `X-Telegram-Bot-Api-Secret-Token`, порівняний через `!=`.
-Рефакторинг уроку 46 (схема як у GitHub і Stripe):
+Рефакторинг кроку 8 (схема як у GitHub і Stripe):
 - секрет не передається зовсім: відправник надсилає **підпис** HMAC-SHA256(секрет, час + "." + тіло);
   перехоплений запит не розкриває секрету, а змінене тіло не пройде перевірку;
 - підпис рахується від **сирих байтів** тіла — до розбору JSON (інший порядок ключів — інший підпис);
@@ -13,7 +13,7 @@ Webhook — це запит **до нас** від іншої системи. А
   перехоплений запит не можна повторити;
 - `hmac.compare_digest` — час порівняння не залежить від того, скільки перших символів збіглося;
 - секрет не в URL: шлях потрапляє в журнали проксі й сервера.
-Telegram (урок 47) підпису не дає — лише секретний заголовок; для нього — `verify_secret_token`.
+Telegram (крок 9) підпису не дає — лише секретний заголовок; для нього — `verify_secret_token`.
 """
 import hashlib
 import hmac
@@ -74,5 +74,5 @@ async def remember_delivery(redis: Redis, signature: str) -> None:
 
 
 def verify_secret_token(expected: bytes, received: str | None) -> bool:
-    """Для Telegram (урок 47): заголовок X-Telegram-Bot-Api-Secret-Token, порівняння без витоку часу."""
+    """Для Telegram (крок 9): заголовок X-Telegram-Bot-Api-Secret-Token, порівняння без витоку часу."""
     return received is not None and hmac.compare_digest(received.encode(), expected)

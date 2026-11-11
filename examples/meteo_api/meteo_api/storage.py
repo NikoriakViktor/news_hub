@@ -1,6 +1,6 @@
 """Сховище метеоданих у пам'яті: станції і спостереження.
 
-Шар «репозиторій» (урок 29): API нічого не знає, звідки дані, — зі знімка CSV,
+Шар «репозиторій»: API нічого не знає, звідки дані, — зі знімка CSV,
 MongoDB чи PostgreSQL. Щоб перейти на базу, замінюють лише цей клас.
 """
 import csv
@@ -72,7 +72,7 @@ class MeteoRepository:
 
     @classmethod
     def default(cls):
-        """Знімок даних уроку, а якщо його ще немає — маленька фікстура для тестів."""
+        """Знімок даних прикладу, а якщо його ще немає — маленька фікстура для тестів."""
         if (DATA_DIR / "stations_ua.csv").exists():
             return cls.from_files(DATA_DIR / "stations_ua.csv", DATA_DIR / "synop_ua.csv")
         return cls.from_files(DATA_DIR / "stations_sample.csv", DATA_DIR / "synop_sample.csv")

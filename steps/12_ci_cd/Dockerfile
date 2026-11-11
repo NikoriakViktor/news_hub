@@ -1,10 +1,10 @@
-# news_hub в контейнері. Урок 48.
-# Основа — Dockerfile стартового production_bot:
-# python:3.12-slim, залежності окремим шаром, користувач без root. Що додано і чому — docs/modules/m5/lesson_48.md.
+# news_hub в контейнері. Крок 10.
+# Основа — Dockerfile стартового шаблону бекенду:
+# python:3.12-slim, залежності окремим шаром, користувач без root. Що додано і чому — крок 10 у книзі.
 #
-#   docker build -t news_hub:48 .
-#   docker run --rm -v news_data:/data news_hub:48 alembic upgrade head          # схема бази на томі
-#   docker run -d -p 8000:8000 -v news_data:/data --env-file .env news_hub:48    # повна інструкція — README
+#   docker build -t news_hub:12 .
+#   docker run --rm -v news_data:/data news_hub:12 alembic upgrade head          # схема бази на томі
+#   docker run -d -p 8000:8000 -v news_data:/data --env-file .env news_hub:12    # повна інструкція — README
 
 FROM python:3.12-slim
 
@@ -46,5 +46,5 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
 
 # exec-форма (JSON-масив): uvicorn стає PID 1 і сам отримує SIGTERM від `docker stop` → коректна зупинка.
 # Кількість процесів — змінна WEB_CONCURRENCY (uvicorn читає її сам), за замовчуванням 1:
-# у контейнері масштабуємо кількістю контейнерів (урок 49), а не --workers усередині.
+# у контейнері масштабуємо кількістю контейнерів (крок 11), а не --workers усередині.
 CMD ["uvicorn", "news_hub.api:app", "--host", "0.0.0.0", "--port", "8000"]

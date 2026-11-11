@@ -1,6 +1,6 @@
-"""Alembic env — async-версія зі стартового production_bot.
+"""Alembic env — async-версія стартового шаблону бекенду.
 
-Зміна уроку 38: адреса бази — з news_hub.db.DATABASE_URL (змінна середовища), а не з alembic.ini,
+Зміна кроку 3: адреса бази — з news_hub.db.DATABASE_URL (змінна середовища), а не з alembic.ini,
 тож застосунок і міграції завжди дивляться в ту саму базу.
 """
 import asyncio

@@ -1,6 +1,6 @@
-"""Урок 47: webhook Telegram у FastAPI — секретний заголовок, обробка після відповіді, lifespan.
+"""Крок 9: webhook Telegram у FastAPI — секретний заголовок, обробка після відповіді, lifespan.
 
-Урок 49: Telegram недоступний при старті — API однаково стартує, реєстрація повторюється у фоні.
+Крок 11: Telegram недоступний при старті — API однаково стартує, реєстрація повторюється у фоні.
 """
 import asyncio
 import socket
@@ -53,7 +53,7 @@ async def test_lifespan_sets_webhook_and_keeps_it(twin: TelegramTwin, monkeypatc
     monkeypatch.setenv("TELEGRAM_WEBHOOK_URL", "https://news.example/api/telegram/webhook")
     monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", WEBHOOK_SECRET)
     async with app.router.lifespan_context(app):
-        assert await app.state.bot_setup is True                        # урок 49: реєстрація — фонова задача
+        assert await app.state.bot_setup is True                        # крок 11: реєстрація — фонова задача
         assert (twin.webhook_url, twin.webhook_secret) == ("https://news.example/api/telegram/webhook", WEBHOOK_SECRET)
         assert [method for method, _ in twin.calls] == ["setWebhook", "setMyCommands"]
     assert twin.webhook_url                                              # після зупинки webhook на місці
@@ -68,7 +68,7 @@ def free_port() -> int:
 
 
 async def test_api_starts_while_telegram_is_down(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Урок 49: у Compose API стартує раніше, ніж мережа до Telegram (чи сам Telegram) доступна.
+    """Крок 11: у Compose API стартує раніше, ніж мережа до Telegram (чи сам Telegram) доступна.
 
     Раніше setWebhook у lifespan кидав TelegramNetworkError → «Application startup failed» → контейнер по колу.
     """

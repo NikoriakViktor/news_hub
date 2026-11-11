@@ -165,4 +165,4 @@ print(c.get("/sync").json())
 
 [Маршрути, параметри і валідація](routes_and_validation.md) — звідки береться кожен параметр і як працює `422`.
 
-**Джерела:** довідник FastAPI курсу, розділ 1; [FastAPI — First Steps](https://fastapi.tiangolo.com/tutorial/first-steps/); [Starlette](https://www.starlette.io/); [Concurrency and async / await](https://fastapi.tiangolo.com/async/).
+**Джерела:** [FastAPI — First Steps](https://fastapi.tiangolo.com/tutorial/first-steps/); [Starlette](https://www.starlette.io/); [Concurrency and async / await](https://fastapi.tiangolo.com/async/).

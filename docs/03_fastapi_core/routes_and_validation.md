@@ -227,4 +227,4 @@ GET /users/me → 422 ['path', 'user_id'] Input should be a valid integer, unabl
 
 [Залежності: `Depends` і `lifespan`](dependencies.md) — як ендпоінт отримує сховище, з'єднання, поточного користувача.
 
-**Джерела:** FastAPI — [Path Parameters](https://fastapi.tiangolo.com/tutorial/path-params/), [Query Parameters and String Validations](https://fastapi.tiangolo.com/tutorial/query-params-str-validations/), [Request Body](https://fastapi.tiangolo.com/tutorial/body/), [Response Model](https://fastapi.tiangolo.com/tutorial/response-model/), [Handling Errors](https://fastapi.tiangolo.com/tutorial/handling-errors/); урок 38 курсу.
+**Джерела:** FastAPI — [Path Parameters](https://fastapi.tiangolo.com/tutorial/path-params/), [Query Parameters and String Validations](https://fastapi.tiangolo.com/tutorial/query-params-str-validations/), [Request Body](https://fastapi.tiangolo.com/tutorial/body/), [Response Model](https://fastapi.tiangolo.com/tutorial/response-model/), [Handling Errors](https://fastapi.tiangolo.com/tutorial/handling-errors/).

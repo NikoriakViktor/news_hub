@@ -1,11 +1,11 @@
-"""Middleware бота (урок 47) — з `app/middlewares/` стартового `ai_bot`.
+"""Middleware бота (крок 9) — з `app/middlewares/` стартового шаблону бота.
 
 Update → [outer: RateLimitMiddleware] → роутери → [inner: InjectMiddleware] → handler.
 
-- `RateLimitMiddleware` — той самий `RateLimiter` (Redis INCR + EXPIRE NX), що й rate limit API в уроці 39,
+- `RateLimitMiddleware` — той самий `RateLimiter` (Redis INCR + EXPIRE NX), що й rate limit API в кроці 4,
   ключ `rate:bot:tg<user_id>`. Відповідь про ліміт — один раз за вікно, а не на кожне повідомлення.
 - `InjectMiddleware` — «Depends для бота»: на кожен update **своя** сесія бази, як `get_db` у FastAPI;
-  COMMIT після handler. У стартовому `ai_bot` у handlers ішов один спільний репозиторій на Redis — з базою
+  COMMIT після handler. У стартовому шаблоні бота у handlers ішов один спільний репозиторій на Redis — з базою
   так не можна: сесія SQLAlchemy не для одночасних update.
 """
 from collections.abc import Awaitable, Callable

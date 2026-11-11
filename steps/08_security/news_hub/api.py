@@ -1,25 +1,25 @@
-"""HTTP API агрегатора: FastAPI поверх парсера й моделі з уроку 36.
+"""HTTP API агрегатора: FastAPI поверх парсера й моделі з кроку 1.
 
-Урок 37: ядро `app/main.py` прототипу `news_dashboard` (`/api/news`, `/stats`, `POST /api/scrape`),
+Крок 2: ядро `app/main.py` прототипу (`/api/news`, `/stats`, `POST /api/scrape`),
 сховище `NewsStore` через `Depends`.
-Урок 38 — рефакторинг сховища:
+Крок 3 — рефакторинг сховища:
 - `NewsStore` у пам'яті → `NewsRepository` над SQLAlchemy (PostgreSQL або SQLite); сесія на запит — `get_db`;
 - у відповіді з'явились `id` і `scraped_at` — їх дає база (`NewsOut`);
 - повний CRUD окремої новини: `GET/PATCH/DELETE /api/news/{news_id}`, `POST /api/news`;
 - той самий url удруге → `409 Conflict` (унікальність гарантує база);
 - `Depends(get_db, scope="function")` — COMMIT до відповіді, а не після (див. SessionDep).
-Урок 39 — Redis і middleware:
+Крок 4 — Redis і middleware:
 - кеш `GET /api/news` і `/api/news/stats` (cache-aside, заголовок X-Cache: HIT/MISS);
 - middleware: X-Request-ID і X-Process-Time; rate limit на POST /api/scrape*; інвалідація кешу після COMMIT;
 - фоновий збір: `POST /api/scrape/jobs` → 202 + job_id, статус — `GET /api/scrape/jobs/{job_id}`.
-Урок 41 — тести: `pages` з `https://fakerbc.ua/` проходили перевірку (endswith) — сервер завантажив би
+Крок 5 — тести: `pages` з `https://fakerbc.ua/` проходили перевірку (endswith) — сервер завантажив би
 чужий сайт на прохання будь-кого; тепер `is_rbc_host` (models.py).
-Урок 43 — аналіз LLM (llm.py, analysis.py):
+Крок 7 — аналіз LLM (llm.py, analysis.py):
 - `POST /api/news/{news_id}/analyze` — підсумок, тема, тональність, ключові слова; результат — у рядку новини;
 - `POST /api/analyze/jobs` — пакетний аналіз у фоні; статус — `GET /api/analyze/jobs/{job_id}`;
 - клієнт LLM — через `Depends(get_llm_client)`: тести підміняють його на FakeLLM, без мережі й ключа;
 - збій провайдера → 502, відкритий breaker або немає ключа → 503; фільтри `?ai_category=&sentiment=`.
-Урок 46 — безпека (security.py, safe_fetch.py, webhooks.py):
+Крок 8 — безпека (security.py, safe_fetch.py, webhooks.py):
 - `POST /api/admin/token` — пароль адміна → JWT; кожен ендпоінт запису, збору й аналізу — лише з токеном
   (`dependencies=[AdminDep]`); читання новин лишається публічним;
 - RSS-джерела адміна: `POST/GET/DELETE /api/sources`, `POST /api/sources/{id}/fetch` — завантаження лише
@@ -74,7 +74,7 @@ def setup_logging() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     setup_logging()
-    app.state.admin = load_admin_settings()      # урок 46: None — адмінку не налаштовано (запис → 503)
+    app.state.admin = load_admin_settings()      # крок 8: None — адмінку не налаштовано (запис → 503)
     app.state.webhook_secret = load_webhook_secret()
     app.state.redis = make_redis()       # таблиці створює міграція: alembic upgrade head
     app.state.llm = make_llm()           # None — немає ключа: аналіз відповідатиме 503
@@ -87,9 +87,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(
     title="news_hub API",
-    description="Новинний агрегатор курсу: парсинг rbc.ua → перевірені `NewsItem` → база → кеш → API → "
-                "аналіз LLM; запис — лише адміну з JWT. Урок 46.",
-    version="0.46.0",
+    description="Новинний агрегатор: парсинг rbc.ua → перевірені `NewsItem` → база → кеш → API → "
+                "аналіз LLM; запис — лише адміну з JWT. Крок 8.",
+    version="0.8.0",
     lifespan=lifespan,
     openapi_tags=[
         {"name": "news", "description": "Новини в базі"},
@@ -190,7 +190,7 @@ class NewsOut(NewsItem):
 
     id: int
     scraped_at: datetime
-    # аналіз LLM (урок 43); None — ще не аналізували
+    # аналіз LLM (крок 7); None — ще не аналізували
     summary: str | None = None
     ai_category: str | None = None
     sentiment: str | None = None
@@ -421,7 +421,7 @@ async def delete_news(row: RowDep, repo: RepoDep) -> Response:
 
 
 # ---------------------------------------------------------------------------
-# Аналіз LLM (урок 43)
+# Аналіз LLM (крок 7)
 # ---------------------------------------------------------------------------
 
 @app.post("/api/news/{news_id}/analyze", response_model=AnalyzeOut, tags=["analyze"], summary="Аналіз новини LLM",
@@ -465,7 +465,7 @@ async def get_analyze_job(job_id: str, redis: RedisDep) -> JobStatus:
 
 
 # ---------------------------------------------------------------------------
-# Адмін: вхід (урок 46)
+# Адмін: вхід (крок 8)
 # ---------------------------------------------------------------------------
 
 class TokenRequest(BaseModel):
@@ -491,7 +491,7 @@ async def admin_token(body: TokenRequest, settings: AdminSettingsDep) -> TokenRe
 
 
 # ---------------------------------------------------------------------------
-# RSS-джерела адміна: чужі URL — лише через safe_fetch (урок 46)
+# RSS-джерела адміна: чужі URL — лише через safe_fetch (крок 8)
 # ---------------------------------------------------------------------------
 
 def get_fetch_policy() -> FetchPolicy:
@@ -599,7 +599,7 @@ async def fetch_source(row: SourceDep, repo: RepoDep, policy: FetchPolicyDep) ->
 
 
 # ---------------------------------------------------------------------------
-# Вхідні webhook (урок 46)
+# Вхідні webhook (крок 8)
 # ---------------------------------------------------------------------------
 
 def get_webhook_secret(request: Request) -> bytes:

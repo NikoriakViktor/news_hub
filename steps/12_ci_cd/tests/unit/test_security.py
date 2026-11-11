@@ -1,4 +1,4 @@
-"""Урок 46: пароль, JWT і налаштування адміна — без бази й HTTP."""
+"""Крок 8: пароль, JWT і налаштування адміна — без бази й HTTP."""
 import base64
 import json
 from datetime import datetime, timedelta, timezone
@@ -86,7 +86,7 @@ def test_settings_from_env() -> None:
 
 @pytest.mark.parametrize("quoted", [True, False])
 def test_env_lines_give_a_working_hash(monkeypatch: pytest.MonkeyPatch, quoted: bool) -> None:
-    """Урок 48: `docker run --env-file` бере значення буквально — з лапками хеш не пройде перевірку."""
+    """Крок 10: `docker run --env-file` бере значення буквально — з лапками хеш не пройде перевірку."""
     monkeypatch.setattr("news_hub.security.hash_password", lambda password: bcrypt_hash(password))
     lines = env_lines("s3cret", quoted=quoted)
     literal = dict(line.split("=", 1) for line in lines)             # як читає docker run --env-file
@@ -105,7 +105,7 @@ def bcrypt_hash(password: str) -> str:
 
 
 def test_truncated_hash_fails_at_startup() -> None:
-    """Урок 49: Compose підставляє `$змінні` у .env без лапок — від хешу лишається «$2b$12».
+    """Крок 11: Compose підставляє `$змінні` у .env без лапок — від хешу лишається «$2b$12».
 
     Раніше це проходило перевірку «починається з $2», застосунок стартував, а вхід адміна відповідав 500.
     """

@@ -1,4 +1,4 @@
-# news_hub — новинний агрегатор курсу
+# news_hub — новинний агрегатор
 
 Сторінки rbc.ua → `parse_rbc_news` → `RawNews` → перевірка `NewsItem` (Pydantic) → PostgreSQL / SQLite
 (SQLAlchemy 2 async) → кеш Redis → FastAPI → аналіз LLM (Gemini / Anthropic) → Telegram-бот (aiogram) → образ Docker → Compose (nginx, міграції, бекап) → CI/CD (GitHub Actions).

@@ -1,5 +1,5 @@
 """
-Meteo Dashboard — навчальний frontend для Уроку 31: HTTP & REST API
+Meteo Dashboard — навчальний frontend: HTTP & REST API
 
 Цей Streamlit-додаток Є клієнтом:
   - він робить HTTP-запити до FastAPI (сервера)
@@ -57,7 +57,7 @@ STATIONS_UA: dict[str, str] = {
 # PAGE CONFIG
 # ═══════════════════════════════════════════════════════════════════════════
 st.set_page_config(
-    page_title="Meteo Dashboard | Урок 31",
+    page_title="Meteo Dashboard",
     page_icon="🌦️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -216,7 +216,7 @@ with st.sidebar:
 # HEADER
 # ═══════════════════════════════════════════════════════════════════════════
 st.title("🌦️ Meteo Dashboard")
-st.markdown("**Урок 31 — HTTP & REST API | Streamlit ↔ FastAPI ↔ MongoDB**")
+st.markdown("**HTTP & REST API | Streamlit ↔ FastAPI ↔ MongoDB**")
 
 with st.expander("📐 Архітектура: як це працює", expanded=False):
     st.code(
@@ -774,6 +774,6 @@ ngrok http 8000
 # ═══════════════════════════════════════════════════════════════════════════
 st.divider()
 st.caption(
-    f"Урок 31 — HTTP & REST API | FastAPI: [{api_url}/docs]({api_url}/docs) "
+    f"HTTP & REST API | FastAPI: [{api_url}/docs]({api_url}/docs) "
     f"| Streamlit + requests + pandas + plotly"
 )

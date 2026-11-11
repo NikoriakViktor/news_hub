@@ -1,4 +1,4 @@
-# news_hub — новинний агрегатор курсу
+# news_hub — новинний агрегатор
 
 Сторінки rbc.ua → `parse_rbc_news` → `RawNews` → перевірка `NewsItem` (Pydantic) → PostgreSQL / SQLite
 (SQLAlchemy 2 async) → кеш Redis → FastAPI. Python 3.10+.

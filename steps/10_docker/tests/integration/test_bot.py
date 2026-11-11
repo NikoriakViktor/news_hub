@@ -1,4 +1,4 @@
-"""Урок 47: команди бота — aiogram по-справжньому, «Telegram» — двійник (tests/telegram_twin.py).
+"""Крок 9: команди бота — aiogram по-справжньому, «Telegram» — двійник (tests/telegram_twin.py).
 
 Кожен тест надсилає update через `dp.feed_update` (як це робить webhook чи polling) і дивиться, що бот
 надіслав у «Telegram». Двійник перевіряє HTML за правилами Bot API: невалідна розмітка = бот мовчить.

@@ -4,11 +4,11 @@
 
 ## Розділи
 
-| Розділ | Джерело | Стан |
+| Розділ | Код | Стан |
 |---|---|---|
-| Адмін, bcrypt і JWT | урок 47 «Рефакторинг 1»; `steps/08/news_hub/security.py` | у роботі |
-| SSRF: куди ходить сервер | урок 47 «Рефакторинг 2»; `steps/08/news_hub/safe_fetch.py` | у роботі |
-| Підписані webhook | урок 47 «Рефакторинг 3»; `steps/08/news_hub/webhooks.py` | у роботі |
+| Адмін, bcrypt і JWT | `steps/08/news_hub/security.py` | у роботі |
+| SSRF: куди ходить сервер | `steps/08/news_hub/safe_fetch.py` | у роботі |
+| Підписані webhook | `steps/08/news_hub/webhooks.py` | у роботі |
 
 ## На практиці — Zero to Hero
 

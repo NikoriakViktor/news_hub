@@ -74,7 +74,7 @@ def test_failed_commit_is_500_not_200(client: TestClient) -> None:
             raise RuntimeError("COMMIT не вдався")    # як обрив з'єднання з базою під час COMMIT
 
     app.dependency_overrides[get_db] = broken_commit_db
-    quiet = TestClient(app, raise_server_exceptions=False, headers=client.headers)   # урок 46: запис — з токеном
+    quiet = TestClient(app, raise_server_exceptions=False, headers=client.headers)   # крок 8: запис — з токеном
     assert quiet.post("/api/news", json=NEW).status_code == 500
     app.dependency_overrides[get_db] = working_db
 

@@ -1,6 +1,6 @@
 from news_hub.parser import parse_rbc_news
 
-# HTML — з ноутбука про web scraping («демо на прикладі»)
+# Демо-розмітка стрічки rbc.ua (спрощена)
 SAMPLE_HTML = """
 <html><body>
   <div class="newsline">

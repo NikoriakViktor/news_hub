@@ -1,20 +1,20 @@
-"""HTTP API агрегатора: FastAPI поверх парсера й моделі з уроку 36.
+"""HTTP API агрегатора: FastAPI поверх парсера й моделі з кроку 1.
 
-Урок 37: ядро `app/main.py` прототипу `news_dashboard` (`/api/news`, `/stats`, `POST /api/scrape`),
+Крок 2: ядро `app/main.py` прототипу (`/api/news`, `/stats`, `POST /api/scrape`),
 сховище `NewsStore` через `Depends`.
-Урок 38 — рефакторинг сховища:
+Крок 3 — рефакторинг сховища:
 - `NewsStore` у пам'яті → `NewsRepository` над SQLAlchemy (PostgreSQL або SQLite); сесія на запит — `get_db`;
 - у відповіді з'явились `id` і `scraped_at` — їх дає база (`NewsOut`);
 - повний CRUD окремої новини: `GET/PATCH/DELETE /api/news/{news_id}`, `POST /api/news`;
 - той самий url удруге → `409 Conflict` (унікальність гарантує база);
 - `Depends(get_db, scope="function")` — COMMIT до відповіді, а не після (див. SessionDep).
-Урок 39 — Redis і middleware:
+Крок 4 — Redis і middleware:
 - кеш `GET /api/news` і `/api/news/stats` (cache-aside, заголовок X-Cache: HIT/MISS);
 - middleware: X-Request-ID і X-Process-Time; rate limit на POST /api/scrape*; інвалідація кешу після COMMIT;
 - фоновий збір: `POST /api/scrape/jobs` → 202 + job_id, статус — `GET /api/scrape/jobs/{job_id}`.
-Урок 41 — тести: `pages` з `https://fakerbc.ua/` проходили перевірку (endswith) — сервер завантажив би
+Крок 5 — тести: `pages` з `https://fakerbc.ua/` проходили перевірку (endswith) — сервер завантажив би
 чужий сайт на прохання будь-кого; тепер `is_rbc_host` (models.py).
-Урок 43 — аналіз LLM (llm.py, analysis.py):
+Крок 7 — аналіз LLM (llm.py, analysis.py):
 - `POST /api/news/{news_id}/analyze` — підсумок, тема, тональність, ключові слова; результат — у рядку новини;
 - `POST /api/analyze/jobs` — пакетний аналіз у фоні; статус — `GET /api/analyze/jobs/{job_id}`;
 - клієнт LLM — через `Depends(get_llm_client)`: тести підміняють його на FakeLLM, без мережі й ключа;
@@ -75,9 +75,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(
     title="news_hub API",
-    description="Новинний агрегатор курсу: парсинг rbc.ua → перевірені `NewsItem` → база → кеш → API → "
-                "аналіз LLM. Урок 43.",
-    version="0.43.0",
+    description="Новинний агрегатор: парсинг rbc.ua → перевірені `NewsItem` → база → кеш → API → "
+                "аналіз LLM. Крок 7.",
+    version="0.7.0",
     lifespan=lifespan,
     openapi_tags=[
         {"name": "news", "description": "Новини в базі"},
@@ -176,7 +176,7 @@ class NewsOut(NewsItem):
 
     id: int
     scraped_at: datetime
-    # аналіз LLM (урок 43); None — ще не аналізували
+    # аналіз LLM (крок 7); None — ще не аналізували
     summary: str | None = None
     ai_category: str | None = None
     sentiment: str | None = None
@@ -406,7 +406,7 @@ async def delete_news(row: RowDep, repo: RepoDep) -> Response:
 
 
 # ---------------------------------------------------------------------------
-# Аналіз LLM (урок 43)
+# Аналіз LLM (крок 7)
 # ---------------------------------------------------------------------------
 
 @app.post("/api/news/{news_id}/analyze", response_model=AnalyzeOut, tags=["analyze"], summary="Аналіз новини LLM",

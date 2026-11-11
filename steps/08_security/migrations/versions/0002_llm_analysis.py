@@ -1,4 +1,4 @@
-"""llm analysis — колонки аналізу LLM у таблиці news (урок 43)
+"""llm analysis — колонки аналізу LLM у таблиці news (крок 7)
 
 Згенеровано `alembic revision --autogenerate` і перечитано: усі колонки nullable — наявні рядки
 лишаються без аналізу (NULL), дані не переписуються. batch_alter_table — бо env.py вмикає

@@ -73,7 +73,7 @@ def client() -> Iterator[TestClient]:
     db = TestDatabase()
     db.install()
     with TestClient(app) as c:
-        app.state.llm = FakeLLM()               # урок 43: навіть з GEMINI_API_KEY у середовищі — без платних викликів
+        app.state.llm = FakeLLM()               # крок 7: навіть з GEMINI_API_KEY у середовищі — без платних викликів
         c.portal.call(db.create_tables)         # у циклі подій застосунку, де працюватиме engine
         c.portal.call(app.state.redis.flushdb)  # чистий Redis (для TEST_REDIS_URL — окрема база 15)
         yield c
@@ -83,7 +83,7 @@ def client() -> Iterator[TestClient]:
 
 @pytest_asyncio.fixture
 async def aclient() -> AsyncIterator[httpx.AsyncClient]:
-    """Асинхронний клієнт (урок 41): тест і застосунок — в одному циклі подій, без portal.
+    """Асинхронний клієнт (крок 5): тест і застосунок — в одному циклі подій, без portal.
 
     ASGITransport не запускає lifespan — запускаємо його самі, щоб з'явився app.state.redis.
     """
@@ -102,7 +102,7 @@ async def aclient() -> AsyncIterator[httpx.AsyncClient]:
 
 @pytest.fixture
 def fake_llm() -> Iterator[FakeLLM]:
-    """Урок 43: клієнт LLM для API — FakeLLM зі сценарієм: fake_llm.replies.extend([...]); виклики — fake_llm.calls."""
+    """Крок 7: клієнт LLM для API — FakeLLM зі сценарієм: fake_llm.replies.extend([...]); виклики — fake_llm.calls."""
     fake = FakeLLM()
     app.dependency_overrides[get_llm_client] = lambda: fake
     yield fake

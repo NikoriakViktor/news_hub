@@ -1,13 +1,13 @@
 """Pydantic-модель новини — межа між «сирим» HTML і рештою застосунку.
 
-Рефакторинг уроку 36: замість словника `{"title": ..., "url": ...}` без жодних гарантій —
+Рефакторинг кроку 1: замість словника `{"title": ..., "url": ...}` без жодних гарантій —
 `NewsItem`, який або перевірений, або не створений (`ValidationError`).
-Далі цю модель використовують FastAPI (урок 37), база (38) і Gemini (43).
+Далі цю модель використовують FastAPI (крок 2), база (крок 3) і LLM (крок 7).
 
-Урок 41: тест конвеєра «парсер → модель» на збереженій розмітці знайшов, що новини з контейнерів
+Крок 5: тест конвеєра «парсер → модель» на збереженій розмітці знайшов, що новини з контейнерів
 (`<time datetime="2024-05-08T10:30:00">`) модель відхиляла: `published_time` приймав лише «HH:MM».
 Покриття гілок знайшло й друге: перевірка `host.endswith("rbc.ua")` пропускала `fakerbc.ua` → `is_rbc_host`.
-Урок 42: друге джерело — «Українська правда» (RSS): `is_allowed_host` (rbc.ua, pravda.com.ua, epravda.com.ua),
+Крок 6: друге джерело — «Українська правда» (RSS): `is_allowed_host` (rbc.ua, pravda.com.ua, epravda.com.ua),
 мова й категорія для URL без /ukr/ — зміни внесено Claude Code за специфікацією, категорію виправлено на рецензії.
 """
 from datetime import datetime, time
@@ -18,7 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field, HttpUrl, ValidationError, fie
 
 from .parser import RawNews
 
-# Розділ сайту в URL → назва категорії (словник — з прототипу news_dashboard)
+# Розділ сайту в URL → назва категорії
 CATEGORIES: dict[str, str] = {
     "news": "Новини", "economic": "Економіка", "economics": "Економіка",
     "politics": "Політика", "society": "Суспільство", "sport": "Спорт",
@@ -68,7 +68,7 @@ class NewsItem(BaseModel):
             derived["lang"] = LANGS[path[0]]
         elif not is_rbc_host(parts.hostname):
             derived["lang"] = "uk"          # pravda.com.ua / epravda.com.ua — завжди українською, без /ukr/
-        # rbc.ua: /ukr/news/… — розділ другий; pravda.com.ua: /news/2026/09/26/… — перший (рецензія, урок 42:
+        # rbc.ua: /ukr/news/… — розділ другий; pravda.com.ua: /news/2026/09/26/… — перший (рецензія, крок 6:
         # код асистента брав другий сегмент і для правди → категорія «2026», якщо в RSS немає <category>)
         section = path[1] if is_rbc_host(parts.hostname) and len(path) > 1 else (path[0] if path else "")
         if section:

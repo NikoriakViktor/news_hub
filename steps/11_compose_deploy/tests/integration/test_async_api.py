@@ -1,4 +1,4 @@
-"""API через httpx.AsyncClient + ASGITransport (урок 41).
+"""API через httpx.AsyncClient + ASGITransport (крок 5).
 
 Те саме, що TestClient, але тест — корутина в тому ж циклі подій, що й застосунок:
 - Redis і базу можна викликати напряму через `await`, без `client.portal.call(...)`;

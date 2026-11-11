@@ -1,14 +1,14 @@
-"""HTTP API агрегатора: FastAPI поверх парсера й моделі з уроку 36.
+"""HTTP API агрегатора: FastAPI поверх парсера й моделі з кроку 1.
 
-Урок 37: ядро `app/main.py` прототипу `news_dashboard` (`/api/news`, `/stats`, `POST /api/scrape`),
+Крок 2: ядро `app/main.py` прототипу (`/api/news`, `/stats`, `POST /api/scrape`),
 сховище `NewsStore` через `Depends`.
-Урок 38 — рефакторинг сховища:
+Крок 3 — рефакторинг сховища:
 - `NewsStore` у пам'яті → `NewsRepository` над SQLAlchemy (PostgreSQL або SQLite); сесія на запит — `get_db`;
 - у відповіді з'явились `id` і `scraped_at` — їх дає база (`NewsOut`);
 - повний CRUD окремої новини: `GET/PATCH/DELETE /api/news/{news_id}`, `POST /api/news`;
 - той самий url удруге → `409 Conflict` (унікальність гарантує база);
 - `Depends(get_db, scope="function")` — COMMIT до відповіді, а не після (див. SessionDep).
-Урок 39 — Redis і middleware:
+Крок 4 — Redis і middleware:
 - кеш `GET /api/news` і `/api/news/stats` (cache-aside, заголовок X-Cache: HIT/MISS);
 - middleware: X-Request-ID і X-Process-Time; rate limit на POST /api/scrape*; інвалідація кешу після COMMIT;
 - фоновий збір: `POST /api/scrape/jobs` → 202 + job_id, статус — `GET /api/scrape/jobs/{job_id}`.
@@ -62,8 +62,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(
     title="news_hub API",
-    description="Новинний агрегатор курсу: парсинг rbc.ua → перевірені `NewsItem` → база → кеш → API. Урок 39.",
-    version="0.39.0",
+    description="Новинний агрегатор: парсинг rbc.ua → перевірені `NewsItem` → база → кеш → API. Крок 4.",
+    version="0.4.0",
     lifespan=lifespan,
     openapi_tags=[
         {"name": "news", "description": "Новини в базі"},
