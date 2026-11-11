@@ -34,10 +34,11 @@ git diff --no-index steps/04_middleware_redis steps/05_api_testing
 | 11 | [`steps/11_compose_deploy`](steps/11_compose_deploy) | Compose: nginx, PostgreSQL, Redis, міграції, бот, бекап |
 | 12 | [`steps/12_ci_cd`](steps/12_ci_cd) | CI/CD: тести ×2 Python, мінімальні версії, mypy, smoke, ghcr.io |
 
-Ще три приклади:
+Ще чотири приклади:
 
 - [`examples/meteo_api`](examples/meteo_api) — REST API метеостанцій (дизайн REST, REST vs gRPC/GraphQL/WebSocket);
 - [`examples/fastapi_vs_drf`](examples/fastapi_vs_drf) — той самий API нотаток на FastAPI, щоб порівняти з DRF;
+- [`examples/frameworks_compared`](examples/frameworks_compared) — той самий API на FastAPI, Flask і Django;
 - [`examples/fastapi_demo`](examples/fastapi_demo) — шість ендпоінтів і навантажувальний тест: що блокує сервер.
 
 ## Швидкий старт

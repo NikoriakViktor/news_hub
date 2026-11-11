@@ -156,6 +156,81 @@ flowchart TD
 
 Останні два рядки важливі для практики. Помилка перевірки не скасовує вже виконаних залежностей, тому `yield`-залежність мусить прибирати за собою в `finally` або в `with`. А підміна працює на рівні функції: замінив `get_connection`, і `repo` отримує фейк, навіть не знаючи про це.
 
+## Де підключати залежність { #levels }
+
+Та сама функція-залежність працює на чотирьох рівнях:
+
+| Рівень | Запис | Для чого |
+|---|---|---|
+| параметр ендпоінта | `x: Annotated[T, Depends(get_x)]` | ендпоінту потрібне значення |
+| декоратор операції | `@app.get(..., dependencies=[Depends(check)])` | лише перевірка, значення не потрібне |
+| роутер | `APIRouter(prefix="/admin", dependencies=[Depends(router_check)])` | усі маршрути модуля: наприклад, усе під `/admin` — лише адміну |
+| застосунок | `FastAPI(dependencies=[Depends(audit)])` | кожен ендпоінт: аудит, ключ API для всього сервісу |
+
+**Клас теж залежність.** `Depends` приймає будь-що, що можна викликати. Параметри `__init__` класу стають параметрами запиту, а ендпоінт отримує готовий об'єкт. Якщо тип і залежність — той самий клас, `Depends()` можна писати без аргументу:
+
+```python title="ex_levels.py"
+app = FastAPI(dependencies=[Depends(audit)])                          # кожен запит
+router = APIRouter(prefix="/admin", dependencies=[Depends(router_check)])
+
+
+class Pagination:
+    def __init__(self, skip: int = 0, limit: int = 10):
+        self.skip, self.limit = skip, limit
+
+
+@router.get("/stats")
+def stats(p: Annotated[Pagination, Depends()]) -> dict:              # Depends() = Depends(Pagination)
+    return {"skip": p.skip, "limit": p.limit, "log": LOG}
+
+
+@app.get("/plain")
+def plain() -> dict:
+    return {"log": LOG}
+
+
+app.include_router(router)
+```
+
+```text
+GET /plain                → {'log': ['audit']}
+GET /admin/stats?skip=5   → {'skip': 5, 'limit': 10, 'log': ['audit', 'router_check']}
+GET /admin/stats?limit=x  → 422
+```
+
+Залежність застосунку спрацювала скрізь, залежність роутера — лише під `/admin`, а помилку в параметрі класу FastAPI перевірив так само, як параметр функції.
+
+## Коли саме виконується код після `yield` { #yield-timing }
+
+Код після `yield` виконується після ендпоінта. Але **до чи після того, як клієнт отримав відповідь?** З FastAPI 0.118 — **після**, якщо не сказати інакше. Перевірка на справжньому сервері (uvicorn), де прибирання триває 1,5 с:
+
+```python
+def slow_cleanup():
+    yield "res"
+    time.sleep(1.5)
+
+
+@app.get("/slow")
+def slow(r: Annotated[str, Depends(slow_cleanup)]) -> dict: ...
+
+
+@app.get("/slow-fn")
+def slow_fn(r: Annotated[str, Depends(slow_cleanup, scope="function")]) -> dict: ...
+```
+
+```text
+$ curl -w "перший байт %{time_starttransfer}s" localhost:8000/slow
+slow:    перший байт 0.009s
+slow-fn: перший байт 1.639s
+```
+
+| `scope` | Прибирання | Для чого |
+|---|---|---|
+| `"request"` (за замовчуванням) | після відправлення відповіді | закрити файл, повернути з'єднання в пул: клієнт не чекає |
+| `"function"` (FastAPI ≥ 0.121) | після ендпоінта, **до** відповіді | `COMMIT`: клієнт має дізнатися, якщо він не вдався |
+
+Для бази це принципово. `get_db` у News Hub робить `commit()` після `yield`. Зі `scope="request"` клієнт отримав би `201 Created`, а `COMMIT` міг би впасти вже потім, і новини в базі не було б. Тому з [кроку 3](../tutorials/03_sqlalchemy_alembic/index.md) сесію підключено як `Depends(get_db, scope="function")`, а тест `test_failed_commit_is_500_not_200` перевіряє, що впалий `COMMIT` дає клієнту `500`.
+
 ## `lifespan`: ресурси на весь час роботи сервера { #lifespan }
 
 Залежність живе один запит. Те, що має жити довше (пул з'єднань, HTTP-клієнт, сховище), створюють у `lifespan`, а залежність лише віддає це з `app.state`:
@@ -179,7 +254,7 @@ def get_store(request: Request) -> NewsStore:
 |---|---|---|
 | скільки разів | один на весь час роботи сервера | на кожен запит |
 | що там створюють | пул з'єднань, клієнт Redis, HTTP-сесію, модель ML | сесію бази з пулу, транзакцію |
-| прибирання | при зупинці сервера | після відповіді на запит |
+| прибирання | при зупинці сервера | після ендпоінта: після відповіді (`scope="request"`) або до неї (`scope="function"`) |
 
 `@app.on_event("startup")` / `"shutdown"` — старий спосіб, у FastAPI він застарів. `lifespan` тримає старт і зупинку в одній функції, тож ресурс і його закриття видно поруч.
 
@@ -191,7 +266,7 @@ def get_store(request: Request) -> NewsStore:
 |---|---|---|
 | `StoreDep` → `get_store` | [2](../tutorials/02_fastapi_basics/depends_and_lifespan.md) | `NewsStore` з `app.state` |
 | `get_scrapers` | 2 | словник скраперів; у тестах — фейк без мережі |
-| `get_db` з `yield` | [3](../tutorials/03_sqlalchemy_alembic/index.md) | сесія бази на запит: `commit` після успіху, `rollback` при помилці |
+| `SessionDep` → `get_db` з `yield`, `scope="function"` | [3](../tutorials/03_sqlalchemy_alembic/index.md) | сесія бази на запит: `commit` після успіху й до відповіді, `rollback` при помилці |
 | `get_llm_client` | [7](../tutorials/07_llm_api/index.md) | клієнт LLM; у тестах — `FakeLLM` |
 | `AdminDep` | [8](../tutorials/08_security/index.md) | перевірка JWT: `401` / `403` до ендпоінта |
 
@@ -203,6 +278,7 @@ def get_store(request: Request) -> NewsStore:
 | глобальна змінна замість залежності | тести бачать дані одне одного, підміна — лише `monkeypatch` | `lifespan` + `Depends` |
 | ресурс на весь сервер у залежності на запит | новий пул з'єднань на кожен запит | пул — у `lifespan`, з'єднання з пулу — у залежності |
 | прибирання після `yield` без `try/finally` | при винятку ресурс не закривається | `try: yield x` / `finally: close()` або `with` |
+| `commit()` після `yield` без `scope="function"` | клієнт отримує `201`, а `COMMIT` падає вже після відповіді | `Depends(get_db, scope="function")` |
 | забули `app.dependency_overrides.clear()` | підміна з одного тесту протікає в інші | очищати у фікстурі після `yield` |
 
 ## Налагодження { #debugging }
@@ -224,14 +300,18 @@ def get_store(request: Request) -> NewsStore:
 3. Коли виконується код після `yield` у залежності? А після `yield` у `lifespan`?
 4. Чому в прикладі при `422` з'єднання все одно відкрили?
 5. Що підмінити в тесті, щоб агрегатор не ходив у мережу?
+6. Як застосувати перевірку до всіх маршрутів під `/admin`, не дописуючи її в кожен?
+7. Чому `get_db` у News Hub підключено зі `scope="function"`?
 
 ??? success "Відповіді"
 
     1. Перед викликом ендпоінта виклич `get_x` і передай результат як `x`; `T` — тип для mypy і `/docs`.
     2. Один: у межах запиту результат кешується.
-    3. Після відповіді на запит; після зупинки сервера.
+    3. Після ендпоінта: за замовчуванням — уже після відправлення відповіді, зі `scope="function"` — до неї. У `lifespan` — при зупинці сервера.
     4. FastAPI спершу обчислює всі залежності й параметри, збирає помилки і лише потім відповідає `422`. Тому `yield`-залежність має прибирати в `finally`.
     5. `app.dependency_overrides[get_scrapers]` — словник з фейковими скраперами, як у `tests/test_api.py`.
+    6. `APIRouter(prefix="/admin", dependencies=[Depends(check)])`.
+    7. `COMMIT` після `yield` має статися до відповіді: якщо він впаде, клієнт мусить отримати `500`, а не `201`.
 
 ## Що далі { #next }
 

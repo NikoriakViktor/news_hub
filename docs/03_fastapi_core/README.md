@@ -32,6 +32,7 @@ flowchart LR
 | [Маршрути, параметри і валідація](routes_and_validation.md) | шлях, рядок запиту, тіло; `Query`, `Literal`; `422`; `response_model`; `HTTPException`; порядок маршрутів | `GET /api/news`, `POST /api/scrape` |
 | [Залежності: `Depends` і `lifespan`](dependencies.md) | DI, ланцюжки залежностей, кеш на запит, `yield`-залежності, `dependency_overrides`, `lifespan` | `StoreDep`, `get_scrapers`, тести |
 | [OpenAPI: опис API з коду](openapi.md) | звідки береться `/openapi.json`; `summary`, `description`, `tags`, `responses`; `/docs` і `/redoc` | `/docs` агрегатора |
+| [FastAPI, Flask і Django](fastapi_flask_django.md) | той самий API на трьох фреймворках; ASGI і WSGI; як обрати | `examples/frameworks_compared` |
 | [FastAPI і Django REST Framework](fastapi_vs_drf.md) | той самий API нотаток на обох; що чому відповідає; як обрати | `examples/fastapi_vs_drf` |
 
 Версії, на яких перевірено приклади: FastAPI 0.162, Starlette 1.10, Pydantic 2.13, uvicorn 0.54. Нижня межа в `requirements.txt` кроку 2 — `fastapi>=0.115`.

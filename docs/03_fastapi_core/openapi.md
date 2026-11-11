@@ -145,6 +145,6 @@ POST   /api/scrape        ['scrape'] Зібрати новини
 
 ## Що далі { #next }
 
-[FastAPI і Django REST Framework](fastapi_vs_drf.md).
+[FastAPI, Flask і Django](fastapi_flask_django.md).
 
 **Джерела:** [OpenAPI Specification](https://spec.openapis.org/oas/latest.html); FastAPI — [Metadata and Docs URLs](https://fastapi.tiangolo.com/tutorial/metadata/), [Path Operation Configuration](https://fastapi.tiangolo.com/tutorial/path-operation-configuration/), [Additional Responses in OpenAPI](https://fastapi.tiangolo.com/advanced/additional-responses/).
