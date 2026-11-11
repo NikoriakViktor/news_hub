@@ -35,7 +35,7 @@ SQLAlchemy 2. Для кожного прикладу напиши, який ви
 - [x] Принципи REST (ресурси, однорідний інтерфейс, відсутність стану, кешування) — що з них реально застосовують у JSON API, а що ні.
 - [x] Іменування ресурсів і вкладених ресурсів, фільтрація, сортування, пагінація (offset/limit проти cursor): переваги й пастки кожного.
 - [x] Версіонування API: у шляху, заголовку, параметрі. Як організувати версії через `APIRouter(prefix=...)` у FastAPI?
-- [ ] Формат помилок: RFC 9457 (Problem Details) проти стандартного `detail` у FastAPI. Як підмінити обробник `RequestValidationError` і `HTTPException`?
+- [x] Формат помилок: RFC 9457 (Problem Details) проти стандартного `detail` у FastAPI. Як підмінити обробник `RequestValidationError` і `HTTPException`?
 - [ ] REST, gRPC, GraphQL, WebSocket, SSE, webhook: для яких задач кожен, як кожен підтримує FastAPI або Starlette?
 - [ ] CORS: що це, коли браузер робить preflight, як налаштувати `CORSMiddleware` і які налаштування небезпечні (`allow_origins=["*"]` з `allow_credentials`).
 

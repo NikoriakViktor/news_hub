@@ -42,6 +42,7 @@ git diff --no-index steps/04_middleware_redis steps/05_api_testing
 - [`examples/http_anatomy`](examples/http_anatomy) — HTTP зсередини: сирий запит, методи, коди, кеш;
 - [`examples/pagination`](examples/pagination) — фільтри, сортування, offset проти курсора на мільйоні рядків;
 - [`examples/versioning`](examples/versioning) — версії в шляху, заголовку й параметрі; Deprecation і Sunset;
+- [`examples/errors`](examples/errors) — помилки у форматі RFC 9457 (Problem Details) і типові пастки власних обробників;
 - [`examples/fastapi_demo`](examples/fastapi_demo) — шість ендпоінтів і навантажувальний тест: що блокує сервер.
 
 ## Швидкий старт

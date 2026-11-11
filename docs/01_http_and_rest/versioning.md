@@ -211,6 +211,6 @@ News Hub версій не має: усі адреси — `/api/...`, а єди
 
 ## Що далі { #next }
 
-[Частина I. HTTP і дизайн REST API](README.md) — решта розділів частини.
+[Формат помилок: `detail` і RFC 9457](errors.md).
 
 **Джерела:** FastAPI — [Bigger Applications — Multiple Files](https://fastapi.tiangolo.com/tutorial/bigger-applications/), [Sub Applications — Mounts](https://fastapi.tiangolo.com/advanced/sub-applications/), [Path Operation Configuration — deprecated](https://fastapi.tiangolo.com/tutorial/path-operation-configuration/#deprecate-a-path-operation); [RFC 9745 — The Deprecation HTTP Response Header Field](https://www.rfc-editor.org/rfc/rfc9745); [RFC 8594 — The Sunset HTTP Header Field](https://www.rfc-editor.org/rfc/rfc8594); [RFC 9110 — §12.5.5 Vary, §15.5.11 410 Gone](https://www.rfc-editor.org/rfc/rfc9110).
