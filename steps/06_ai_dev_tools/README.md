@@ -10,9 +10,12 @@
 | 4 | middleware, кеш і rate limit на Redis, фоновий збір |
 | 5 | тести: unit / integration, HTML-фікстури, мок і фейк мережі, httpx, покриття |
 | **6** | **Claude Code у проєкті: CLAUDE.md, дозволи, hook; друге джерело — RSS «Української правди», написане AI за тестами** ← ти тут |
-| 7 | Gemini: підсумок, категорія, тональність |
-| 9 | Telegram-бот: `/news`, `/digest` |
-| 48–50 | Docker, Compose, CI/CD |
+| 7 | LLM: підсумок, тема, тональність, ключові слова — Gemini (або Anthropic) за спільним інтерфейсом, перевірка Pydantic, кеш, circuit breaker |
+| 8 | безпека: запис лише адміну з JWT, RSS-джерела за URL без SSRF, підписані webhook |
+| 9 | Telegram-бот: `/news`, `/digest`, підписки на слова й сповіщення, webhook у FastAPI |
+| 10 | Docker: образ застосунку — `Dockerfile`, `.dockerignore`, користувач без root, HEALTHCHECK, `/health/ready` |
+| 11 | Compose: nginx → api → PostgreSQL + Redis, міграції окремим кроком, бот; реальний IP клієнта за nginx; бекап |
+| 12 | CI/CD: GitHub Actions на кожен PR — тести ×2 Python, мінімальні версії, PostgreSQL, mypy, образ + smoke; образ у ghcr.io з main |
 
 ## Що тут
 

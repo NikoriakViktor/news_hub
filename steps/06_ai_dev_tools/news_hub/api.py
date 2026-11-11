@@ -149,6 +149,15 @@ class NewsPatch(BaseModel):
     title: str | None = Field(None, min_length=10, max_length=300)
     category: str | None = Field(None, min_length=2, max_length=100)
 
+    @field_validator("title", "category")
+    @classmethod
+    def not_null(cls, value: str | None) -> str:
+        """Явний null — не «не змінювати», а спроба стерти обов'язкове поле: 422, а не 500 з NewsOut.
+        Значення за замовчуванням валідатор не бачить, тож пропущене поле лишається непереданим."""
+        if value is None:
+            raise ValueError("поле не може бути null; не хочеш міняти — не передавай його")
+        return value
+
 
 class ScrapeRequest(BaseModel):
     source: Literal["live", "snapshot"] = Field("live", description="live — сайт; snapshot — збережений знімок")

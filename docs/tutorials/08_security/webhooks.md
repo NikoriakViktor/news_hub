@@ -57,7 +57,7 @@ def sign(secret: bytes, timestamp: int, body: bytes) -> str:
 def verify_signature(secret: bytes, headers: Mapping[str, str], body: bytes, now: float | None = None) -> str:
     """Перевіряє час і підпис; повертає підпис (для захисту від повтору). WebhookRejected — ні."""
     signature, timestamp = headers.get(SIGNATURE_HEADER, ""), headers.get(TIMESTAMP_HEADER, "")
-    if not signature or not timestamp.isdigit():
+    if not signature or not (timestamp.isascii() and timestamp.isdigit()):   # "²".isdigit() — True, int("²") — ValueError
         raise WebhookRejected(f"потрібні заголовки {SIGNATURE_HEADER} і {TIMESTAMP_HEADER}")
     now = time.time() if now is None else now
     if abs(now - int(timestamp)) > TOLERANCE_SECONDS:
@@ -73,6 +73,15 @@ async def remember_delivery(redis: Redis, signature: str) -> None:
     if not fresh:
         raise WebhookRejected("цей запит уже отримано (повтор)", status_code=409)
 ```
+
+Чому не просто `timestamp.isdigit()`: для Unicode «цифрами» є й `²`, `³`, `①`, а `int("²")` падає з `ValueError`. Перша версія кроку мала саме `isdigit()`, і заголовок `X-Webhook-Timestamp: ²` (байт `\xb2`, сирим HTTP-запитом) давав **`500` без жодної автентифікації**:
+
+```text
+old: HTTP/1.1 500 Internal Server Error
+new: HTTP/1.1 401 Unauthorized
+```
+
+Будь-хто ззовні міг сипати в журнал трасування з `ValueError`. `isascii()` пропускає лише `0`–`9`, і таке значення стає звичайною відмовою `401`. Тест — випадок «час не число» в `tests/unit/test_webhooks.py` зі значенням `"²"`.
 
 `WEBHOOK_SECRET` читає `load_webhook_secret` при старті, як і секрети адміна: не задано — webhook вимкнено (`503`), коротший за 32 символи — `RuntimeError`, застосунок не стартує.
 

@@ -15,7 +15,7 @@
 | 9 | Telegram-бот: `/news`, `/digest`, підписки на слова й сповіщення, webhook у FastAPI |
 | 10 | Docker: образ застосунку — `Dockerfile`, `.dockerignore`, користувач без root, HEALTHCHECK, `/health/ready` |
 | **11** | **Compose: nginx → api → PostgreSQL + Redis, міграції окремим кроком, бот; реальний IP клієнта за nginx; бекап** ← ти тут |
-| 12 | CI/CD |
+| 12 | CI/CD: GitHub Actions на кожен PR — тести ×2 Python, мінімальні версії, PostgreSQL, mypy, образ + smoke; образ у ghcr.io з main |
 
 ## Що тут
 
@@ -116,7 +116,7 @@ docker compose down                   # зупинити (дані — у том
 - Міграції — окремий сервіс `migrate` (один раз, до api), а не при старті кожного api.
 - Бот у режимі polling: `docker compose --profile polling up -d`. З `TELEGRAM_WEBHOOK_URL` — усередині api;
   реєстрація в Telegram — у фоні з повторами, недоступний Telegram не зупиняє API.
-- Двійник Telegram для заняття: `docker compose --profile twin up -d`, у `.env` — `BOT_TOKEN=123456:TEST-TOKEN`,
+- Двійник Telegram для локальної перевірки: `docker compose --profile twin up -d`, у `.env` — `BOT_TOKEN=123456:TEST-TOKEN`,
   `TELEGRAM_API_URL=http://twin:8081`, `TELEGRAM_WEBHOOK_URL=http://nginx/api/telegram/webhook` і секрет.
 
 ### Docker (крок 10)

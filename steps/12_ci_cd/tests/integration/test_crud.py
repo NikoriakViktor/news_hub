@@ -39,6 +39,9 @@ def test_patch_changes_only_given_fields_and_persists(client: TestClient) -> Non
     assert (patched["category"], patched["title"]) == ("Економіка", NEW["title"])
     assert client.get(f"/api/news/{created['id']}").json()["category"] == "Економіка"   # новий запит — нова сесія
     assert client.patch(f"/api/news/{created['id']}", json={"title": "Коротко"}).status_code == 422
+    for field in ("title", "category"):                    # явний null — 422, а не 500 з відповіді
+        assert client.patch(f"/api/news/{created['id']}", json={field: None}).status_code == 422
+    assert client.get(f"/api/news/{created['id']}").json()["title"] == NEW["title"]
 
 
 def test_delete_one(client: TestClient) -> None:

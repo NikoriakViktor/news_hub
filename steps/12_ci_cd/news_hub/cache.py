@@ -4,7 +4,7 @@
 Рефакторинг кроку 4:
 - замість глобальної змінної `_redis_pool` — клієнт у `app.state`, створюється в `lifespan`, дістається
   через `Depends(get_redis)` (так його можна підмінити в тестах);
-- `REDIS_URL=fakeredis://` — Redis у пам'яті процесу (пакет fakeredis) для тестів і ноутбука без сервера.
+- `REDIS_URL=fakeredis://` — Redis у пам'яті процесу (пакет fakeredis) для тестів і локального запуску без сервера.
 
 Інвалідація — через **версію**: ключі кешу містять номер `news:version`; будь-який запис у новини
 збільшує версію (`INCR`), і старі ключі просто перестають читатися, а TTL їх прибирає.
@@ -22,7 +22,7 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
 
 def make_redis(url: str = REDIS_URL) -> "Redis":
-    if url.startswith("fakeredis://"):                 # лише для тестів і ноутбука
+    if url.startswith("fakeredis://"):                 # лише для тестів і локального запуску
         import fakeredis
         return fakeredis.FakeAsyncRedis(decode_responses=True)
     return Redis.from_url(url, decode_responses=True)

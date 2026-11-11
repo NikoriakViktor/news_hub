@@ -129,7 +129,7 @@ docker compose down                   # зупинити (дані — у том
 - Міграції — окремий сервіс `migrate` (один раз, до api), а не при старті кожного api.
 - Бот у режимі polling: `docker compose --profile polling up -d`. З `TELEGRAM_WEBHOOK_URL` — усередині api;
   реєстрація в Telegram — у фоні з повторами, недоступний Telegram не зупиняє API.
-- Двійник Telegram для заняття: `docker compose --profile twin up -d`, у `.env` — `BOT_TOKEN=123456:TEST-TOKEN`,
+- Двійник Telegram для локальної перевірки: `docker compose --profile twin up -d`, у `.env` — `BOT_TOKEN=123456:TEST-TOKEN`,
   `TELEGRAM_API_URL=http://twin:8081`, `TELEGRAM_WEBHOOK_URL=http://nginx/api/telegram/webhook` і секрет.
 
 ### Docker (крок 10)

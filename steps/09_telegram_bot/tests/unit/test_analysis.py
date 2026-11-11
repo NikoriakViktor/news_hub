@@ -137,7 +137,7 @@ def test_topics_are_site_categories_except_news() -> None:
 
 
 def test_demo_reply_is_valid_for_every_snapshot_title() -> None:
-    """FakeLLM без сценарію (ноутбук, LLM_PROVIDER=fake) дає валідну відповідь на кожен заголовок знімка."""
+    """FakeLLM без сценарію (локальний запуск, LLM_PROVIDER=fake) дає валідну відповідь на кожен заголовок знімка."""
     for raw in load_snapshot():
         NewsAnalysis.model_validate_json(demo_reply(build_prompt(raw["title"])))
 

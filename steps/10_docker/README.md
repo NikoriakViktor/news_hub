@@ -14,7 +14,8 @@
 | 8 | безпека: запис лише адміну з JWT, RSS-джерела за URL без SSRF, підписані webhook |
 | 9 | Telegram-бот: `/news`, `/digest`, підписки на слова й сповіщення, webhook у FastAPI |
 | **10** | **Docker: образ застосунку — `Dockerfile`, `.dockerignore`, користувач без root, HEALTHCHECK, `/health/ready`** ← ти тут |
-| 49–50 | Compose + деплой, CI/CD |
+| 11 | Compose: nginx → api → PostgreSQL + Redis, міграції окремим кроком, бот; реальний IP клієнта за nginx; бекап |
+| 12 | CI/CD: GitHub Actions на кожен PR — тести ×2 Python, мінімальні версії, PostgreSQL, mypy, образ + smoke; образ у ghcr.io з main |
 
 ## Що тут
 

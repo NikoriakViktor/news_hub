@@ -89,6 +89,15 @@ class NewsPatch(BaseModel):
     title: str | None = Field(None, min_length=10, max_length=300)
     category: str | None = Field(None, min_length=2, max_length=100)
 
+    @field_validator("title", "category")
+    @classmethod
+    def not_null(cls, value: str | None) -> str:
+        """Явний null — не «не змінювати», а спроба стерти обов'язкове поле: 422, а не 500 з NewsOut.
+        Значення за замовчуванням валідатор не бачить, тож пропущене поле лишається непереданим."""
+        if value is None:
+            raise ValueError("поле не може бути null; не хочеш міняти — не передавай його")
+        return value
+
 
 @app.patch("/api/news/{news_id}", response_model=NewsOut, tags=["news"],
            responses={404: {"description": "такої новини немає"}})
@@ -102,23 +111,27 @@ async def update_news(body: NewsPatch, row: RowDep) -> NewsRow:
 `exclude_unset=True` — серце `PATCH`. Що потрапляє в цикл для різних тіл:
 
 ```python
+from pydantic import ValidationError
 from news_hub.api import NewsPatch
 
 for raw in ({"category": "Економіка"}, {"title": None}, {}):
-    body = NewsPatch.model_validate(raw)
-    print(raw, "→", body.model_dump(exclude_unset=True), "| без exclude_unset:", body.model_dump())
+    try:
+        body = NewsPatch.model_validate(raw)
+        print(raw, "→", body.model_dump(exclude_unset=True), "| без exclude_unset:", body.model_dump())
+    except ValidationError as error:
+        print(raw, "→ 422:", error.errors()[0]["msg"])
 ```
 
 ```text
 {'category': 'Економіка'} → {'category': 'Економіка'} | без exclude_unset: {'title': None, 'category': 'Економіка'}
-{'title': None} → {'title': None} | без exclude_unset: {'title': None, 'category': None}
+{'title': None} → 422: Value error, поле не може бути null; не хочеш міняти — не передавай його
 {} → {} | без exclude_unset: {'title': None, 'category': None}
 ```
 
 Без `exclude_unset` `PATCH {"category": …}` записав би в заголовок `None`. А `UPDATE` ендпоінт не пише: після `setattr` сесія знає, що рядок змінено, і `commit()` у `get_db` відправить `UPDATE` ([розділ 3](session_per_request.md#get-db)).
 
-!!! warning "Відома проблема: `PATCH {"title": null}` → `500`, а не `422`"
-    Другий рядок виводу вище показує дірку: **явний** `null` вважається «переданим» полем, і `exclude_unset` його лишає. `Field(None, min_length=10)` не перевіряє `None` — тип `str | None` його дозволяє. Тож `setattr(row, "title", None)`, а відповідь `NewsOut` вимагає `title: str`:
+!!! warning "Навіщо `not_null`: без нього `PATCH {"title": null}` → `500`, а не `422`"
+    **Явний** `null` вважається «переданим» полем, і `exclude_unset` його лишає. `Field(None, min_length=10)` не перевіряє `None` — тип `str | None` його дозволяє. Без валідатора далі було б `setattr(row, "title", None)`, а відповідь `NewsOut` вимагає `title: str`:
 
     ```text
     PATCH null 500 'Internal Server Error'
@@ -129,7 +142,7 @@ for raw in ({"category": "Економіка"}, {"title": None}, {}):
       {'type': 'string_type', 'loc': ('response', 'title'), 'msg': 'Input should be a valid string', 'input': None}
     ```
 
-    Те саме з `{"category": null}`. Дані не псуються: виняток виникає до COMMIT, `get_db` робить ROLLBACK, і наступний `GET` показує старий заголовок (перевірено на PostgreSQL і SQLite). Але клієнт отримує `500` замість `422` з поясненням. Знайти причину й виправити — вправа в [контрольній точці](checkpoint.md#find-bug-patch).
+    Те саме з `{"category": null}`. Дані не псуються: виняток виникає до COMMIT, `get_db` робить ROLLBACK, і наступний `GET` показує старий заголовок (перевірено на PostgreSQL і SQLite). Але клієнт отримує `500` замість `422` з поясненням. Так поводилася перша версія кроку, без `not_null`; повний розбір — вправа в [контрольній точці](checkpoint.md#find-bug-patch). Валідатор не чіпає пропущені поля: значення за замовчуванням Pydantic не перевіряє, тому `{}` і `{"category": …}` працюють, як раніше.
 
 ## Зміна 4: `DELETE` — `204` без тіла { #delete }
 

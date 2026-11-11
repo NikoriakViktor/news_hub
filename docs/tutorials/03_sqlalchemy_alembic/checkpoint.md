@@ -107,7 +107,7 @@ print(api.get("/api/news/search", params={"q": "а"}).status_code)
 
 ### Знайди помилку 1: `PATCH` з `null` { #find-bug-patch }
 
-Клієнт хоче «стерти» заголовок і надсилає:
+Прибери з `NewsPatch` валідатор `not_null` — саме так виглядала перша версія кроку — і запусти сервер. Клієнт хоче «стерти» заголовок і надсилає:
 
 ```python
 import httpx
@@ -153,7 +153,7 @@ print(httpx.get(f"{base}/api/news/1").json()["title"])
             return value
     ```
 
-    Перевірено в копії кроку: усі 32 тести проходять, `mypy --strict` чистий, а
+    Саме цей валідатор стоїть у `NewsPatch` у кроках 3–12. Перевірено: усі 32 тести проходять, `mypy --strict` чистий, а
 
     ```text
     {'title': None} → 422 {'detail': [{'type': 'value_error', 'loc': ['body', 'title'], 'msg': 'Value error, поле не може бути null; не хочеш міняти — не передавай його', 'input': None, 'ctx': {'error': {}}}]}
@@ -161,7 +161,7 @@ print(httpx.get(f"{base}/api/news/1").json()["title"])
     {} → 200 Економіка
     ```
 
-    Додай і тест: `client.patch(f"/api/news/{id}", json={"title": None}).status_code == 422`.
+    Тест на це — у `test_patch_changes_only_given_fields_and_persists`: `{"title": null}` і `{"category": null}` дають `422`, а заголовок лишається старим.
 
 ### Знайди помилку 2: «перевір, потім встав» { #find-bug-race }
 

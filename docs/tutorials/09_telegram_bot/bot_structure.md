@@ -146,7 +146,7 @@ RuntimeError: Router is already attached to <Dispatcher '0x7f0233d1cd40'>
 async def cmd_news(message: Message, command: CommandObject, news: NewsRepository) -> None:
     count = NEWS_DEFAULT
     if command.args:
-        if not command.args.strip().isdigit():
+        if not command.args.strip().isdecimal():      # не isdigit(): "²".isdigit() — True, а int("²") падає
             await message.answer(f"Використання: /news [1–{NEWS_MAX}]")
             return
         count = max(1, min(int(command.args), NEWS_MAX))

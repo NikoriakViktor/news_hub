@@ -56,7 +56,7 @@ def sign(secret: bytes, timestamp: int, body: bytes) -> str:
 def verify_signature(secret: bytes, headers: Mapping[str, str], body: bytes, now: float | None = None) -> str:
     """Перевіряє час і підпис; повертає підпис (для захисту від повтору). WebhookRejected — ні."""
     signature, timestamp = headers.get(SIGNATURE_HEADER, ""), headers.get(TIMESTAMP_HEADER, "")
-    if not signature or not timestamp.isdigit():
+    if not signature or not (timestamp.isascii() and timestamp.isdigit()):   # "²".isdigit() — True, int("²") — ValueError
         raise WebhookRejected(f"потрібні заголовки {SIGNATURE_HEADER} і {TIMESTAMP_HEADER}")
     now = time.time() if now is None else now
     if abs(now - int(timestamp)) > TOLERANCE_SECONDS:

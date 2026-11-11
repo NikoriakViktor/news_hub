@@ -13,7 +13,9 @@
 | 7 | LLM: підсумок, тема, тональність, ключові слова — Gemini (або Anthropic) за спільним інтерфейсом, перевірка Pydantic, кеш, circuit breaker |
 | 8 | безпека: запис лише адміну з JWT, RSS-джерела за URL без SSRF, підписані webhook |
 | **9** | **Telegram-бот: `/news`, `/digest`, підписки на слова й сповіщення, webhook у FastAPI** ← ти тут |
-| 48–50 | Docker, Compose, CI/CD |
+| 10 | Docker: образ застосунку — `Dockerfile`, `.dockerignore`, користувач без root, HEALTHCHECK, `/health/ready` |
+| 11 | Compose: nginx → api → PostgreSQL + Redis, міграції окремим кроком, бот; реальний IP клієнта за nginx; бекап |
+| 12 | CI/CD: GitHub Actions на кожен PR — тести ×2 Python, мінімальні версії, PostgreSQL, mypy, образ + smoke; образ у ghcr.io з main |
 
 ## Що тут
 

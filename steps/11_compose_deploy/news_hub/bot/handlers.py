@@ -9,7 +9,7 @@
 
 Порядок у роутері важливий: aiogram перевіряє handlers згори донизу, тому «будь-який текст» — останній.
 Роутер будує функція `build_router()`, а не змінна модуля: aiogram прив'язує Router лише до одного
-Dispatcher, а диспетчерів у процесі буває кілька (API, тести, ноутбук).
+Dispatcher, а диспетчерів у процесі буває кілька (API, тести).
 """
 import logging
 
@@ -61,7 +61,7 @@ async def cmd_help(message: Message) -> None:
 async def cmd_news(message: Message, command: CommandObject, news: NewsRepository) -> None:
     count = NEWS_DEFAULT
     if command.args:
-        if not command.args.strip().isdigit():
+        if not command.args.strip().isdecimal():      # не isdigit(): "²".isdigit() — True, а int("²") падає
             await message.answer(f"Використання: /news [1–{NEWS_MAX}]")
             return
         count = max(1, min(int(command.args), NEWS_MAX))
@@ -88,7 +88,7 @@ async def cmd_digest(message: Message, news: NewsRepository, llm: LLMClient | No
         try:
             result = await analyze_news(row.title, llm, AnalysisCache(redis))
         except LLMError as error:
-            note = f"Частину новин не проаналізовано: {esc(str(error))[:200]}"
+            note = f"Частину новин не проаналізовано: {esc(str(error)[:200])}"
             break
         await news.save_analysis(row, result.analysis)
     analyzed = [row for row in rows if row.analyzed_at is not None]

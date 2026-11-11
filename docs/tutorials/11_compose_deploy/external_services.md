@@ -174,7 +174,7 @@ async def test_wrong_token_does_not_stop_api(twin: TelegramTwin, monkeypatch: py
     healthcheck:
       disable: true
     volumes:
-      - ./tests:/app/tests:ro      # тестів в образі немає (.dockerignore) — підключаємо на час заняття
+      - ./tests:/app/tests:ro      # тестів в образі немає (.dockerignore) — підключаємо, щоб запускати pytest у контейнері
     ports:
       - "127.0.0.1:8081:8081"      # керування двійником з твого комп'ютера (лише localhost)
     networks: [backend, edge]      # backend — бот ходить до «Telegram»; edge — «Telegram» надсилає webhook на nginx

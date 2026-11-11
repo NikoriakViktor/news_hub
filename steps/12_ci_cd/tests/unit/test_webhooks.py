@@ -26,7 +26,7 @@ def test_valid_signature() -> None:
     ("час з майбутнього", headers(timestamp=NOW + 301), BODY),
     ("час змінено, підпис старий", {**headers(), TIMESTAMP_HEADER: str(NOW + 1)}, BODY),
     ("немає заголовків", {}, BODY),
-    ("час не число", {**headers(), TIMESTAMP_HEADER: "вчора"}, BODY),
+    ("час не число: isdigit() каже «так», int() падає", {**headers(), TIMESTAMP_HEADER: "²"}, BODY),
 ])
 def test_rejected(case: str, request_headers: dict[str, str], body: bytes) -> None:
     with pytest.raises(WebhookRejected) as error:

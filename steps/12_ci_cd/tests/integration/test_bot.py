@@ -39,6 +39,7 @@ async def test_news_newest_first(telegram: BotHarness) -> None:
     assert "про &lt;теги&gt; &amp; знаки" in reply                      # двійник прийняв — HTML валідний
     assert '<a href="https://www.rbc.ua/ukr/news/test-3.html">' in reply
     assert await telegram.say("/news багато") == ["Використання: /news [1–10]"]
+    assert await telegram.say("/news ²") == ["Використання: /news [1–10]"]      # isdigit() пропустив би
 
 
 async def test_subscriptions(telegram: BotHarness) -> None:
