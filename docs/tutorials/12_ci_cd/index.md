@@ -1,268 +1,162 @@
 # Крок 12. CI/CD на GitHub Actions
 
-> **Код кроку:** [`steps/12_ci_cd`](https://github.com/NikoriakViktor/news_hub/tree/main/steps/12_ci_cd).
+> **Код кроку:** [`steps/12_ci_cd`](https://github.com/NikoriakViktor/news_hub/tree/main/steps/12_ci_cd), workflow — [`.github/workflows/news_hub.yml`](https://github.com/NikoriakViktor/news_hub/blob/main/.github/workflows/news_hub.yml) у корені репозиторію.
 >
-> **Передумови:** [Крок 11. Docker Compose і деплой](../11_compose_deploy/index.md).
+> **Передумови:** [Крок 11. Docker Compose і деплой](../11_compose_deploy/index.md) — є стек nginx → api → PostgreSQL + Redis, міграції окремим сервісом, бекап.
 
-## Що додаємо
+## Де ми зараз { #where }
 
-Кожен PR перевіряє GitHub Actions: тести на двох версіях Python, мінімальні версії залежностей, PostgreSQL і Alembic, `mypy --strict`, образ і smoke-тест усього стеку; з `main` образ публікується в ghcr.io.
+За одинадцять кроків у `news_hub` з'явилось 343 тести (SQLite у пам'яті, fakeredis, локальні aiohttp-сервери, двійник Telegram, FakeLLM), `mypy --strict`, тести образу `pytest -m docker` (крок 10) і стек у Compose (крок 11). Кожна з цих перевірок ловить свій клас помилок.
 
-## Теми кроку
+Але всі вони працюють, лише коли хтось **не забуває** їх запустити. Забути легко: змінив одну функцію, «це ж дрібниця», push — і зламав те, що ламатися не мало. А деякі перевірки локально майже ніхто не запускає: тести на справжній PostgreSQL, на Python 3.10, з найменшими дозволеними версіями залежностей.
 
-1. Коли CI запускається
-2. Що саме перевіряти
-3. Порядок і паралельність
-4. Права, секрети, публікація
+## Проблема { #problem }
 
-!!! info "Сторінки кроку — у роботі"
-    Покроковий розбір цих тем з'явиться тут. Поки що — код кроку, README в його папці й теорія:
-    [Частина X. Docker, Compose і CI/CD](../../10_docker_and_ci/README.md).
+Потрібен автомат, який:
 
-## Структура після кроку
+- на **кожну** зміну сам збирає проєкт і проганяє всі перевірки — і показує результат прямо в pull request: зелена галочка чи червоний хрестик з журналом;
+- перевіряє в кількох середовищах: дві версії Python, мінімальні версії залежностей, справжні PostgreSQL і Redis, зібраний образ і весь стек;
+- не запускається, коли змінились файли, що до проєкту не стосуються, і не витрачає хвилини на застарілі прогони;
+- має лише ті права, які потрібні, і не світить секрети в журналах;
+- з `main` публікує готовий до встановлення артефакт — образ Docker у реєстрі.
 
-```
-news_hub/
-├── news_hub/
-│   ├── parser.py     ← стартовий parse_rbc_news + типи: HTML → list[RawNews]
-│   ├── rss.py        ← крок 6: parse_pravda_rss — RSS «Української правди» → list[RawNews] (написав Claude Code)
-│   ├── models.py     ← NewsItem (Pydantic), validate_news, is_allowed_host (rbc.ua, pravda.com.ua, epravda.com.ua)
-│   ├── snapshot.py   ← знімок стрічки: data/rbc_news_snapshot.json → list[RawNews]
-│   ├── scraper.py    ← крок 2: сторінки rbc.ua через aiohttp — разом (gather) або по черзі
-│   ├── db.py         ← крок 3: engine, сесії, get_db (сесія й транзакція на запит)
-│   ├── tables.py     ← крок 3: NewsRow — таблиця news (SQLAlchemy 2.0)
-│   ├── repository.py ← крок 3: NewsRepository — увесь SQL; замінив NewsStore з кроку 2
-│   ├── cache.py      ← крок 4: клієнт Redis, NewsCache (cache-aside з версією)
-│   ├── middleware.py ← крок 4: X-Request-ID / X-Process-Time, rate limit → 429, інвалідація кешу
-│   ├── jobs.py       ← крок 4: фоновий збір, статус задачі в Redis; крок 7: пакетний аналіз LLM
-│   ├── llm.py        ← крок 7: LLMClient — GeminiClient (пул моделей), AnthropicClient, FakeLLM; CircuitBreaker у Redis
-│   ├── analysis.py   ← крок 7: NewsAnalysis (Pydantic), промпт, analyze_news (перевірка + 1 повтор), кеш за хешем тексту
-│   ├── security.py   ← крок 8: пароль адміна (bcrypt), JWT, require_admin (401 / 403 / 503)
-│   ├── safe_fetch.py ← крок 8: завантаження чужого URL без SSRF — схема, порт, IP після DNS, кожне перенаправлення
-│   ├── webhooks.py   ← крок 8: підпис HMAC (час + тіло), вікно 5 хв, захист від повтору
-│   ├── bot/          ← крок 9: aiogram — factory.py (Bot, Dispatcher), handlers.py (команди), middlewares.py
-│   │                   (rate limit, сесія бази на update), formatting.py (HTML, 4096), settings.py; __main__ — polling
-│   ├── notify.py     ← крок 9: нові новини → підписникам (403 — видалити підписки, 429 — retry_after)
-│   └── api.py        ← FastAPI: /api/news (+ CRUD, кеш), /stats, POST /api/scrape, /api/scrape/jobs,
-│                       POST /api/news/{id}/analyze, /api/analyze/jobs; крок 8: /api/admin/token, /api/sources,
-│                       POST /api/webhooks/scrape; запис — лише з токеном адміна; крок 9: POST /api/telegram/webhook
-├── data/rbc_news_snapshot.json   ← 168 новин, зібраних parse_rbc_news
-├── migrations/       ← крок 3: Alembic — версії схеми бази (0001: таблиця news; 0002: колонки аналізу LLM; 0003: таблиця sources; 0004: таблиця subscriptions)
-├── alembic.ini
-├── Dockerfile        ← крок 10: образ застосунку: залежності окремим шаром, користувач app,
-│                       SQLite на томі /data, HEALTHCHECK без curl, CMD у exec-формі
-├── .dockerignore     ← крок 10: що не потрапляє в образ — .env, .venv, tests, *.db, кеші
-├── requirements.txt  ← крок 10: лише залежності роботи (вони йдуть в образ)
-├── requirements-dev.txt ← крок 10: + pytest, mypy, fakeredis — для розробки й тестів
-├── docker-compose.yml ← крок 11: уся система — postgres, redis, migrate, api, nginx; профілі polling (бот) і twin
-├── docker-compose.dev.yml ← крок 11: розробка — порти бази й Redis лише на 127.0.0.1
-├── nginx/nginx.conf  ← крок 11: проксі до api, X-Forwarded-For перезаписується (реальний IP для rate limit)
-├── scripts/          ← крок 11: backup.sh / restore.sh — pg_dump з контейнера, set -euo pipefail;
-│                       крок 12: make_env.py (.env з випадковими секретами), smoke.sh (стек через nginx, як у CI)
-├── .env.example      ← крок 11: усі змінні стеку; значення з `$` — в одинарних лапках
-├── postman/news_hub.postman_collection.json   ← 18 запитів з перевірками; пароль адміна — змінна adminPassword
-├── examples/         ← before_dict.py / after_typed.py — що бачить mypy
-├── CLAUDE.md         ← крок 6: інструкції для AI-асистента — команди, структура, правила проєкту
-├── .claude/          ← крок 6: settings.json (дозволи), hooks/unit_tests.py (pytest -m unit після правок),
-│                       skills/add-news-source/ (/add-news-source)
-├── pytest.ini        ← крок 5: маркери unit / integration, asyncio; крок 10: docker (лише pytest -m docker)
-├── .coveragerc       ← крок 5: покриття гілок, concurrency = thread,greenlet (async SQLAlchemy)
-└── tests/
-    ├── conftest.py   ← фікстура html("…"), маркер за папкою
-    ├── factories.py  ← make_raw(**зміни) — тестова новина
-    ├── fixtures/     ← збережені сторінки: справжній фрагмент rbc.ua, демо-розмітка, pravda_rss.xml (навчальний знімок RSS)
-    ├── unit/         ← парсер, модель, конвеєр, скрапер під моком; test_pravda.py — специфікація для AI,
-    │                   test_pravda_review.py — що знайшла рецензія його коду
-    ├── integration/  ← API (TestClient і httpx.AsyncClient), CRUD, Redis, справжній get_db,
-    │                   скрапер проти локального aiohttp-сервера; test_analyze_api.py — аналіз LLM через API;
-    │                   крок 8: test_admin_api.py (хто може писати), test_sources_ssrf.py, test_webhooks_api.py;
-    │                   крок 9: test_bot.py (команди), test_notify.py, test_telegram_webhook.py
-    ├── docker/       ← крок 10: test_image.py — збірка образу, що в ньому немає, користувач, healthcheck, docker stop
-    ├── telegram_twin.py ← крок 9: двійник Telegram Bot API (aiohttp): записує виклики, правила HTML, 403 / 429
-    └── live/         ← крок 7: справжні виклики моделі — лише pytest -m llm (потрібен ключ і мережа)
-```
+Перше — **CI** (continuous integration): кожна зміна інтегрується з перевіркою. Останнє — **CD** (continuous delivery): те, що пройшло перевірки в `main`, автоматично стає артефактом, який можна поставити на сервер.
 
-## Запуск
+## Що додаємо { #what }
 
-Усі команди — з папки кроку: `cd steps/12_ci_cd`.
-
-```bash
-pip install -r requirements-dev.txt   # застосунок + pytest, mypy, fakeredis
-pytest                      # 343 тести: SQLite у пам'яті + fakeredis + локальні aiohttp-сервери + двійник Telegram + FakeLLM
-pytest -m unit              # лише швидкі, без бази, Redis і мережі
-pytest --cov=news_hub       # покриття (налаштування — .coveragerc)
-mypy --strict news_hub      # перевірка типів
-pytest -m docker            # крок 10: 6 тестів образу (потрібен Docker)
-
-# база: без DATABASE_URL — файл news_hub.db (SQLite); з PostgreSQL і Redis з Compose (cp .env.example .env спершу):
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d postgres redis
-export DATABASE_URL=postgresql+asyncpg://news:<POSTGRES_PASSWORD>@localhost:5432/news_hub   # Windows: set DATABASE_URL=...
-export REDIS_URL=redis://localhost:6379/0                                                   # без Redis: REDIS_URL=fakeredis://
-
-alembic upgrade head        # створити / оновити таблиці
-uvicorn news_hub.api:app --reload
-```
-
-### CI/CD (крок 12)
-
-Workflow — у корені репозиторію: [`.github/workflows/news_hub.yml`](https://github.com/NikoriakViktor/news_hub/blob/main/.github/workflows/news_hub.yml). На кожен PR, що змінює
-цю папку: `pytest` на Python 3.10 і 3.13, мінімальні версії залежностей (`uv --resolution lowest-direct`), PostgreSQL + Redis
-і `alembic check`, `mypy --strict`, тести образу й smoke-тест стеку. Push у `main` — ще й образ у `ghcr.io`. Локально — те саме:
-
-```bash
-pip install -r requirements-dev.txt && pytest && mypy --strict news_hub && pytest -m docker
-ADMIN_PASSWORD=… python scripts/make_env.py      # .env з випадковими секретами (якщо .env ще немає)
-ADMIN_PASSWORD=… ./scripts/smoke.sh               # стек через nginx: готовність, вхід, збір, база без портів; потім down -v
-```
-
-### Уся система в Compose (крок 11)
-
-```bash
-cp .env.example .env                  # заповнити: POSTGRES_PASSWORD, рядки з python -m news_hub.security
-docker compose up -d --build --wait   # postgres → migrate → api (healthy) → nginx
-curl localhost/health/ready           # {"status":"ok","checks":{"database":"ok","redis":"ok"}}
-docker compose logs -f api            # журнал
-docker compose up -d --build --wait   # оновлення після git pull: перезбирається й перезапускається лише змінене
-./scripts/backup.sh                   # backups/news_hub-….sql.gz
-./scripts/restore.sh backups/news_hub-….sql.gz
-docker compose down                   # зупинити (дані — у томі pgdata; down -v видалить і їх)
-```
-
-- api назовні не відкритий — лише через nginx. IP клієнта (rate limit входу, крок 8) — з `X-Forwarded-For`, який nginx
-  перезаписує, а uvicorn приймає лише від nginx (`FORWARDED_ALLOW_IPS=172.28.0.10`).
-- Міграції — окремий сервіс `migrate` (один раз, до api), а не при старті кожного api.
-- Бот у режимі polling: `docker compose --profile polling up -d`. З `TELEGRAM_WEBHOOK_URL` — усередині api;
-  реєстрація в Telegram — у фоні з повторами, недоступний Telegram не зупиняє API.
-- Двійник Telegram для заняття: `docker compose --profile twin up -d`, у `.env` — `BOT_TOKEN=123456:TEST-TOKEN`,
-  `TELEGRAM_API_URL=http://twin:8081`, `TELEGRAM_WEBHOOK_URL=http://nginx/api/telegram/webhook` і секрет.
-
-### Docker (крок 10)
-
-```bash
-docker build -t news_hub:12 .
-docker network create news
-docker run -d --name redis --network news redis:7-alpine
-docker run --rm -v news_data:/data news_hub:12 alembic upgrade head        # схема бази на томі
-docker run -d --name api --network news -p 8000:8000 -v news_data:/data \
-    -e REDIS_URL=redis://redis:6379/0 --env-file .env news_hub:12
-curl localhost:8000/health/ready        # {"status":"ok","checks":{"database":"ok","redis":"ok"}}
-docker stop api                         # SIGTERM → uvicorn завершується сам, за 1–2 с
-```
-
-- `REDIS_URL=redis://localhost:…` у контейнері — це сам контейнер, а не твій комп'ютер: інші контейнери — за
-  іменем у спільній мережі (`redis`).
-- `--env-file` бере значення **буквально**, разом з лапками: рядки для нього — `python -m news_hub.security --env-file`.
-- Без `DATABASE_URL` база — SQLite на томі `/data`; PostgreSQL — `-e DATABASE_URL=postgresql+asyncpg://…`.
-- `/health` — «процес живий» (HEALTHCHECK образу), `/health/ready` — база й Redis відповідають (інакше 503).
-- Кілька процесів uvicorn — `-e WEB_CONCURRENCY=2`; зазвичай краще більше контейнерів (крок 11).
-
-### Telegram-бот (крок 9)
-
-Без `BOT_TOKEN` бота немає — API працює як раніше. Токен дає @BotFather у Telegram (`/newbot`); це секрет,
-лише в змінних середовища.
-
-```bash
-# розробка: polling — бот сам питає Telegram про нові повідомлення
-BOT_TOKEN=… python -m news_hub.bot
-
-# сервер: webhook — Telegram надсилає update на POST /api/telegram/webhook (лише https)
-export BOT_TOKEN=… TELEGRAM_WEBHOOK_URL=https://news.example/api/telegram/webhook
-export TELEGRAM_WEBHOOK_SECRET="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
-uvicorn news_hub.api:app          # при старті — setWebhook із секретом; при зупинці webhook лишається
-```
-
-Без мережі й токена — двійник Telegram Bot API (`tests/telegram_twin.py`):
-
-```bash
-python -m tests.telegram_twin --port 8081                  # «Telegram» на 127.0.0.1:8081
-BOT_TOKEN=123456:TEST-TOKEN TELEGRAM_API_URL=http://127.0.0.1:8081 python -m news_hub.bot
-curl -X POST localhost:8081/_twin/say -d '{"text": "/news", "chat_id": 1001}'   # «користувач» пише боту
-curl localhost:8081/_twin/sent?chat_id=1001                                     # що відповів бот
-```
-
-| Змінна | За замовчуванням | Що робить |
+| Що | Де | Розділ |
 |---|---|---|
-| `BOT_TOKEN` | — | токен бота; без нього бот вимкнений |
-| `TELEGRAM_WEBHOOK_URL` / `TELEGRAM_WEBHOOK_SECRET` | — | webhook у FastAPI; секрет — 32–256 символів `A-Z a-z 0-9 _ -` |
-| `TELEGRAM_API_URL` | api.telegram.org | інший сервер Bot API (двійник, локальний Bot API server) |
-| `BOT_ADMIN_IDS` | — | `user_id` через кому: кому дозволено `/scrape` у боті |
+| тригери: PR у будь-яку гілку, push лише в `main`, `paths`, `workflow_dispatch`, `concurrency` | `.github/workflows/news_hub.yml` | [Коли CI запускається](triggers.md) |
+| шість jobs: matrix Python 3.10 / 3.13, мінімальні версії через `uv`, PostgreSQL + Redis і `alembic check`, `mypy --strict`, образ + smoke | `news_hub.yml`, `scripts/smoke.sh`, `scripts/make_env.py` | [Що саме перевіряти](what_to_check.md) |
+| граф `needs`: що йде паралельно, що чекає; `fail-fast`, `timeout-minutes` | `news_hub.yml` | [Порядок і паралельність](order_and_parallel.md) |
+| `permissions`, згенеровані секрети з `::add-mask::`, публікація образу в `ghcr.io` | `news_hub.yml` (`docker`, `publish`) | [Права, секрети, публікація](permissions_and_publish.md) |
 
-Команди: `/news [N]`, `/digest`, `/subscribe <слово>`, `/unsubscribe <слово>`, `/subscriptions`, `/help`;
-адміну — `/scrape [snapshot]`. Після кожного збору (API, фонова задача, RSS-джерело) нові новини, у заголовку
-яких є слово підписки, приходять у чат.
+## Архітектура: було → стало { #architecture }
 
-### Адмін, RSS-джерела і webhook (крок 8)
+```mermaid
+flowchart TD
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
 
-Читати новини може будь-хто; змінювати, збирати, аналізувати й додавати джерела — лише адмін з токеном.
-Без `JWT_SECRET` і `ADMIN_PASSWORD_HASH` ці ендпоінти відповідають `503`, а занадто короткий секрет не дасть
-застосунку стартувати. У середовищі — **хеш** пароля, не пароль:
+    subgraph OLD ["крок 11: перевірки — якщо не забули"]
+        direction LR
+        D0["розробник"] --> M0{"запустив pytest,<br>mypy, smoke?"}
+        M0 -- "так" --> P0["push у main"]
+        M0 -- "ні" --> X0["push у main<br>без перевірки"]
+        P0 --> S0["сервер:<br>git pull, up --build"]
+        X0 --> S0
+    end
+    subgraph NEW ["крок 12: перевірки — на кожен PR"]
+        direction LR
+        D1["розробник<br>push у гілку PR"] --> GA["GitHub Actions<br>news_hub.yml"]
+        GA --> J["tests ×2, min-versions,<br>postgres, types → docker"]
+        J --> PR{"усі jobs<br>зелені?"}
+        PR -- "так" --> MG["merge у main"]
+        PR -- "ні" --> FX["червоний хрестик<br>і журнал у PR"]
+        MG --> PB["publish:<br>образ у ghcr.io"]
+    end
+    OLD --> NEW
 
-```bash
-python -m news_hub.security          # спитає пароль → рядки ADMIN_PASSWORD_HASH='$2b$12$…' і JWT_SECRET='…'
-export ADMIN_PASSWORD_HASH='$2b$12$…' JWT_SECRET='…'      # одинарні лапки: у хеші є $
-export WEBHOOK_SECRET="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"   # якщо потрібен webhook
-uvicorn news_hub.api:app --reload
-
-TOKEN=$(curl -s -X POST localhost:8000/api/admin/token -H 'Content-Type: application/json' \
-        -d '{"username": "admin", "password": "…"}' | python -c 'import json,sys; print(json.load(sys.stdin)["access_token"])')
-curl -X POST localhost:8000/api/scrape -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-     -d '{"source": "snapshot"}'
+    class D0,P0,S0,D1,GA,MG step
+    class M0,PR decision
+    class X0,FX error
+    class J warning
+    class PB success
 ```
 
-У Swagger — кнопка **Authorize** (вставити `access_token`). RSS-джерело: `POST /api/sources`
-з `{"url": "https://www.pravda.com.ua/rss/view_news/", "name": "Українська правда"}`, потім
-`POST /api/sources/1/fetch`. Адреси всередині мережі (localhost, 10.x, 192.168.x, 169.254.169.254, …) — `400`.
+- **Workflow лише вирішує, коли й де.** Кожен job запускає ті самі команди, що й ти локально: `pytest`, `mypy --strict news_hub`, `pytest -m docker`, `./scripts/smoke.sh`. Нової логіки перевірок у YAML немає.
+- **Код застосунку не змінився.** Від кроку 11 до 12 у `news_hub/` змінився лише номер версії в `api.py` (`0.12.0`). Додались два скрипти й workflow.
+- **CD тут — це публікація образу**, а не деплой. Сервер оновлюється, як у кроці 11, свідомою командою; [чому так](permissions_and_publish.md#auto-deploy).
 
-| Змінна | За замовчуванням | Що робить |
+## Файли кроку { #files }
+
+| Файл | Що в ньому | Новий? |
 |---|---|---|
-| `JWT_SECRET` | — | ключ підпису токенів, ≥ 32 символи |
-| `ADMIN_USERNAME` / `ADMIN_PASSWORD_HASH` | `admin` / — | вхід адміна; хеш — `python -m news_hub.security` |
-| `JWT_EXPIRE_MINUTES` | `30` | скільки живе токен |
-| `LOGIN_RATE_LIMIT` / `LOGIN_RATE_WINDOW` | `5` / `300` | спроб входу з однієї адреси за вікно, с |
-| `WEBHOOK_SECRET` | — | спільний секрет для підпису `POST /api/webhooks/scrape`; без нього — `503` |
+| [`.github/workflows/news_hub.yml`](https://github.com/NikoriakViktor/news_hub/blob/main/.github/workflows/news_hub.yml) | 6 jobs: `tests` (matrix), `min-versions`, `postgres`, `types`, `docker`, `publish` | новий (у корені репозиторію) |
+| [`scripts/smoke.sh`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/scripts/smoke.sh) | весь стек через nginx: готовність, вхід, `401` без токена, збір, база без портів; завжди `down -v` | новий |
+| [`scripts/make_env.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/scripts/make_env.py) | `.env` з `.env.example` і випадковими секретами; хеш пароля адміна; існуючий `.env` не чіпає | новий |
+| [`CLAUDE.md`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/CLAUDE.md) | команда smoke, де живе CI, правило «нижня межа в `requirements.txt` — справжня» | змінений |
+| [`docker-compose.yml`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/docker-compose.yml), [`Dockerfile`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/Dockerfile) | тег образу `news_hub:12` | змінений |
+| [`news_hub/api.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/news_hub/api.py) | `version="0.12.0"` | змінений |
+| `news_hub/` (решта), `tests/`, `migrations/`, `nginx/` | з кроку 11 | без змін |
 
-Webhook підписує відправник: `X-Webhook-Timestamp: <unix-час>` і
-`X-Webhook-Signature: sha256=<HMAC-SHA256(WEBHOOK_SECRET, "<час>." + тіло)>` (функція `news_hub.webhooks.sign`).
+Поруч живуть ще два workflow репозиторію: [`steps.yml`](https://github.com/NikoriakViktor/news_hub/blob/main/.github/workflows/steps.yml) проганяє `pytest -q` у кожному кроці `steps/01…12` і в `examples/meteo_api` (Python 3.13, без Docker і PostgreSQL), [`docs.yml`](https://github.com/NikoriakViktor/news_hub/blob/main/.github/workflows/docs.yml) збирає цю книгу й публікує на GitHub Pages.
 
-### Аналіз LLM (крок 7)
+Повна структура проєкту й інструкції запуску всіх попередніх кроків — у [`README.md` кроку](https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/README.md).
 
-Ключ — лише змінна середовища, ніколи не в коді й не в git. Без ключа все, крім аналізу, працює;
-`POST /api/news/{id}/analyze` відповідає `503 LLM не налаштовано`.
+## Порядок читання { #reading-order }
+
+1. [Коли CI запускається](triggers.md) — анатомія workflow, тригери, `paths`, `concurrency`.
+2. [Що саме перевіряти](what_to_check.md) — шість jobs і що ловить кожен; мінімальні версії, `alembic check`, smoke.
+3. [Порядок і паралельність](order_and_parallel.md) — граф `needs`, хвилі, `fail-fast`.
+4. [Права, секрети, публікація](permissions_and_publish.md) — `GITHUB_TOKEN`, `::add-mask::`, образ у `ghcr.io`, автоматичний деплой чи ні.
+5. [Контрольна точка](checkpoint.md) — перевірки, практика, самоперевірка.
+
+Теорія до кроку — [Частина X. Docker, Compose і CI/CD](../../10_docker_and_ci/README.md) і [Частина VII. Тестування API](../../07_testing/README.md).
+
+## Запуск { #run }
+
+Усе, що робить CI, запускається локально тими самими командами. З папки кроку `steps/12_ci_cd`:
 
 ```bash
-export GEMINI_API_KEY=…          # безкоштовний ключ: aistudio.google.com → Get API key
-uvicorn news_hub.api:app --reload
-# або без ключа й мережі — фейкова модель: LLM_PROVIDER=fake uvicorn news_hub.api:app --reload
-# Anthropic замість Gemini: LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=… ANTHROPIC_MODEL=<назва моделі>
+pip install -r requirements-dev.txt
+pytest -m unit -q                 # 203 passed, 148 deselected — так починає job tests
+pytest -q                         # 343 passed, 8 deselected
+mypy --strict news_hub            # Success: no issues found in 26 source files
+pytest -m docker -q               # 6 passed (потрібен Docker)
 
-pytest -m llm                    # справжні виклики (витрачають квоту); без ключа — пропускаються
+ADMIN_PASSWORD=… python scripts/make_env.py   # .env з випадковими секретами (якщо .env ще немає)
+ADMIN_PASSWORD=… ./scripts/smoke.sh            # стек через nginx; наприкінці «smoke: усе гаразд» і down -v
 ```
 
-| Змінна | За замовчуванням | Що робить |
-|---|---|---|
-| `LLM_PROVIDER` | `gemini` | `gemini`, `anthropic` або `fake` |
-| `GEMINI_MODELS` | `gemini-2.5-flash,…` | пул моделей через кому — перша, що відповіла |
-| `LLM_TIMEOUT` / `LLM_MAX_TOKENS` | `30` / `2048` | секунд на запит / стеля відповіді |
-| `ANALYZE_RATE_LIMIT` | `10` | запитів до LLM за хвилину з однієї адреси |
+Job `postgres` локально — з PostgreSQL 16 і Redis 7 (окремими контейнерами або з `docker-compose.dev.yml` кроку 11):
 
-Swagger (спершу Authorize — крок 8): `POST /api/scrape` (`{"source": "snapshot"}`) → `POST /api/news/1/analyze` → `POST /api/analyze/jobs`
-(`{"limit": 20}`) → `GET /api/news/stats` (поля `ai_category`, `sentiment`) → `GET /api/news?sentiment=негативна`.
+```bash
+export TEST_DATABASE_URL=postgresql+asyncpg://news:news@localhost:5432/news_hub_test
+export TEST_REDIS_URL=redis://localhost:6379/15
+export DATABASE_URL=$TEST_DATABASE_URL
+alembic upgrade head && alembic check     # No new upgrade operations detected.
+pytest -q                                 # 343 passed
+```
 
-Ті самі тести на справжніх серверах: `TEST_DATABASE_URL=postgresql+asyncpg://news:news@localhost:5432/news_hub_test TEST_REDIS_URL=redis://localhost:6379/15 pytest` (базу `news_hub_test` створи заздалегідь; Redis-база 15 очищується перед кожним тестом). Лише так ловиться гонка в rate limit: fakeredis не віддає керування циклу подій, тож одночасних запитів на ньому не буває (`tests/integration/test_async_api.py`).
+Job `min-versions` — через [`uv`](https://docs.astral.sh/uv/):
 
-- http://127.0.0.1:8000/docs — Swagger UI: Authorize, потім `POST /api/scrape` з `{"source": "snapshot"}`, потім `GET /api/news`;
-- Postman: Import → `postman/news_hub.postman_collection.json` → змінна `adminPassword` → Run collection;
-- без Postman: `npx newman run postman/news_hub.postman_collection.json --env-var adminPassword=…`.
+```bash
+uv venv --python 3.10 .venv
+uv pip install --resolution lowest-direct -r requirements-dev.txt
+.venv/bin/pytest -q                       # 343 passed
+```
 
-Свіжа стрічка (коли `www.rbc.ua` доступний з мережі) — `POST /api/scrape` з `{}` або
-`{"mode": "sequential"}`; у відповіді — час кожної сторінки й помилки, якщо сторінка не завантажилась.
+Усі ці числа — з локального запуску 2026-11-11 (виводи й нюанси — у [контрольній точці](checkpoint.md#check)). Завершених прогонів GitHub Actions для цього workflow на момент написання ще не було: перший прогін стояв у черзі.
 
-Крок 6: `rss.py` і зміни в `models.py` написав Claude Code (`claude -p`) за специфікацією `tests/unit/test_pravda.py`.
-Рецензія його коду — `tests/unit/test_pravda_review.py`.
-
-## Порівняння з попереднім кроком
+## Порівняння з кроком 11 { #diff }
 
 ```bash
 git diff --no-index --stat steps/11_compose_deploy steps/12_ci_cd
-git diff --no-index steps/11_compose_deploy/news_hub steps/12_ci_cd/news_hub
+git diff --no-index steps/11_compose_deploy/scripts steps/12_ci_cd/scripts
 ```
+
+На чистій копії репозиторію (без `__pycache__`):
+
+```text
+ steps/{11_compose_deploy => 12_ci_cd}/CLAUDE.md    |  5 ++-
+ steps/{11_compose_deploy => 12_ci_cd}/Dockerfile   |  6 +--
+ steps/{11_compose_deploy => 12_ci_cd}/README.md    | 29 +++++++++----
+ .../docker-compose.yml                             |  4 +-
+ .../news_hub/api.py                                |  2 +-
+ /dev/null => steps/12_ci_cd/scripts/make_env.py    | 43 +++++++++++++++++++
+ /dev/null => steps/12_ci_cd/scripts/smoke.sh       | 48 ++++++++++++++++++++++
+ 7 files changed, 122 insertions(+), 15 deletions(-)
+```
+
+Головна зміна кроку — поза папкою: `.github/workflows/news_hub.yml`. Workflow живе в корені репозиторію, бо GitHub шукає їх лише в `.github/workflows/`; на папку кроку він посилається через `env.PROJECT: steps/12_ci_cd` і `defaults.run.working-directory`.
+
+## Що далі { #next }
+
+Це останній крок Zero to Hero: `news_hub` пройшов шлях від парсера HTML до сервісу, який перевіряє кожну свою зміну. Далі:
+
+- [News Hub Deep Dive](../../deep_dive/README.md) — та сама фінальна версія `steps/12_ci_cd`, але не «як ми сюди дійшли», а «як воно влаштоване зараз»: модулі, життєвий цикл запиту, модель даних, карта тестів, CI.
+- [Практика](../../labs/README.md) — лабораторні до кожного кроку й фінальна лаба на `steps/12_ci_cd`.

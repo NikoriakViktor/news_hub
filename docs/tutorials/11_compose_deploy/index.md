@@ -2,259 +2,167 @@
 
 > **Код кроку:** [`steps/11_compose_deploy`](https://github.com/NikoriakViktor/news_hub/tree/main/steps/11_compose_deploy).
 >
-> **Передумови:** [Крок 10. Docker-образ](../10_docker/index.md).
+> **Передумови:** [Крок 10. Docker-образ](../10_docker/index.md) — є образ `news_hub`, `/health` і `/health/ready`, том `/data`, користувач без root.
 
-## Що додаємо
+## Де ми зараз { #where }
 
-Уся система одним Compose-файлом: nginx → api → PostgreSQL + Redis, міграції окремим кроком, бот, справжній IP клієнта за nginx, секрети в `.env`, бекап і відновлення, деплой на сервер.
-
-## Теми кроку
-
-1. Порядок запуску: healthy, а не «запущено»
-2. nginx і справжній IP клієнта
-3. Секрети в `.env`
-4. Зовнішній сервіс не зупиняє старт
-5. Деплой на сервер
-
-!!! info "Сторінки кроку — у роботі"
-    Покроковий розбір цих тем з'явиться тут. Поки що — код кроку, README в його папці й теорія:
-    [Частина X. Docker, Compose і CI/CD](../../10_docker_and_ci/README.md).
-
-## Структура після кроку
-
-```
-news_hub/
-├── news_hub/
-│   ├── parser.py     ← стартовий parse_rbc_news + типи: HTML → list[RawNews]
-│   ├── rss.py        ← крок 6: parse_pravda_rss — RSS «Української правди» → list[RawNews] (написав Claude Code)
-│   ├── models.py     ← NewsItem (Pydantic), validate_news, is_allowed_host (rbc.ua, pravda.com.ua, epravda.com.ua)
-│   ├── snapshot.py   ← знімок стрічки: data/rbc_news_snapshot.json → list[RawNews]
-│   ├── scraper.py    ← крок 2: сторінки rbc.ua через aiohttp — разом (gather) або по черзі
-│   ├── db.py         ← крок 3: engine, сесії, get_db (сесія й транзакція на запит)
-│   ├── tables.py     ← крок 3: NewsRow — таблиця news (SQLAlchemy 2.0)
-│   ├── repository.py ← крок 3: NewsRepository — увесь SQL; замінив NewsStore з кроку 2
-│   ├── cache.py      ← крок 4: клієнт Redis, NewsCache (cache-aside з версією)
-│   ├── middleware.py ← крок 4: X-Request-ID / X-Process-Time, rate limit → 429, інвалідація кешу
-│   ├── jobs.py       ← крок 4: фоновий збір, статус задачі в Redis; крок 7: пакетний аналіз LLM
-│   ├── llm.py        ← крок 7: LLMClient — GeminiClient (пул моделей), AnthropicClient, FakeLLM; CircuitBreaker у Redis
-│   ├── analysis.py   ← крок 7: NewsAnalysis (Pydantic), промпт, analyze_news (перевірка + 1 повтор), кеш за хешем тексту
-│   ├── security.py   ← крок 8: пароль адміна (bcrypt), JWT, require_admin (401 / 403 / 503)
-│   ├── safe_fetch.py ← крок 8: завантаження чужого URL без SSRF — схема, порт, IP після DNS, кожне перенаправлення
-│   ├── webhooks.py   ← крок 8: підпис HMAC (час + тіло), вікно 5 хв, захист від повтору
-│   ├── bot/          ← крок 9: aiogram — factory.py (Bot, Dispatcher), handlers.py (команди), middlewares.py
-│   │                   (rate limit, сесія бази на update), formatting.py (HTML, 4096), settings.py; __main__ — polling
-│   ├── notify.py     ← крок 9: нові новини → підписникам (403 — видалити підписки, 429 — retry_after)
-│   └── api.py        ← FastAPI: /api/news (+ CRUD, кеш), /stats, POST /api/scrape, /api/scrape/jobs,
-│                       POST /api/news/{id}/analyze, /api/analyze/jobs; крок 8: /api/admin/token, /api/sources,
-│                       POST /api/webhooks/scrape; запис — лише з токеном адміна; крок 9: POST /api/telegram/webhook
-├── data/rbc_news_snapshot.json   ← 168 новин, зібраних parse_rbc_news
-├── migrations/       ← крок 3: Alembic — версії схеми бази (0001: таблиця news; 0002: колонки аналізу LLM; 0003: таблиця sources; 0004: таблиця subscriptions)
-├── alembic.ini
-├── Dockerfile        ← крок 10: образ застосунку: залежності окремим шаром, користувач app,
-│                       SQLite на томі /data, HEALTHCHECK без curl, CMD у exec-формі
-├── .dockerignore     ← крок 10: що не потрапляє в образ — .env, .venv, tests, *.db, кеші
-├── requirements.txt  ← крок 10: лише залежності роботи (вони йдуть в образ)
-├── requirements-dev.txt ← крок 10: + pytest, mypy, fakeredis — для розробки й тестів
-├── docker-compose.yml ← крок 11: уся система — postgres, redis, migrate, api, nginx; профілі polling (бот) і twin
-├── docker-compose.dev.yml ← крок 11: розробка — порти бази й Redis лише на 127.0.0.1
-├── nginx/nginx.conf  ← крок 11: проксі до api, X-Forwarded-For перезаписується (реальний IP для rate limit)
-├── scripts/          ← крок 11: backup.sh / restore.sh — pg_dump з контейнера, set -euo pipefail
-├── .env.example      ← крок 11: усі змінні стеку; значення з `$` — в одинарних лапках
-├── postman/news_hub.postman_collection.json   ← 18 запитів з перевірками; пароль адміна — змінна adminPassword
-├── examples/         ← before_dict.py / after_typed.py — що бачить mypy
-├── CLAUDE.md         ← крок 6: інструкції для AI-асистента — команди, структура, правила проєкту
-├── .claude/          ← крок 6: settings.json (дозволи), hooks/unit_tests.py (pytest -m unit після правок),
-│                       skills/add-news-source/ (/add-news-source)
-├── pytest.ini        ← крок 5: маркери unit / integration, asyncio; крок 10: docker (лише pytest -m docker)
-├── .coveragerc       ← крок 5: покриття гілок, concurrency = thread,greenlet (async SQLAlchemy)
-└── tests/
-    ├── conftest.py   ← фікстура html("…"), маркер за папкою
-    ├── factories.py  ← make_raw(**зміни) — тестова новина
-    ├── fixtures/     ← збережені сторінки: справжній фрагмент rbc.ua, демо-розмітка, pravda_rss.xml (навчальний знімок RSS)
-    ├── unit/         ← парсер, модель, конвеєр, скрапер під моком; test_pravda.py — специфікація для AI,
-    │                   test_pravda_review.py — що знайшла рецензія його коду
-    ├── integration/  ← API (TestClient і httpx.AsyncClient), CRUD, Redis, справжній get_db,
-    │                   скрапер проти локального aiohttp-сервера; test_analyze_api.py — аналіз LLM через API;
-    │                   крок 8: test_admin_api.py (хто може писати), test_sources_ssrf.py, test_webhooks_api.py;
-    │                   крок 9: test_bot.py (команди), test_notify.py, test_telegram_webhook.py
-    ├── docker/       ← крок 10: test_image.py — збірка образу, що в ньому немає, користувач, healthcheck, docker stop
-    ├── telegram_twin.py ← крок 9: двійник Telegram Bot API (aiohttp): записує виклики, правила HTML, 403 / 429
-    └── live/         ← крок 7: справжні виклики моделі — лише pytest -m llm (потрібен ключ і мережа)
-```
-
-## Запуск
-
-Усі команди — з папки кроку: `cd steps/11_compose_deploy`.
+Після кроку 10 News Hub — образ. Але щоб він запрацював, довелося руками створити мережу, запустити Redis, окремим контейнером прогнати міграції, передати десяток змінних через `--env-file` і не переплутати порядок:
 
 ```bash
-pip install -r requirements-dev.txt   # застосунок + pytest, mypy, fakeredis
-pytest                      # 343 тести: SQLite у пам'яті + fakeredis + локальні aiohttp-сервери + двійник Telegram + FakeLLM
-pytest -m unit              # лише швидкі, без бази, Redis і мережі
-pytest --cov=news_hub       # покриття (налаштування — .coveragerc)
-mypy --strict news_hub      # перевірка типів
-pytest -m docker            # крок 10: 6 тестів образу (потрібен Docker)
-
-# база: без DATABASE_URL — файл news_hub.db (SQLite); з PostgreSQL і Redis з Compose (cp .env.example .env спершу):
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d postgres redis
-export DATABASE_URL=postgresql+asyncpg://news:<POSTGRES_PASSWORD>@localhost:5432/news_hub   # Windows: set DATABASE_URL=...
-export REDIS_URL=redis://localhost:6379/0                                                   # без Redis: REDIS_URL=fakeredis://
-
-alembic upgrade head        # створити / оновити таблиці
-uvicorn news_hub.api:app --reload
+docker network create news
+docker run -d --name redis --network news redis:7-alpine
+docker run --rm -v news_data:/data news_hub:11 alembic upgrade head
+docker run -d --name api --network news -p 8000:8000 -v news_data:/data \
+    -e REDIS_URL=redis://redis:6379/0 --env-file .env news_hub:11
 ```
 
-### Уся система в Compose (крок 11)
+Це чотири команди для однієї машини розробника, і база тут — SQLite на томі. На сервері ніхто не повторюватиме їх вручну після кожного оновлення, а помилка в порядку (API раніше за міграції) з'ясовується вже на живих користувачах.
+
+## Проблема { #problem }
+
+Потрібен **один опис усієї системи**: які контейнери, з яких образів, у яких мережах, з якими томами й змінними, у якому порядку вони стартують і як зрозуміти, що система справді готова. І цей опис має:
+
+- запускатися однією командою, яка або повністю працює, або каже, що саме не так;
+- не тримати паролів у git;
+- ставити перед API проксі (nginx) і при цьому **не губити IP клієнта**: від нього залежить rate limit входу адміна з кроку 8;
+- не падати через сторонній сервіс (Telegram), якого в цю мить немає;
+- переноситися на сервер, оновлюватися й мати бекап, з якого реально відновлюються.
+
+## Що додаємо { #what }
+
+| Що | Де | Розділ |
+|---|---|---|
+| уся система: `postgres`, `redis`, `migrate`, `api`, `nginx`; `depends_on` з умовами, healthchecks, профілі `polling` і `twin` | `docker-compose.yml` | [Порядок запуску: healthy, а не «запущено»](startup_order.md) |
+| nginx перед API, мережі `backend` і `edge`, `FORWARDED_ALLOW_IPS` | `nginx/nginx.conf`, `docker-compose.yml` | [nginx і справжній IP клієнта](nginx_real_ip.md) |
+| `.env` поза git, значення з `$` в одинарних лапках, перевірка повного bcrypt-хешу | `.env.example`, `.gitignore`, `news_hub/security.py` | [Секрети в `.env`](env_secrets.md) |
+| реєстрація бота в Telegram — у фоні з повторами | `news_hub/api.py` | [Зовнішній сервіс не зупиняє старт](external_services.md) |
+| сервер: firewall, `.env` з правами 600, HTTPS, оновлення, репліки; порти бази лише для розробки | `docker-compose.dev.yml` | [Деплой на сервер](deploy.md) |
+| бекап і відновлення бази | `scripts/backup.sh`, `scripts/restore.sh` | [Бекап і відновлення](backup_restore.md) |
+
+## Архітектура: було → стало { #architecture }
+
+```mermaid
+flowchart TD
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    subgraph OLD ["крок 10: контейнери руками"]
+        direction LR
+        U0["клієнт"] -- ":8000" --> A0["api<br>docker run"]
+        A0 --> R0["redis<br>docker run"]
+        A0 --> S0["SQLite<br>том news_data"]
+    end
+    subgraph NEW ["крок 11: docker compose up -d --wait"]
+        direction LR
+        U["клієнт, Telegram"] -- ":80" --> N["nginx<br>172.28.0.10"]
+        N -- "X-Forwarded-For<br>мережа edge" --> A["api<br>uvicorn"]
+        M["migrate<br>один раз"] --> PG["postgres<br>том pgdata"]
+        A --> PG
+        A --> RD["redis"]
+        B["bot<br>профіль polling"] --> PG
+        E[".env<br>секрети"] -.-> A
+    end
+    OLD --> NEW
+
+    class U0,A0,R0,S0 step
+    class U,B step
+    class N decision
+    class A,E,M warning
+    class PG,RD success
+```
+
+| Сервіс | Образ | Назовні | Скільки | Чекає |
+|---|---|---|---|---|
+| `nginx` | `nginx:1.27-alpine` | `${HTTP_PORT:-80}:80` | 1 | `api` healthy |
+| `api` | `news_hub:11` | — | 1…N | `migrate` завершився з кодом 0, `redis` healthy |
+| `migrate` | `news_hub:11` | — | один раз | `postgres` healthy |
+| `bot` | `news_hub:11` | — | 1, лише `--profile polling` | `migrate`, `redis` |
+| `twin` | `news_hub:11` | `127.0.0.1:8081` | лише `--profile twin` | — |
+| `postgres`, `redis` | `postgres:16-alpine`, `redis:7-alpine` | — | 1 | — |
+
+- **Назовні — лише nginx.** У бази, Redis і API в `docker-compose.yml` немає `ports` зовсім. Порти бази для розробки — окремий файл `docker-compose.dev.yml`, лише на `127.0.0.1`.
+- **Дві мережі.** `backend` — api, база, Redis, міграції, бот; `edge` — nginx і api. nginx до бази не дістається навіть зсередини.
+- **Випуск окремо від роботи.** Міграції — сервіс `migrate`, який один раз виконує `alembic upgrade head` і завершується. `api` можна запустити в кількох копіях без гонки міграцій.
+- **Один образ — кілька ролей.** `migrate`, `api`, `bot` і `twin` запускають той самий `news_hub:11` з різною командою; спільне описано один раз YAML-якорем `x-app: &app`.
+
+## Файли кроку { #files }
+
+| Файл | Що в ньому | Новий? |
+|---|---|---|
+| [`docker-compose.yml`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/docker-compose.yml) | `x-app`, сервіси `postgres`, `redis`, `migrate`, `api`, `nginx`, `bot` (профіль `polling`), `twin` (профіль `twin`); мережі `backend`, `edge` | переписаний: у кроці 10 — лише `db` і `redis` для розробки |
+| [`docker-compose.dev.yml`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/docker-compose.dev.yml) | порти `127.0.0.1:5432` і `127.0.0.1:6379` для `uvicorn --reload` на своєму комп'ютері | новий |
+| [`nginx/nginx.conf`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/nginx/nginx.conf) | `upstream` на `api:8000`, `/nginx-health`, `X-Forwarded-For $remote_addr`, `client_max_body_size 1m`, `proxy_read_timeout 65s` | новий |
+| [`.env.example`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/.env.example) | усі змінні стеку; правило про `$` і одинарні лапки | новий |
+| [`.gitignore`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/.gitignore) | `.env`, `backups/` | новий |
+| [`scripts/backup.sh`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/scripts/backup.sh), [`scripts/restore.sh`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/scripts/restore.sh) | `pg_dump` / `psql` у контейнері `postgres`, `set -euo pipefail` | нові |
+| [`news_hub/api.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/news_hub/api.py) | `register_bot` з повторами, `TELEGRAM_RETRY_DELAYS`; версія `0.11.0` | змінений |
+| [`news_hub/security.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/news_hub/security.py) | `BCRYPT_HASH.fullmatch` замість «починається з `$2`» | змінений |
+| [`.dockerignore`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/.dockerignore) | + `nginx/`, `scripts/`, `backups/`; виняток `!.env.example` прибрано | змінений |
+| [`tests/unit/test_security.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/tests/unit/test_security.py) | + `test_truncated_hash_fails_at_startup` | змінений |
+| [`tests/integration/test_telegram_webhook.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/tests/integration/test_telegram_webhook.py) | + `test_api_starts_while_telegram_is_down`, `test_wrong_token_does_not_stop_api` | змінений |
+| `Dockerfile` | лише тег у коментарях: `news_hub:11` | без змін по суті |
+
+## Порядок читання { #reading-order }
+
+1. [Порядок запуску: healthy, а не «запущено»](startup_order.md) — `depends_on` з умовами, `migrate`, healthchecks, хронологія старту.
+2. [nginx і справжній IP клієнта](nginx_real_ip.md) — чому за проксі всі клієнти стають одним і як цього уникнути, не дозволивши підробити IP.
+3. [Секрети в `.env`](env_secrets.md) — `${VAR:?…}`, `$` у хеші bcrypt, перевірка при старті.
+4. [Зовнішній сервіс не зупиняє старт](external_services.md) — Telegram недоступний, а API працює.
+5. [Деплой на сервер](deploy.md) — сервер, firewall, HTTPS, оновлення і простій, репліки, де запускати.
+6. [Бекап і відновлення](backup_restore.md) — `pg_dump`, `pipefail`, перевірка відновленням.
+7. [Контрольна точка](checkpoint.md) — тести, чекліст, практика, самоперевірка.
+
+Теорія до кроку — [Частина X. Docker, Compose і CI/CD](../../10_docker_and_ci/README.md). Чому `$` у `.env` поводиться по-різному в різних інструментах — [`$` у `.env`](../../02_typing_and_pydantic/settings.md#dollar).
+
+## Запуск { #run }
+
+З папки кроку `steps/11_compose_deploy`:
 
 ```bash
+pip install -r requirements-dev.txt
+pytest -q                             # 343 passed, 8 deselected
+mypy --strict news_hub                # Success: no issues found in 26 source files
+
 cp .env.example .env                  # заповнити: POSTGRES_PASSWORD, рядки з python -m news_hub.security
 docker compose up -d --build --wait   # postgres → migrate → api (healthy) → nginx
 curl localhost/health/ready           # {"status":"ok","checks":{"database":"ok","redis":"ok"}}
 docker compose logs -f api            # журнал
-docker compose up -d --build --wait   # оновлення після git pull: перезбирається й перезапускається лише змінене
 ./scripts/backup.sh                   # backups/news_hub-….sql.gz
-./scripts/restore.sh backups/news_hub-….sql.gz
-docker compose down                   # зупинити (дані — у томі pgdata; down -v видалить і їх)
+docker compose down                   # зупинити; дані лишаються в томі pgdata (down -v видалить і їх)
 ```
 
-- api назовні не відкритий — лише через nginx. IP клієнта (rate limit входу, крок 8) — з `X-Forwarded-For`, який nginx
-  перезаписує, а uvicorn приймає лише від nginx (`FORWARDED_ALLOW_IPS=172.28.0.10`).
-- Міграції — окремий сервіс `migrate` (один раз, до api), а не при старті кожного api.
-- Бот у режимі polling: `docker compose --profile polling up -d`. З `TELEGRAM_WEBHOOK_URL` — усередині api;
-  реєстрація в Telegram — у фоні з повторами, недоступний Telegram не зупиняє API.
-- Двійник Telegram для заняття: `docker compose --profile twin up -d`, у `.env` — `BOT_TOKEN=123456:TEST-TOKEN`,
-  `TELEGRAM_API_URL=http://twin:8081`, `TELEGRAM_WEBHOOK_URL=http://nginx/api/telegram/webhook` і секрет.
-
-### Docker (крок 10)
+Розробка без контейнера застосунку — база й Redis з Compose, API через `uvicorn --reload`:
 
 ```bash
-docker build -t news_hub:11 .
-docker network create news
-docker run -d --name redis --network news redis:7-alpine
-docker run --rm -v news_data:/data news_hub:11 alembic upgrade head        # схема бази на томі
-docker run -d --name api --network news -p 8000:8000 -v news_data:/data \
-    -e REDIS_URL=redis://redis:6379/0 --env-file .env news_hub:11
-curl localhost:8000/health/ready        # {"status":"ok","checks":{"database":"ok","redis":"ok"}}
-docker stop api                         # SIGTERM → uvicorn завершується сам, за 1–2 с
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d postgres redis
+export DATABASE_URL=postgresql+asyncpg://news:<POSTGRES_PASSWORD>@localhost:5432/news_hub
+export REDIS_URL=redis://localhost:6379/0
+alembic upgrade head && uvicorn news_hub.api:app --reload
 ```
 
-- `REDIS_URL=redis://localhost:…` у контейнері — це сам контейнер, а не твій комп'ютер: інші контейнери — за
-  іменем у спільній мережі (`redis`).
-- `--env-file` бере значення **буквально**, разом з лапками: рядки для нього — `python -m news_hub.security --env-file`.
-- Без `DATABASE_URL` база — SQLite на томі `/data`; PostgreSQL — `-e DATABASE_URL=postgresql+asyncpg://…`.
-- `/health` — «процес живий» (HEALTHCHECK образу), `/health/ready` — база й Redis відповідають (інакше 503).
-- Кілька процесів uvicorn — `-e WEB_CONCURRENCY=2`; зазвичай краще більше контейнерів (крок 11).
+Бот у режимі polling — `docker compose --profile polling up -d`. З `TELEGRAM_WEBHOOK_URL` бот працює всередині `api`, окремий сервіс не потрібен. Двійник Telegram з кроку 9 — `docker compose --profile twin up -d` (налаштування — у розділі [Зовнішній сервіс не зупиняє старт](external_services.md#twin)).
 
-### Telegram-бот (крок 9)
+!!! note "Як перевірялись виводи на сторінках кроку"
+    Усі виводи — зі справжніх запусків Docker Compose v2.40 (Docker 29.1) на машині, де вже працювали інші проєкти.
+    Тому стек запускався з іменем проєкту `-p newshub-step11-bookcheck` (контейнери звуться
+    `newshub-step11-bookcheck-api-1`, а не `news_hub-api-1`), з `HTTP_PORT=8091` (порт 80 був зайнятий) і з
+    файлом-доповненням, що міняє підмережу `edge` на `10.28.0.0/24`: `172.28.0.0/24` перетиналась з уже наявною
+    мережею Docker (див. [Типові помилки](checkpoint.md#mistakes)). Тому в журналах адреса nginx — `10.28.0.10`, а не
+    `172.28.0.10`. Решта файлів — без змін. Кроки на справжньому сервері не виконувались: див. [Деплой](deploy.md).
 
-Без `BOT_TOKEN` бота немає — API працює як раніше. Токен дає @BotFather у Telegram (`/newbot`); це секрет,
-лише в змінних середовища.
-
-```bash
-# розробка: polling — бот сам питає Telegram про нові повідомлення
-BOT_TOKEN=… python -m news_hub.bot
-
-# сервер: webhook — Telegram надсилає update на POST /api/telegram/webhook (лише https)
-export BOT_TOKEN=… TELEGRAM_WEBHOOK_URL=https://news.example/api/telegram/webhook
-export TELEGRAM_WEBHOOK_SECRET="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
-uvicorn news_hub.api:app          # при старті — setWebhook із секретом; при зупинці webhook лишається
-```
-
-Без мережі й токена — двійник Telegram Bot API (`tests/telegram_twin.py`):
-
-```bash
-python -m tests.telegram_twin --port 8081                  # «Telegram» на 127.0.0.1:8081
-BOT_TOKEN=123456:TEST-TOKEN TELEGRAM_API_URL=http://127.0.0.1:8081 python -m news_hub.bot
-curl -X POST localhost:8081/_twin/say -d '{"text": "/news", "chat_id": 1001}'   # «користувач» пише боту
-curl localhost:8081/_twin/sent?chat_id=1001                                     # що відповів бот
-```
-
-| Змінна | За замовчуванням | Що робить |
-|---|---|---|
-| `BOT_TOKEN` | — | токен бота; без нього бот вимкнений |
-| `TELEGRAM_WEBHOOK_URL` / `TELEGRAM_WEBHOOK_SECRET` | — | webhook у FastAPI; секрет — 32–256 символів `A-Z a-z 0-9 _ -` |
-| `TELEGRAM_API_URL` | api.telegram.org | інший сервер Bot API (двійник, локальний Bot API server) |
-| `BOT_ADMIN_IDS` | — | `user_id` через кому: кому дозволено `/scrape` у боті |
-
-Команди: `/news [N]`, `/digest`, `/subscribe <слово>`, `/unsubscribe <слово>`, `/subscriptions`, `/help`;
-адміну — `/scrape [snapshot]`. Після кожного збору (API, фонова задача, RSS-джерело) нові новини, у заголовку
-яких є слово підписки, приходять у чат.
-
-### Адмін, RSS-джерела і webhook (крок 8)
-
-Читати новини може будь-хто; змінювати, збирати, аналізувати й додавати джерела — лише адмін з токеном.
-Без `JWT_SECRET` і `ADMIN_PASSWORD_HASH` ці ендпоінти відповідають `503`, а занадто короткий секрет не дасть
-застосунку стартувати. У середовищі — **хеш** пароля, не пароль:
-
-```bash
-python -m news_hub.security          # спитає пароль → рядки ADMIN_PASSWORD_HASH='$2b$12$…' і JWT_SECRET='…'
-export ADMIN_PASSWORD_HASH='$2b$12$…' JWT_SECRET='…'      # одинарні лапки: у хеші є $
-export WEBHOOK_SECRET="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"   # якщо потрібен webhook
-uvicorn news_hub.api:app --reload
-
-TOKEN=$(curl -s -X POST localhost:8000/api/admin/token -H 'Content-Type: application/json' \
-        -d '{"username": "admin", "password": "…"}' | python -c 'import json,sys; print(json.load(sys.stdin)["access_token"])')
-curl -X POST localhost:8000/api/scrape -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-     -d '{"source": "snapshot"}'
-```
-
-У Swagger — кнопка **Authorize** (вставити `access_token`). RSS-джерело: `POST /api/sources`
-з `{"url": "https://www.pravda.com.ua/rss/view_news/", "name": "Українська правда"}`, потім
-`POST /api/sources/1/fetch`. Адреси всередині мережі (localhost, 10.x, 192.168.x, 169.254.169.254, …) — `400`.
-
-| Змінна | За замовчуванням | Що робить |
-|---|---|---|
-| `JWT_SECRET` | — | ключ підпису токенів, ≥ 32 символи |
-| `ADMIN_USERNAME` / `ADMIN_PASSWORD_HASH` | `admin` / — | вхід адміна; хеш — `python -m news_hub.security` |
-| `JWT_EXPIRE_MINUTES` | `30` | скільки живе токен |
-| `LOGIN_RATE_LIMIT` / `LOGIN_RATE_WINDOW` | `5` / `300` | спроб входу з однієї адреси за вікно, с |
-| `WEBHOOK_SECRET` | — | спільний секрет для підпису `POST /api/webhooks/scrape`; без нього — `503` |
-
-Webhook підписує відправник: `X-Webhook-Timestamp: <unix-час>` і
-`X-Webhook-Signature: sha256=<HMAC-SHA256(WEBHOOK_SECRET, "<час>." + тіло)>` (функція `news_hub.webhooks.sign`).
-
-### Аналіз LLM (крок 7)
-
-Ключ — лише змінна середовища, ніколи не в коді й не в git. Без ключа все, крім аналізу, працює;
-`POST /api/news/{id}/analyze` відповідає `503 LLM не налаштовано`.
-
-```bash
-export GEMINI_API_KEY=…          # безкоштовний ключ: aistudio.google.com → Get API key
-uvicorn news_hub.api:app --reload
-# або без ключа й мережі — фейкова модель: LLM_PROVIDER=fake uvicorn news_hub.api:app --reload
-# Anthropic замість Gemini: LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=… ANTHROPIC_MODEL=<назва моделі>
-
-pytest -m llm                    # справжні виклики (витрачають квоту); без ключа — пропускаються
-```
-
-| Змінна | За замовчуванням | Що робить |
-|---|---|---|
-| `LLM_PROVIDER` | `gemini` | `gemini`, `anthropic` або `fake` |
-| `GEMINI_MODELS` | `gemini-2.5-flash,…` | пул моделей через кому — перша, що відповіла |
-| `LLM_TIMEOUT` / `LLM_MAX_TOKENS` | `30` / `2048` | секунд на запит / стеля відповіді |
-| `ANALYZE_RATE_LIMIT` | `10` | запитів до LLM за хвилину з однієї адреси |
-
-Swagger (спершу Authorize — крок 8): `POST /api/scrape` (`{"source": "snapshot"}`) → `POST /api/news/1/analyze` → `POST /api/analyze/jobs`
-(`{"limit": 20}`) → `GET /api/news/stats` (поля `ai_category`, `sentiment`) → `GET /api/news?sentiment=негативна`.
-
-Ті самі тести на справжніх серверах: `TEST_DATABASE_URL=postgresql+asyncpg://news:news@localhost:5432/news_hub_test TEST_REDIS_URL=redis://localhost:6379/15 pytest` (базу `news_hub_test` створи заздалегідь; Redis-база 15 очищується перед кожним тестом). Лише так ловиться гонка в rate limit: fakeredis не віддає керування циклу подій, тож одночасних запитів на ньому не буває (`tests/integration/test_async_api.py`).
-
-- http://127.0.0.1:8000/docs — Swagger UI: Authorize, потім `POST /api/scrape` з `{"source": "snapshot"}`, потім `GET /api/news`;
-- Postman: Import → `postman/news_hub.postman_collection.json` → змінна `adminPassword` → Run collection;
-- без Postman: `npx newman run postman/news_hub.postman_collection.json --env-var adminPassword=…`.
-
-Свіжа стрічка (коли `www.rbc.ua` доступний з мережі) — `POST /api/scrape` з `{}` або
-`{"mode": "sequential"}`; у відповіді — час кожної сторінки й помилки, якщо сторінка не завантажилась.
-
-Крок 6: `rss.py` і зміни в `models.py` написав Claude Code (`claude -p`) за специфікацією `tests/unit/test_pravda.py`.
-Рецензія його коду — `tests/unit/test_pravda_review.py`.
-
-## Порівняння з попереднім кроком
+## Порівняння з кроком 10 { #diff }
 
 ```bash
 git diff --no-index --stat steps/10_docker steps/11_compose_deploy
+git diff --no-index steps/10_docker/docker-compose.yml steps/11_compose_deploy/docker-compose.yml
 git diff --no-index steps/10_docker/news_hub steps/11_compose_deploy/news_hub
 ```
 
-## Що далі
+У коді застосунку змінилися лише два файли: `api.py` (фонова реєстрація бота) і `security.py` (повна перевірка хешу). Решта кроку — конфігурація навколо того самого образу.
 
-[Крок 12. CI/CD на GitHub Actions](../12_ci_cd/index.md)
+## Що далі { #next }
+
+[Крок 12. CI/CD на GitHub Actions](../12_ci_cd/index.md): те, що тут перевіряли руками, — тести, типи, збірка образу, запуск і перевірка `/health/ready` — робитиме GitHub Actions на кожен pull request.
