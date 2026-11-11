@@ -262,6 +262,6 @@ examples/after_typed.py:11: error: Item "None" of "time | None" has no attribute
 
 ## Що далі { #next }
 
-[Частина II. Типи і Pydantic](README.md) — решта розділів частини.
+[Моделі Pydantic 2](pydantic_models.md).
 
 **Джерела:** [Python — typing](https://docs.python.org/3/library/typing.html); PEP [604](https://peps.python.org/pep-0604/) (`X | Y`), [585](https://peps.python.org/pep-0585/) (`list[str]`), [586](https://peps.python.org/pep-0586/) (`Literal`), [589](https://peps.python.org/pep-0589/) (`TypedDict`), [593](https://peps.python.org/pep-0593/) (`Annotated`), [544](https://peps.python.org/pep-0544/) (`Protocol`), [563](https://peps.python.org/pep-0563/) (`from __future__ import annotations`); FastAPI — [Python Types Intro](https://fastapi.tiangolo.com/python-types/), [Response Model — Return Type](https://fastapi.tiangolo.com/tutorial/response-model/), [Query Parameters and String Validations](https://fastapi.tiangolo.com/tutorial/query-params-str-validations/); Pydantic — [Types](https://docs.pydantic.dev/latest/concepts/types/), [Fields](https://docs.pydantic.dev/latest/concepts/fields/), [Standard Library Types — TypedDict](https://docs.pydantic.dev/latest/api/standard_library_types/); [mypy — Protocols and structural subtyping](https://mypy.readthedocs.io/en/stable/protocols.html), [Literal types — exhaustiveness checking](https://mypy.readthedocs.io/en/stable/literal_types.html#exhaustiveness-checking).
