@@ -6,7 +6,7 @@
 
 | Розділ | Код | Стан |
 |---|---|---|
-| Анотації типів і `TypedDict` | `steps/01/examples/before_dict.py`, `after_typed.py` | у роботі |
+| [Анотації типів: що читає FastAPI, а що лише mypy](type_hints.md) | `examples/type_hints/runtime_app.py`, `mypy_only.py` | готово |
 | Моделі Pydantic | `steps/01/news_hub/models.py` | у роботі |
 | Межа довіри | — | у роботі |
 

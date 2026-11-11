@@ -41,7 +41,7 @@ SQLAlchemy 2. Для кожного прикладу напиши, який ви
 
 ## Частина II. Типи й Pydantic
 
-- [ ] Анотації типів у Python 3.10+: `X | None`, `list[str]`, `Literal`, `Annotated`, `TypedDict`, `Protocol`. Що з них використовує FastAPI в рантаймі, а що — лише mypy?
+- [x] Анотації типів у Python 3.10+: `X | None`, `list[str]`, `Literal`, `Annotated`, `TypedDict`, `Protocol`. Що з них використовує FastAPI в рантаймі, а що — лише mypy?
 - [ ] Pydantic 2: `BaseModel`, `Field` (обмеження), `model_validate`, `model_dump`, `model_dump(mode="json")`, `exclude_unset`. Різниця з Pydantic 1 для тих, хто мігрує.
 - [ ] Режими перевірки: lax і strict. Які перетворення типів Pydantic робить сам (`"5"` → `5`), як їх вимкнути?
 - [ ] `field_validator`, `model_validator` (before/after), `computed_field`: коли що, приклади.

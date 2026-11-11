@@ -43,6 +43,7 @@ git diff --no-index steps/04_middleware_redis steps/05_api_testing
 - [`examples/pagination`](examples/pagination) — фільтри, сортування, offset проти курсора на мільйоні рядків;
 - [`examples/versioning`](examples/versioning) — версії в шляху, заголовку й параметрі; Deprecation і Sunset;
 - [`examples/realtime`](examples/realtime) — SSE (`fastapi.sse`), WebSocket з токеном і розсилкою, `app.webhooks` в OpenAPI;
+- [`examples/type_hints`](examples/type_hints) — які анотації читають FastAPI і Pydantic у рантаймі, а які лише mypy;
 - [`examples/cors`](examples/cors) — `CORSMiddleware`: preflight, небезпека `["*"]` з credentials, порядок middleware;
 - [`examples/errors`](examples/errors) — помилки у форматі RFC 9457 (Problem Details) і типові пастки власних обробників;
 - [`examples/fastapi_demo`](examples/fastapi_demo) — шість ендпоінтів і навантажувальний тест: що блокує сервер.
