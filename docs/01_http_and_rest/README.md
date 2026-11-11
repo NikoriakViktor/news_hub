@@ -13,7 +13,7 @@
 | [Колекції: адреси, фільтри, сортування, пагінація](collections.md) | `examples/pagination/pagination_app.py`, `pagination_demo.py` | готово |
 | [Версіонування API](versioning.md) | `examples/versioning/versioning_app.py`, `versioning_demo.py` | готово |
 | [Формат помилок: RFC 9457](errors.md) | `examples/errors/problem_app.py`, `naive_app.py` | готово |
-| Які бувають API | `examples/meteo_api/meteo_api/grpc_meteo.py`, `meteo.proto` | у роботі |
+| [Які бувають API](api_styles.md) | `examples/meteo_api/api_styles_demo.py`, `examples/realtime/realtime_app.py` | готово |
 | Кейс: API v1 → v2 | `meteo_api/legacy/` | у роботі |
 | Архітектура: API, клієнт і карта | `examples/meteo_api` | у роботі |
 

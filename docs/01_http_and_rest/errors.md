@@ -202,6 +202,6 @@ Problem Details варто вводити, коли з'являються зов
 
 ## Що далі { #next }
 
-[Частина I. HTTP і дизайн REST API](README.md) — решта розділів частини.
+[Які бувають API: REST, GraphQL, gRPC, WebSocket, SSE, webhook](api_styles.md).
 
 **Джерела:** [RFC 9457 — Problem Details for HTTP APIs](https://www.rfc-editor.org/rfc/rfc9457); FastAPI — [Handling Errors](https://fastapi.tiangolo.com/tutorial/handling-errors/) (розділи «Install custom exception handlers», «Override the default exception handlers», «FastAPI's HTTPException vs Starlette's HTTPException»), [Additional Responses in OpenAPI](https://fastapi.tiangolo.com/advanced/additional-responses/); [Pydantic — Validation Errors](https://docs.pydantic.dev/latest/errors/validation_errors/).
