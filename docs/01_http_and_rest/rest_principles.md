@@ -134,6 +134,6 @@ if if_none_match == etag:
 
 ## Що далі { #next }
 
-[Частина I. HTTP і дизайн REST API](README.md) — решта розділів частини.
+[Колекції: адреси, фільтри, сортування, пагінація](collections.md).
 
 **Джерела:** [Roy Fielding — Architectural Styles and the Design of Network-based Software Architectures, гл. 5 (REST)](https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm); [RFC 9111 — HTTP Caching](https://www.rfc-editor.org/rfc/rfc9111); [RFC 9110 — §8.8.3 ETag, §13.1.2 If-None-Match](https://www.rfc-editor.org/rfc/rfc9110); [MDN — HTTP caching](https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching); [FastAPI — Server Workers](https://fastapi.tiangolo.com/deployment/server-workers/).
