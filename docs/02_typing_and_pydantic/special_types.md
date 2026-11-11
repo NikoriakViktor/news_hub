@@ -181,6 +181,6 @@
 
 ## Що далі { #next }
 
-[Частина II. Типи і Pydantic](README.md) — решта розділів частини.
+[`ValidationError`: структура і як показати людині](validation_error.md).
 
 **Джерела:** Pydantic — [Network Types](https://docs.pydantic.dev/latest/api/networks/), [Pydantic Types — AwareDatetime, NaiveDatetime](https://docs.pydantic.dev/latest/api/types/#pydantic.types.AwareDatetime), [Standard Library Types — datetime](https://docs.pydantic.dev/latest/api/standard_library_types/#datetimedatetime), [Changelog v2.10](https://github.com/pydantic/pydantic/releases/tag/v2.10.0); [email-validator](https://github.com/JoshData/python-email-validator); [SQLAlchemy — DateTime](https://docs.sqlalchemy.org/en/20/core/type_basics.html#sqlalchemy.types.DateTime); [OWASP — SSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html).

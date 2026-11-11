@@ -6,6 +6,7 @@ python models_demo.py       # Field, model_validate, model_dump(mode=...), exclu
 python strict_demo.py       # lax і strict: що перетворюється, чотири способи strict, strict у FastAPI
 python validators_demo.py   # field_validator before/after, model_validator, computed_field, типові помилки
 python types_demo.py        # HttpUrl, AnyUrl, EmailStr, AwareDatetime; HttpUrl і SQLite
+python validation_error_demo.py  # type/loc/msg/input/ctx, переклад повідомлень, ValidationError у маршруті → 500
 python migration_demo.py    # той самий код; запусти ще раз після pip install "pydantic<2" — побачиш різницю з Pydantic 1
 ```
 
