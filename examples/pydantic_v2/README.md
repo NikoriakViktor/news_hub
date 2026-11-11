@@ -7,6 +7,7 @@ python strict_demo.py       # lax і strict: що перетворюється, 
 python validators_demo.py   # field_validator before/after, model_validator, computed_field, типові помилки
 python types_demo.py        # HttpUrl, AnyUrl, EmailStr, AwareDatetime; HttpUrl і SQLite
 python validation_error_demo.py  # type/loc/msg/input/ctx, переклад повідомлень, ValidationError у маршруті → 500
+python config_demo.py      # ConfigDict: extra і масове присвоєння, frozen, from_attributes і async SQLAlchemy
 python migration_demo.py    # той самий код; запусти ще раз після pip install "pydantic<2" — побачиш різницю з Pydantic 1
 ```
 

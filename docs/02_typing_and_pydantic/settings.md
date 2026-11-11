@@ -203,6 +203,6 @@ def load_admin_settings(env: Mapping[str, str] = os.environ) -> AdminSettings | 
 
 ## Що далі { #next }
 
-[Частина II. Типи і Pydantic](README.md) — решта розділів частини.
+[`ConfigDict`: `extra`, `frozen`, `from_attributes`](config_dict.md) — `extra="forbid"` ми вже зустріли в `BaseSettings`; тепер — усі головні налаштування моделі й чим вони захищають від масового присвоєння.
 
 **Джерела:** Pydantic — [Settings Management](https://docs.pydantic.dev/latest/concepts/pydantic_settings/) (розділи «Field value priority», «Dotenv (.env) support», «Secrets», «Parsing environment variable values»), [Types — SecretStr](https://docs.pydantic.dev/latest/api/types/#pydantic.types.SecretStr); FastAPI — [Settings and Environment Variables](https://fastapi.tiangolo.com/advanced/settings/); [Docker Compose — Interpolation](https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/); [The Twelve-Factor App — Config](https://12factor.net/config).
