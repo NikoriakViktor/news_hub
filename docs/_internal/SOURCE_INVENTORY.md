@@ -20,6 +20,7 @@
 | `module_5/lessons/lesson_51_*/news_hub` | `steps/12_ci_cd` |
 | `module_4/lessons/lesson_33_rest_api_design/{meteo_api,weather_map,tests,Dockerfile,docker-compose.yml,requirements.txt}` | `examples/meteo_api` |
 | `module_4/lessons/lesson_36_drf_fastapi/fastapi_notes.py` | `examples/fastapi_vs_drf/fastapi_notes.py` |
+| `module_4/lessons/lesson_38_fastapi_basics/fastapi_demo` | `examples/fastapi_demo` |
 | `module_6/lessons/lesson_52_final_project/patches/news_hub_search_index.patch` | лаба «Пошуковий індекс» (Практика) |
 
 ## Тексти: книга знань
@@ -33,11 +34,11 @@
 | `02_typing_and_pydantic/type_hints.md` — Анотації типів і `TypedDict` | урок 37 «Рефакторинг 1»; `steps/01/examples/before_dict.py`, `after_typed.py` | заплановано |
 | `02_typing_and_pydantic/pydantic_models.md` — Моделі Pydantic | урок 37 «Рефакторинг 2»; `steps/01/news_hub/models.py` | заплановано |
 | `02_typing_and_pydantic/trust_boundary.md` — Межа довіри | урок 37 «Архітектура: межа довіри» | заплановано |
-| `03_fastapi_core/what_is_fastapi.md` — Що таке FastAPI | `fastapi_documentation.md` §1; урок 38 «Рефакторинг 1» | заплановано |
-| `03_fastapi_core/routes_and_validation.md` — Маршрути, параметри і валідація | урок 38 «Рефакторинг 1», «Рефакторинг 3»; `steps/02/news_hub/api.py` | заплановано |
-| `03_fastapi_core/dependencies.md` — Залежності: `Depends` і `lifespan` | урок 38 «Рефакторинг 2»; `fastapi_documentation.md` §5 | заплановано |
-| `03_fastapi_core/openapi_and_postman.md` — OpenAPI, `/docs` і Postman | урок 38 «OpenAPI і /docs», «Postman»; `steps/02/postman/` | заплановано |
-| `03_fastapi_core/fastapi_vs_drf.md` — FastAPI і Django REST Framework | урок 36 «Django + DRF чи FastAPI»; `examples/fastapi_vs_drf/fastapi_notes.py` | заплановано |
+| `03_fastapi_core/what_is_fastapi.md` — Що таке FastAPI | `fastapi_documentation.md` §1; урок 38 «Рефакторинг 1» | готово |
+| `03_fastapi_core/routes_and_validation.md` — Маршрути, параметри і валідація | урок 38 «Рефакторинг 1», «Рефакторинг 3»; `steps/02/news_hub/api.py` | готово |
+| `03_fastapi_core/dependencies.md` — Залежності: `Depends` і `lifespan` | урок 38 «Рефакторинг 2»; `fastapi_documentation.md` §5 | готово |
+| `03_fastapi_core/openapi.md` — OpenAPI: опис API з коду | урок 38 «OpenAPI і /docs»; урок 33 | готово |
+| `03_fastapi_core/fastapi_vs_drf.md` — FastAPI і Django REST Framework | урок 36 «Django + DRF чи FastAPI»; `examples/fastapi_vs_drf/fastapi_notes.py` | готово |
 | `04_async/asgi_vs_wsgi.md` — ASGI і WSGI | `fastapi_documentation.md` §2 | заплановано |
 | `04_async/endpoint_types.md` — Три типи ендпоінтів | `fastapi_documentation.md` §3 | заплановано |
 | `04_async/blocking_code.md` — Блокуючий код: каскадний ефект | `fastapi_documentation.md` §4 | заплановано |
@@ -78,9 +79,9 @@
 | `tutorials/01_typing_pydantic/index.md` | README кроку + урок 37 | скелет |
 | `tutorials/01_typing_pydantic/*.md` — Анотації типів і `TypedDict`; Pydantic: модель `NewsItem`; Межа довіри | `m4/lesson_37.md` «Рефакторинг …», «Архітектура», «Тести» | заплановано |
 | `tutorials/01_typing_pydantic/checkpoint.md` | урок 37 «Практика», «Підсумок» | заплановано |
-| `tutorials/02_fastapi_basics/index.md` | README кроку + урок 38 | скелет |
-| `tutorials/02_fastapi_basics/*.md` — FastAPI над `NewsItem`; Сховище через `Depends` і `lifespan`; `POST /api/scrape`: парсинг через API; OpenAPI і `/docs`; Postman; Async чи blocking: виміри | `m4/lesson_38.md` «Рефакторинг …», «Архітектура», «Тести» | заплановано |
-| `tutorials/02_fastapi_basics/checkpoint.md` | урок 38 «Практика», «Підсумок» | заплановано |
+| `tutorials/02_fastapi_basics/index.md` | README кроку + урок 38 | готово |
+| `tutorials/02_fastapi_basics/` async_measurements.md, depends_and_lifespan.md, fastapi_app.md, openapi_and_postman.md, scrape_endpoint.md | `m4/lesson_38.md` «Рефакторинг …», «Архітектура», «Тести» | готово |
+| `tutorials/02_fastapi_basics/checkpoint.md` | урок 38 «Практика», «Підсумок» | готово |
 | `tutorials/03_sqlalchemy_alembic/index.md` | README кроку + урок 39 | скелет |
 | `tutorials/03_sqlalchemy_alembic/*.md` — Engine, сесії й таблиця; Репозиторій замість `NewsStore`; Сесія на запит і COMMIT до відповіді; Повний CRUD; Міграції Alembic | `m4/lesson_39.md` «Рефакторинг …», «Архітектура», «Тести» | заплановано |
 | `tutorials/03_sqlalchemy_alembic/checkpoint.md` | урок 39 «Практика», «Підсумок» | заплановано |

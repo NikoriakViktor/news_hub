@@ -9,7 +9,8 @@ news_hub/
 │   └── 12_ci_cd/             ← фінальна версія
 ├── examples/
 │   ├── meteo_api/            ← API метеостанцій: дизайн REST, gRPC для порівняння
-│   └── fastapi_vs_drf/       ← API нотаток на FastAPI — пара до DRF
+│   ├── fastapi_vs_drf/       ← API нотаток на FastAPI — пара до DRF
+│   └── fastapi_demo/         ← async чи blocking: виміри
 ├── docs/                     ← ця книга (MkDocs Material)
 ├── .github/workflows/
 │   ├── steps.yml             ← pytest у кожному кроці
