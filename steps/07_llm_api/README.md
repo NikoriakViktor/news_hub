@@ -112,4 +112,4 @@ Swagger: `POST /api/scrape` (`{"source": "snapshot"}`) → `POST /api/news/1/ana
 Урок 43: `rss.py` і зміни в `models.py` написав Claude Code (`claude -p`) за специфікацією `tests/unit/test_pravda.py`.
 Рецензія його коду — `tests/unit/test_pravda_review.py`.
 
-Розбір змін — [урок 44 у книзі курсу](https://nikoriakviktor.github.io/PY-Course-Victor-Nikoriak-11-11-2026/modules/m4/lesson_44/).
+Розбір змін — [Крок 7 у книзі](https://nikoriakviktor.github.io/news_hub/tutorials/07_llm_api/) · урок 44 курсу.

@@ -41,7 +41,7 @@ news_hub/
 
 ```bash
 pip install -r requirements.txt
-pytest                      # 31 тест на SQLite у пам'яті
+pytest                      # 32 тести на SQLite у пам'яті
 mypy --strict news_hub      # перевірка типів
 
 # база: без DATABASE_URL — файл news_hub.db (SQLite); з PostgreSQL:
@@ -61,4 +61,4 @@ uvicorn news_hub.api:app --reload
 Свіжа стрічка (коли `www.rbc.ua` доступний з мережі) — `POST /api/scrape` з `{}` або
 `{"mode": "sequential"}`; у відповіді — час кожної сторінки й помилки, якщо сторінка не завантажилась.
 
-Розбір змін — [урок 39 у книзі курсу](https://nikoriakviktor.github.io/PY-Course-Victor-Nikoriak-11-11-2026/modules/m4/lesson_39/).
+Розбір змін — [Крок 3 у книзі](https://nikoriakviktor.github.io/news_hub/tutorials/03_sqlalchemy_alembic/) · урок 39 курсу.

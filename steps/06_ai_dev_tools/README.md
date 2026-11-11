@@ -84,4 +84,4 @@ uvicorn news_hub.api:app --reload
 Урок 43: `rss.py` і зміни в `models.py` написав Claude Code (`claude -p`) за специфікацією `tests/unit/test_pravda.py`.
 Рецензія його коду — `tests/unit/test_pravda_review.py`.
 
-Розбір змін — [урок 43 у книзі курсу](https://nikoriakviktor.github.io/PY-Course-Victor-Nikoriak-11-11-2026/modules/m4/lesson_43/).
+Розбір змін — [Крок 6 у книзі](https://nikoriakviktor.github.io/news_hub/tutorials/06_ai_dev_tools/) · урок 43 курсу.

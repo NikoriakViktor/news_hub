@@ -191,4 +191,4 @@ Swagger (спершу Authorize — урок 47): `POST /api/scrape` (`{"source"
 Урок 43: `rss.py` і зміни в `models.py` написав Claude Code (`claude -p`) за специфікацією `tests/unit/test_pravda.py`.
 Рецензія його коду — `tests/unit/test_pravda_review.py`.
 
-Розбір змін — [урок 48 у книзі курсу](https://nikoriakviktor.github.io/PY-Course-Victor-Nikoriak-11-11-2026/modules/m4/lesson_48/).
+Розбір змін — [Крок 9 у книзі](https://nikoriakviktor.github.io/news_hub/tutorials/09_telegram_bot/) · урок 48 курсу.

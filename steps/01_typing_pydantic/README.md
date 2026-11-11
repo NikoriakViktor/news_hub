@@ -48,4 +48,4 @@ html = requests.get("https://www.rbc.ua/ukr/news/", headers={"User-Agent": "EduS
 valid, rejected = validate_news(parse_rbc_news(html))
 ```
 
-Розбір змін — [урок 37 у книзі курсу](https://nikoriakviktor.github.io/PY-Course-Victor-Nikoriak-11-11-2026/modules/m4/lesson_37/).
+Розбір змін — [Крок 1 у книзі](https://nikoriakviktor.github.io/news_hub/tutorials/01_typing_pydantic/) · урок 37 курсу.

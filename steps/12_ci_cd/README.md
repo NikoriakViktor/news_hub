@@ -103,7 +103,7 @@ uvicorn news_hub.api:app --reload
 
 ### CI/CD (урок 51)
 
-Workflow — у корені репозиторію: [`.github/workflows/news_hub.yml`](../../../../.github/workflows/news_hub.yml). На кожен PR, що змінює
+Workflow — у корені репозиторію: [`.github/workflows/news_hub.yml`](../../.github/workflows/news_hub.yml). На кожен PR, що змінює
 цю папку: `pytest` на Python 3.10 і 3.13, мінімальні версії залежностей (`uv --resolution lowest-direct`), PostgreSQL + Redis
 і `alembic check`, `mypy --strict`, тести образу й smoke-тест стеку. Push у `main` — ще й образ у `ghcr.io`. Локально — те саме:
 
@@ -258,4 +258,4 @@ Swagger (спершу Authorize — урок 47): `POST /api/scrape` (`{"source"
 Урок 43: `rss.py` і зміни в `models.py` написав Claude Code (`claude -p`) за специфікацією `tests/unit/test_pravda.py`.
 Рецензія його коду — `tests/unit/test_pravda_review.py`.
 
-Розбір змін — [урок 51 у книзі курсу](https://nikoriakviktor.github.io/PY-Course-Victor-Nikoriak-11-11-2026/modules/m5/lesson_51/).
+Розбір змін — [Крок 12 у книзі](https://nikoriakviktor.github.io/news_hub/tutorials/12_ci_cd/) · урок 51 курсу.
