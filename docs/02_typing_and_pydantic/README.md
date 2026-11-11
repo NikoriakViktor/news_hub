@@ -12,6 +12,7 @@
 | [Валідатори і `computed_field`](validators.md) | `examples/pydantic_v2/validators_demo.py` | готово |
 | [URL, email і дати](special_types.md) | `examples/pydantic_v2/types_demo.py` | готово |
 | [`ValidationError`: структура і як показати людині](validation_error.md) | `examples/pydantic_v2/validation_error_demo.py` | готово |
+| [Налаштування: `pydantic-settings`, `.env`, `SecretStr`](settings.md) | `examples/settings/settings_demo.py` | готово |
 | Межа довіри | — | у роботі |
 
 ## На практиці — Zero to Hero

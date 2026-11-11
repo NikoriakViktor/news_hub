@@ -47,7 +47,7 @@ SQLAlchemy 2. Для кожного прикладу напиши, який ви
 - [x] `field_validator`, `model_validator` (before/after), `computed_field`: коли що, приклади.
 - [x] Типи Pydantic для URL, email, дат: `HttpUrl`, `AnyUrl`, `EmailStr`, `AwareDatetime`. Що повертає `HttpUrl` у Pydantic 2 і як його серіалізувати?
 - [x] `ValidationError`: структура помилки (`type`, `loc`, `msg`, `input`, `ctx`), як її показати користувачу.
-- [ ] `pydantic-settings`: налаштування зі змінних середовища й `.env`, `SecretStr`, пріоритет джерел.
+- [x] `pydantic-settings`: налаштування зі змінних середовища й `.env`, `SecretStr`, пріоритет джерел.
 - [ ] `ConfigDict`: `extra="forbid"`, `frozen`, `from_attributes` (для об'єктів ORM).
 
 ## Частина III. Ядро FastAPI (розділи написано — промпти для перевірки й доповнення)

@@ -206,6 +206,6 @@ FastAPI перехоплює лише `RequestValidationError` — помилк�
 
 ## Що далі { #next }
 
-[Частина II. Типи і Pydantic](README.md) — решта розділів частини.
+[Налаштування: `pydantic-settings`, `.env`, `SecretStr`](settings.md) — ті самі моделі й ті самі `ValidationError`, але дані приходять не з запиту, а зі змінних середовища при старті.
 
 **Джерела:** Pydantic — [Validation Errors](https://docs.pydantic.dev/latest/errors/validation_errors/), [Errors — ValidationError](https://docs.pydantic.dev/latest/api/pydantic_core/#pydantic_core.ValidationError), [Validators — Raising validation errors](https://docs.pydantic.dev/latest/concepts/validators/#raising-validation-errors); FastAPI — [Handling Errors — Override request validation exceptions](https://fastapi.tiangolo.com/tutorial/handling-errors/#override-request-validation-exceptions).
