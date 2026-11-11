@@ -182,6 +182,6 @@ stmt = select(NewsRow).order_by(NewsRow.id).offset(skip).limit(limit)
 
 ## Що далі { #next }
 
-[Частина I. HTTP і дизайн REST API](README.md) — решта розділів частини. Як `Query`, `Literal` і обмеження перетворюються на `422` — [Маршрути, параметри і валідація](../03_fastapi_core/routes_and_validation.md).
+[Версіонування API](versioning.md). Як `Query`, `Literal` і обмеження перетворюються на `422` — [Маршрути, параметри і валідація](../03_fastapi_core/routes_and_validation.md).
 
 **Джерела:** [FastAPI — Query Parameters and String Validations](https://fastapi.tiangolo.com/tutorial/query-params-str-validations/); [FastAPI — SQL (Relational) Databases](https://fastapi.tiangolo.com/tutorial/sql-databases/); [SQLAlchemy 2 — ORM Querying Guide](https://docs.sqlalchemy.org/en/20/orm/queryguide/select.html); [SQLite — EXPLAIN QUERY PLAN](https://www.sqlite.org/eqp.html); [OWASP API Security Top 10 — API1:2023 Broken Object Level Authorization](https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/).

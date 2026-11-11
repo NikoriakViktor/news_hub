@@ -41,6 +41,7 @@ git diff --no-index steps/04_middleware_redis steps/05_api_testing
 - [`examples/frameworks_compared`](examples/frameworks_compared) — той самий API на FastAPI, Flask і Django;
 - [`examples/http_anatomy`](examples/http_anatomy) — HTTP зсередини: сирий запит, методи, коди, кеш;
 - [`examples/pagination`](examples/pagination) — фільтри, сортування, offset проти курсора на мільйоні рядків;
+- [`examples/versioning`](examples/versioning) — версії в шляху, заголовку й параметрі; Deprecation і Sunset;
 - [`examples/fastapi_demo`](examples/fastapi_demo) — шість ендпоінтів і навантажувальний тест: що блокує сервер.
 
 ## Швидкий старт
