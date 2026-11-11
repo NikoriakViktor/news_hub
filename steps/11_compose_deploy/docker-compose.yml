@@ -1,0 +1,136 @@
+# news_hub повністю: nginx → api → PostgreSQL + Redis; міграції — окремим кроком перед API. Урок 49.
+# Основа — docker-compose.yml стартового production_bot (bot, nginx, postgres, redis, migrate).
+#
+#   cp .env.example .env            # і заповнити
+#   docker compose up -d --build --wait
+#   curl localhost/health/ready
+#
+# Порядок запуску: postgres (healthy) → migrate (завершився з кодом 0) → api (healthy) → nginx.
+# Бот у режимі polling — лише з профілем: docker compose --profile polling up -d
+# (з TELEGRAM_WEBHOOK_URL бот працює всередині api, окремий сервіс не потрібен).
+name: news_hub
+
+x-app: &app
+  build: .
+  image: news_hub:49
+  env_file: .env
+  environment: &app-env
+    # Адреси сервісів — за іменами в мережі Compose, не localhost (урок 48)
+    DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-news}:${POSTGRES_PASSWORD:?задай POSTGRES_PASSWORD у .env}@postgres:5432/${POSTGRES_DB:-news_hub}
+    REDIS_URL: redis://redis:6379/0
+  networks: [backend]
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-news_hub}
+      POSTGRES_USER: ${POSTGRES_USER:-news}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?задай POSTGRES_PASSWORD у .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks: [backend]            # портів назовні немає: база доступна лише сервісам у мережі
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    networks: [backend]
+
+  migrate:
+    <<: *app
+    command: ["alembic", "upgrade", "head"]
+    healthcheck:
+      disable: true                # HEALTHCHECK образу питає :8000/health — у міграцій сервера немає
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    <<: *app
+    environment:
+      <<: *app-env
+      # Кому вірити в X-Forwarded-For: лише nginx (фіксована адреса нижче). Інакше IP клієнта підробляється.
+      FORWARDED_ALLOW_IPS: 172.28.0.10
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      # готовність (база й Redis), а не лише «процес живий» — nginx стартує, коли API справді може відповідати
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=4)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+      start_interval: 2s
+    restart: unless-stopped
+    networks: [backend, edge]
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1/nginx-health"]   # curl в nginx:alpine є
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      edge:
+        ipv4_address: 172.28.0.10
+
+  bot:
+    <<: *app
+    profiles: [polling]
+    command: ["python", "-m", "news_hub.bot"]
+    healthcheck:
+      disable: true                # бот не слухає порт: HEALTHCHECK образу тут завжди «unhealthy»
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Двійник Telegram Bot API (урок 47) — лише для заняття: docker compose --profile twin up -d
+  # і в .env: BOT_TOKEN=123456:TEST-TOKEN, TELEGRAM_API_URL=http://twin:8081
+  twin:
+    image: news_hub:49
+    profiles: [twin]
+    command: ["python", "-m", "tests.telegram_twin", "--host", "0.0.0.0", "--port", "8081"]
+    healthcheck:
+      disable: true
+    volumes:
+      - ./tests:/app/tests:ro      # тестів в образі немає (.dockerignore) — підключаємо на час заняття
+    ports:
+      - "127.0.0.1:8081:8081"      # керування двійником з твого комп'ютера (лише localhost)
+    networks: [backend, edge]      # backend — бот ходить до «Telegram»; edge — «Telegram» надсилає webhook на nginx
+
+volumes:
+  pgdata:
+
+networks:
+  backend: {}                      # api, база, Redis, міграції, бот
+  edge:                            # nginx ↔ api
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24

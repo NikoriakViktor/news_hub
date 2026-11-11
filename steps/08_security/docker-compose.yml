@@ -1,0 +1,35 @@
+# PostgreSQL і Redis для news_hub — сервіси postgres і redis з docker-compose.yml стартового production_bot.
+#   docker compose up -d db redis
+#   export DATABASE_URL=postgresql+asyncpg://news:news@localhost:5432/news_hub
+#   export REDIS_URL=redis://localhost:6379/0
+#   alembic upgrade head && uvicorn news_hub.api:app --reload
+# Сам застосунок у контейнері — урок 48 (Docker).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: news_hub
+      POSTGRES_USER: news
+      POSTGRES_PASSWORD: news          # лише для навчання на своєму комп'ютері
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # дані переживають перезапуск контейнера
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U news -d news_hub"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

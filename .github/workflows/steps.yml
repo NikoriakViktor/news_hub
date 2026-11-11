@@ -1,0 +1,69 @@
+# Кожен проміжний крок книги — робочий проєкт, а не лише фінальний.
+# Матриця: steps/01 … steps/12 і examples/meteo_api → pip install → pytest.
+# Тести з Docker, PostgreSQL і справжнім LLM тут вимкнені (pytest.ini: -m "not llm and not docker");
+# їх для фінального кроку запускає news_hub.yml.
+
+name: steps — тести кожного кроку
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'steps/**'
+      - 'examples/**'
+      - '.github/workflows/steps.yml'
+  pull_request:
+    paths:
+      - 'steps/**'
+      - 'examples/**'
+      - '.github/workflows/steps.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pytest:
+    name: pytest · ${{ matrix.dir }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false               # впав крок 05 — все одно дізнатися про решту
+      matrix:
+        dir:
+          - steps/01_typing_pydantic
+          - steps/02_fastapi_basics
+          - steps/03_sqlalchemy_alembic
+          - steps/04_middleware_redis
+          - steps/05_api_testing
+          - steps/06_ai_dev_tools
+          - steps/07_llm_api
+          - steps/08_security
+          - steps/09_telegram_bot
+          - steps/10_docker
+          - steps/11_compose_deploy
+          - steps/12_ci_cd
+          - examples/meteo_api
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: ${{ matrix.dir }}/requirements*.txt
+      - name: залежності кроку
+        run: |
+          if [ -f requirements-dev.txt ]; then
+            pip install -r requirements-dev.txt
+          else
+            # до кроку 10 тестові пакети ще в requirements.txt; fakeredis/pytest-asyncio — на випадок, якщо ні
+            pip install -r requirements.txt pytest pytest-asyncio fakeredis
+          fi
+      - run: pytest -q

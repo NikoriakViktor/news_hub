@@ -1,0 +1,21 @@
+# Meteo API v2 + карта погоди (урок 32).
+#   docker compose up --build
+#   API і Swagger:  http://localhost:8032/docs
+#   Карта:          http://localhost:8501
+services:
+  api:
+    build: .
+    command: uvicorn meteo_api.app:app --host 0.0.0.0 --port 8032
+    ports:
+      - "8032:8032"
+
+  weather_map:
+    build: .
+    command: streamlit run weather_map/app.py --server.address 0.0.0.0 --server.port 8501 --server.headless true
+    environment:
+      # ім'я сервісу в мережі Compose, а не localhost: кожен контейнер — окремий «комп'ютер»
+      - METEO_API_URL=http://api:8032
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api

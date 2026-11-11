@@ -1,0 +1,24 @@
+# PostgreSQL для news_hub — сервіс postgres з docker-compose.yml стартового production_bot.
+#   docker compose up -d db
+#   export DATABASE_URL=postgresql+asyncpg://news:news@localhost:5432/news_hub
+#   alembic upgrade head && uvicorn news_hub.api:app --reload
+# Сам застосунок у контейнері — урок 48 (Docker).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: news_hub
+      POSTGRES_USER: news
+      POSTGRES_PASSWORD: news          # лише для навчання на своєму комп'ютері
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # дані переживають перезапуск контейнера
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U news -d news_hub"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
