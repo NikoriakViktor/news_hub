@@ -163,6 +163,6 @@ Strict у News Hub немає, і lax там працює на користь:
 
 ## Що далі { #next }
 
-[Частина II. Типи і Pydantic](README.md) — решта розділів частини.
+[Валідатори і `computed_field`](validators.md).
 
 **Джерела:** Pydantic — [Strict Mode](https://docs.pydantic.dev/latest/concepts/strict_mode/), [Conversion Table](https://docs.pydantic.dev/latest/concepts/conversion_table/), [Standard Library Types — Booleans](https://docs.pydantic.dev/latest/api/standard_library_types/#booleans); FastAPI — [Query Parameters and String Validations](https://fastapi.tiangolo.com/tutorial/query-params-str-validations/).
