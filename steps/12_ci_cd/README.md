@@ -132,7 +132,8 @@ docker compose down                   # зупинити (дані — у том
 ```
 
 - api назовні не відкритий — лише через nginx. IP клієнта (rate limit входу, крок 8) — з `X-Forwarded-For`, який nginx
-  перезаписує, а uvicorn приймає лише від nginx (`FORWARDED_ALLOW_IPS=172.28.0.10`).
+  перезаписує, а uvicorn приймає лише від nginx (`FORWARDED_ALLOW_IPS` = адреса nginx, типово `172.28.0.10`; підмережу й адресу міняють `EDGE_SUBNET` і
+  `NGINX_IP` у `.env`, якщо `172.28.0.0/24` на машині зайнята).
 - `/docs`, `/redoc` і `/openapi.json` у Compose вимкнено (`DOCS_ENABLED: ${DOCS_ENABLED:-false}`); увімкнути — `DOCS_ENABLED=true`
   у `.env`. nginx не показує своєї версії (`server_tokens off`); заголовки безпеки ставить застосунок, HSTS — лише з TLS.
 - Міграції — окремий сервіс `migrate` (один раз, до api), а не при старті кожного api.

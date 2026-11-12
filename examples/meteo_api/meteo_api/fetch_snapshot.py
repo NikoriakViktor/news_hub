@@ -5,6 +5,8 @@
 тайм-аут, перевірка статусу, пауза між запитами, чесний User-Agent замість fake_useragent.
 
     python -m meteo_api.fetch_snapshot --days 3        # → meteo_api/data/synop_ua.csv
+
+Станції з координатами — `data/stations_ua.csv` у репозиторії; після знімка API бере обидва файли.
 """
 import argparse
 import time

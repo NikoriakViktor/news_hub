@@ -24,7 +24,7 @@
 | `redis` | `redis:7-alpine` | кеш, лічильники rate limit, статус задач, breaker | `backend` | немає |
 | `migrate` | `news_hub:12`, `alembic upgrade head` | один раз застосовує міграції й завершується | `backend` | немає |
 | `api` | `news_hub:12`, `uvicorn news_hub.api:app` (CMD образу) | увесь HTTP API, фонові задачі, бот у режимі webhook | `backend`, `edge` | немає |
-| `nginx` | `nginx:1.27-alpine` + `nginx/nginx.conf` | єдиний вхід ззовні; перезаписує `X-Forwarded-For`; `server_tokens off` — без версії в `Server` | `edge` (адреса `172.28.0.10`) | `${HTTP_PORT:-80}:80` |
+| `nginx` | `nginx:1.27-alpine` + `nginx/nginx.conf` | єдиний вхід ззовні; перезаписує `X-Forwarded-For`; `server_tokens off` — без версії в `Server` | `edge` (адреса `${NGINX_IP:-172.28.0.10}`) | `${HTTP_PORT:-80}:80` |
 | `bot` (профіль `polling`) | `news_hub:12`, `python -m news_hub.bot` | бот у режимі polling — окремим процесом | `backend` | немає |
 | `twin` (профіль `twin`) | `news_hub:12`, `python -m tests.telegram_twin` | двійник Telegram Bot API для локальної перевірки | `backend`, `edge` | `127.0.0.1:8081` |
 
@@ -37,8 +37,8 @@ flowchart LR
     classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
 
     OUT["інтернет<br>клієнт · Telegram"] -->|":80"| NG
-    subgraph EDGE["мережа edge · 172.28.0.0/24"]
-        NG["nginx<br>172.28.0.10"]
+    subgraph EDGE["мережа edge · типово 172.28.0.0/24"]
+        NG["nginx<br>типово 172.28.0.10"]
     end
     subgraph BACK["мережа backend"]
         API["api<br>:8000"]
@@ -366,7 +366,8 @@ flowchart TD
 | `DOCS_ENABLED` | `api.py:158` (імпорт) | `true`; у Compose — `${DOCS_ENABLED:-false}` | — | `0` / `false` / `no` / `off` → `/docs`, `/redoc`, `/openapi.json` віддають `404` |
 | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | `docker-compose.yml` | `news_hub`, `news`, — | `POSTGRES_PASSWORD` — `:?`, Compose не стартує | — |
 | `HTTP_PORT` | `docker-compose.yml` | `80` | — | — |
-| `FORWARDED_ALLOW_IPS` | uvicorn (задано в `docker-compose.yml`) | `172.28.0.10` — адреса nginx | — | — |
+| `FORWARDED_ALLOW_IPS` | uvicorn (задано в `docker-compose.yml`) | `${NGINX_IP:-172.28.0.10}` — адреса nginx | — | — |
+| `EDGE_SUBNET`, `NGINX_IP` | `docker-compose.yml` (мережа `edge`, `ipv4_address` nginx, `FORWARDED_ALLOW_IPS`) | `172.28.0.0/24`, `172.28.0.10` | — | підмережа зайнята → `Pool overlaps with other one on this address space`, мережа не створюється; задавати обидві разом, `NGINX_IP` — адреса з `EDGE_SUBNET` |
 
 Дві стратегії — і обидві навмисні:
 

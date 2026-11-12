@@ -98,7 +98,7 @@ flowchart TD
     end
     subgraph S2["2 · uvicorn"]
         direction LR
-        B1["XFF від 172.28.0.10?"] -->|"так"| B2["request.client.host<br>= адреса клієнта"]
+        B1["XFF від nginx<br>(типово 172.28.0.10)?"] -->|"так"| B2["request.client.host<br>= адреса клієнта"]
     end
     subgraph S3["3 · request_context"]
         direction LR
@@ -142,7 +142,7 @@ flowchart TD
 | Крок | Код | Що відбувається | Якщо не так |
 |---|---|---|---|
 | 1 · nginx | `nginx/nginx.conf`, `location /` | `X-Forwarded-For` **перезаписується** `$remote_addr`, а не дописується | клієнт сам надіслав би `X-Forwarded-For: будь-що` і обійшов ліміт входу ([крок 11](../tutorials/11_compose_deploy/nginx_real_ip.md)) |
-| 2 · uvicorn | `FORWARDED_ALLOW_IPS: 172.28.0.10` у `docker-compose.yml` | заголовку вірять лише від nginx; `request.client.host` — адреса клієнта | без nginx (локально) — адреса з'єднання: у запуску нижче ключі `rate:*:127.0.0.1` |
+| 2 · uvicorn | `FORWARDED_ALLOW_IPS: ${NGINX_IP:-172.28.0.10}` у `docker-compose.yml` | заголовку вірять лише від nginx; `request.client.host` — адреса клієнта | без nginx (локально) — адреса з'єднання: у запуску нижче ключі `rate:*:127.0.0.1` |
 | 3 · `request_context` | `middleware.py:63` | найзовнішній middleware: бачить увесь час, зокрема інших middleware | — |
 | — · `SecurityHeadersMiddleware` | `middleware.py:76` | до ендпоінта нічого не робить: лише загортає `send` | — |
 | 4 · `rate_limit` | `middleware.py:136`, `limited_action` — `middleware.py:122` | лише `POST /api/admin/token`, `POST /api/scrape*`, `POST …/analyze`, `POST /api/analyze*`; решта — без лічильника | понад ліміт → `429` **без** виклику ендпоінта ([нижче](#rate-limit)) |

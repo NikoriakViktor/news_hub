@@ -139,15 +139,18 @@ MeteoClient("http://127.0.0.1:8099", timeout=1).latest()   # нікого нем
 
 ```text
 --- 2. MeteoClient.latest()
-   {'station': '34504', 'station_name': 'Дніпро', 'time': '2024-09-02T18:00Z', 'temperature': 25.1, 'lat': None, 'lon': None}
-   last_exchange: {'request': 'GET http://127.0.0.1:8042/api/v1/observations/latest', 'status': 200} content-length: 379
+   {'station': '34504', 'station_name': 'Дніпро', 'time': '2024-09-02T18:00Z', 'temperature': 25.1, 'lat': 48.6, 'lon': 34.967}
+   last_exchange: {'request': 'GET http://127.0.0.1:8042/api/v1/observations/latest', 'status': 200} content-length: 381
 --- 3. MeteoClient.observations('34504')
-   [{'time': '2024-09-02T18:00Z', 'temperature': 25.1, 'pressure': 998.9, 'wind_speed': 6}]
+   [{'time': '2024-09-02T18:00Z', 'temperature': 25.1, 'wind_speed': 6, 'pressure': 998.9}]
    last_exchange: GET http://127.0.0.1:8042/api/v1/stations/34504/observations?fields=time%2Ctemperature%2Cpressure%2Cwind_speed&limit=200&offset=0
 --- 4. помилки — винятки клієнта, а не коди HTTP
    StationNotFound: станцію 99999 не знайдено | status 404
    MeteoError: API недоступний: ConnectionError
 ```
+
+- **Координати є.** `lat` / `lon` беруться зі станції (`stations_sample.csv` = рядок Дніпра зі `stations_ua.csv`), тож карта може поставити точку навіть на фікстурі ([дані](#snapshot)).
+- **Порядок ключів задає модель відповіді, а не `fields=`.** Клієнт просив `time,temperature,pressure,wind_speed`, а отримав `wind_speed` перед `pressure`: маршрут має `response_model=ObservationPage`, і FastAPI серіалізує поля в порядку оголошення в `Observation` (`response_model_exclude_unset=True` прибирає ті, яких не просили). Для JSON-об'єкта порядок ключів значення не має — звертайся за назвою, а не за позицією.
 
 Крок за кроком для `observations("34504")`, з тими самими даними:
 
@@ -166,7 +169,7 @@ flowchart TD
     subgraph S2 ["2. FastAPI: параметри"]
         direction LR
         V1{"hour, limit, offset,<br>fields коректні?"}
-        V1 -- "ні" --> E1["422 / 400"]
+        V1 -- "ні" --> E1["422<br>detail[0].loc"]
     end
     subgraph S3 ["3. сховище"]
         direction LR
@@ -254,40 +257,67 @@ METEO_API_URL = http://127.0.0.1:8032
    title: 🌦️ Погода на метеостанціях України
    tabs: ['🗺️ Карта', '📈 Станція', '🔍 HTTP-інспектор']
    error: []
-   info: ['У станцій немає координат — завантаж знімок: `python -m meteo_api.fetch_snapshot`.']
+   info: []
    dataframe: [{'station': '34504', 'station_name': 'Дніпро', 'time': '2024-09-02T18:00Z', 'temperature': 25.1, 'pressure': 998.9, 'wind_speed': 6}]
+   plotly_chart: 3
    HTTP-інспектор: {'request': 'GET http://127.0.0.1:8032/api/v1/stations/34504/observations?fields=time%2Ctemperature%2Cpressure%2Cwind_speed&limit=200&offset=0', 'status': 200} content-type: application/json
 METEO_API_URL = http://127.0.0.1:8099
    title: 🌦️ Погода на метеостанціях України
    tabs: []
    error: ['Не вдалося отримати дані: API недоступний: ConnectionError. Запусти API: `uvicorn meteo_api.app:app --port 8032`']
    info: []
+   plotly_chart: 0
 ```
 
 - **Без API сторінка не падає.** `MeteoError` → червоне повідомлення з підказкою, `st.stop()` — і вкладки навіть не будуються.
-- **На фікстурі з однією станцією без координат** карта показує підказку замість порожньої мапи, а таблиця під нею все одно є.
+- **На фікстурі карта вже з точкою.** Було: у `stations_sample.csv` координати були порожні, і карта показувала `st.info("У станцій немає координат — завантаж знімок…")` замість мапи. Стало: у фікстурі Дніпро з `lat` 48.6, `lon` 34.967, тож `info` порожній, а `plotly_chart: 3` — мапа на вкладці «Карта» і два графіки (температура, тиск) на вкладці «Станція». Підказка в коді лишилась: її побачиш, якщо в жодної станції немає `lat` / `lon` (`latest.dropna(subset=["lat", "lon", "temperature"])` порожній). Таблиця під мапою є в обох випадках.
 - **HTTP-інспектор** показує останній запит, тобто запит вкладки «Станція»: Streamlit виконує весь скрипт згори донизу, усі вкладки одразу.
 
 ## Дані: знімок, а не запит на кожен клік { #snapshot }
 
 API не ходить в ogimet.com на кожен запит клієнта. Окремий скрипт `python -m meteo_api.fetch_snapshot --days 3` раз на кілька годин завантажує телеграми 12 обласних центрів (з паузою між запитами й чесним `User-Agent`) і пише CSV. API читає готовий файл при старті. Якщо ogimet недоступний, API і карта працюють на останньому знімку.
 
+Станції — окремо від телеграм. [`data/stations_ua.csv`](https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/meteo_api/data/stations_ua.csv) — 12 станцій WMO з координатами й висотою зі списку станцій NOAA ISD (`isd-history.csv`, колонки `LAT`, `LON`, `ELEV(M)`). Він лежить у репозиторії, бо координати станцій не змінюються щодня. Фікстура `stations_sample.csv` — рядок Дніпра з нього: `34504,Дніпро,48.600,34.967,143.0`.
+
 ```python title="meteo_api/storage.py (фрагмент)"
 @classmethod
 def default(cls):
-    """Знімок даних прикладу, а якщо його ще немає — маленька фікстура для тестів."""
-    if (DATA_DIR / "stations_ua.csv").exists():
+    """Знімок даних прикладу, а якщо його ще немає — маленька фікстура для тестів.
+
+    Станції (`stations_ua.csv`, координати — зі списку станцій NOAA ISD) лежать у репозиторії; телеграми
+    (`synop_ua.csv`) робить `fetch_snapshot.py`. Раніше перевірявся файл станцій, якого ніхто не створював,
+    тож свіжий знімок не підхоплювався ніколи.
+    """
+    if (DATA_DIR / "synop_ua.csv").exists():
         return cls.from_files(DATA_DIR / "stations_ua.csv", DATA_DIR / "synop_ua.csv")
     return cls.from_files(DATA_DIR / "stations_sample.csv", DATA_DIR / "synop_sample.csv")
 ```
+
+**Було.** `default()` перемикався на знімок, лише коли існував `stations_ua.csv`, а `fetch_snapshot.py` писав тільки `synop_ua.csv`. Поруч з фікстурою поклали `synop_ua.csv` — і сховище однаково взяло фікстуру з однією станцією без координат:
 
 ```text
 ['stations_sample.csv', 'synop_sample.csv', 'synop_ua.csv']
 default(): [{'wmo': '34504', 'name': 'Дніпро', 'lat': None, 'lon': None, 'elevation': None}]
 ```
 
-!!! warning "Знімок станцій скрипт не створює"
-    `fetch_snapshot.py` пише лише `synop_ua.csv`, а `default()` перемикається на знімок, тільки коли є `stations_ua.csv`. Тут поруч з фікстурою поклали `synop_ua.csv`, а сховище однаково взяло фікстуру з однією станцією без координат. Щоб карта показала 12 станцій, потрібен `stations_ua.csv` (`wmo,name,lat,lon,elevation`), а жоден скрипт прикладу його не робить.
+Щоб карта показала 12 станцій, потрібен був `stations_ua.csv` (`wmo,name,lat,lon,elevation`), а жоден скрипт прикладу його не робив. Свіжий знімок не підхоплювався ніколи.
+
+**Стало.** `stations_ua.csv` — у репозиторії, а `default()` перевіряє файл, який справді з'являється після `fetch_snapshot.py`, — `synop_ua.csv`. Без знімка:
+
+```text
+['stations_sample.csv', 'stations_ua.csv', 'synop_sample.csv']
+[{'wmo': '34504', 'name': 'Дніпро', 'lat': 48.6, 'lon': 34.967, 'elevation': 143.0}]
+```
+
+Той самий дослід, що й «було»: поруч кладемо `synop_ua.csv` (тут — копія фікстури з однією телеграмою):
+
+```text
+['stations_sample.csv', 'stations_ua.csv', 'synop_sample.csv', 'synop_ua.csv']
+default(): 12 станцій; {'wmo': '33135', 'name': 'Чернігів', 'lat': 51.467, 'lon': 31.25, 'elevation': 141.0} …
+['Чернігів', 'Суми', 'Рівне', 'Житомир', 'Київ', 'Львів', 'Тернопіль', 'Хмельницький', 'Полтава', 'Одеса', 'Харків', 'Дніпро']
+```
+
+**Правило.** Умова «є знімок» має перевіряти саме той файл, який пише завантажувач. Довідкові дані, що майже не змінюються (координати станцій), — у репозиторії поруч з кодом, а не в знімку.
 
 ## Docker Compose: два сервіси з одного образу { #compose }
 
@@ -308,6 +338,13 @@ services:
     command: uvicorn meteo_api.app:app --host 0.0.0.0 --port 8032
     ports:
       - "8032:8032"
+    healthcheck:
+      # «контейнер запущено» ≠ «API відповідає»: без перевірки карта стартує раніше й перші запити падають
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8032/api/v1/stations?limit=1', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
 
   weather_map:
     build: .
@@ -317,16 +354,34 @@ services:
     ports:
       - "8501:8501"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 ```
 
-Після `docker compose up --build`:
+Після `docker compose up --build --wait`:
 
 ```text
-$ docker compose ps --format 'table {{.Service}}\t{{.State}}\t{{.Ports}}'
-SERVICE       STATE     PORTS
-api           running   0.0.0.0:8032->8032/tcp, [::]:8032->8032/tcp
-weather_map   running   0.0.0.0:8501->8501/tcp, [::]:8501->8501/tcp
+$ docker compose up --build --wait                        # без рядків збирання образу
+ Network meteo_api_default  Creating
+ Network meteo_api_default  Created
+ Container meteo_api-api-1  Creating
+ Container meteo_api-api-1  Created
+ Container meteo_api-weather_map-1  Creating
+ Container meteo_api-weather_map-1  Created
+ Container meteo_api-api-1  Starting
+ Container meteo_api-api-1  Started
+ Container meteo_api-api-1  Waiting
+ Container meteo_api-api-1  Healthy
+ Container meteo_api-weather_map-1  Starting
+ Container meteo_api-weather_map-1  Started
+ Container meteo_api-weather_map-1  Waiting
+ Container meteo_api-api-1  Waiting
+ Container meteo_api-api-1  Healthy
+ Container meteo_api-weather_map-1  Healthy
+$ docker compose ps --format 'table {{.Service}}\t{{.State}}\t{{.Status}}\t{{.Ports}}'
+SERVICE       STATE     STATUS                   PORTS
+api           running   Up 6 seconds (healthy)   0.0.0.0:8032->8032/tcp, [::]:8032->8032/tcp
+weather_map   running   Up Less than a second    0.0.0.0:8501->8501/tcp, [::]:8501->8501/tcp
 $ curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8032/docs
 200
 $ curl -s http://localhost:8501/_stcore/health
@@ -334,31 +389,43 @@ ok
 $ docker compose exec -T weather_map python -c "..."      # зсередини контейнера карти
 1                                                         # http://api:8032/api/v1/stations → total
 URLError <urlopen error [Errno 111] Connection refused>   # http://localhost:8032/... 
+$ curl -s http://localhost:8032/api/v1/stations/34504
+{"wmo":"34504","name":"Дніпро","lat":48.6,"lon":34.967,"elevation":143.0}
 $ docker compose logs api
-api-1  | INFO:     192.168.16.1:38148 - "GET /api/v1/observations/latest HTTP/1.1" 200 OK
-api-1  | INFO:     192.168.16.3:34818 - "GET /api/v1/stations HTTP/1.1" 200 OK
+api-1  | INFO:     192.168.16.1:32992 - "GET /docs HTTP/1.1" 200 OK
+api-1  | INFO:     127.0.0.1:59640 - "GET /api/v1/stations?limit=1 HTTP/1.1" 200 OK
+api-1  | INFO:     192.168.16.1:43070 - "GET /api/v1/stations/34504 HTTP/1.1" 200 OK
+api-1  | INFO:     192.168.16.3:35164 - "GET /api/v1/stations HTTP/1.1" 200 OK
 ```
 
 - **Один образ — два процеси.** Код API і карти в одному образі, різні лише `command`. Для прикладу це простіше, ніж два `Dockerfile`. Ціна — карта тягне `fastapi`, а API — `streamlit` і `plotly`.
 - **`localhost` у контейнері — сам контейнер.** Зсередини `weather_map` адреса `localhost:8032` відповідає `Connection refused`, а `api:8032` працює: `api` — ім'я сервісу в мережі Compose ([мережі Compose](../10_docker_and_ci/compose.md#networks)). Тому `METEO_API_URL=http://api:8032`.
-- **У журналі API видно, хто клієнт.** `192.168.16.1` — запит з хоста через опублікований порт, `192.168.16.3` — запит з контейнера карти мережею Compose.
-- **`depends_on` чекає старту контейнера, а не готовності API.** Якщо карта відкриється раніше, ніж uvicorn почав слухати порт, вона покаже повідомлення `MeteoError`, а наступне оновлення сторінки вже отримає дані. Чекати саме готовності — `healthcheck` + `condition: service_healthy` ([depends_on](../10_docker_and_ci/compose.md#depends-on)).
+- **У журналі API видно, хто клієнт.** `192.168.16.1` — запит з хоста через опублікований порт, `192.168.16.3` — запит з контейнера карти мережею Compose, `127.0.0.1` — сам `healthcheck` усередині контейнера API (`/api/v1/stations?limit=1` кожні 5 секунд).
+- **Карта стартує після готовності API, а не після старту контейнера.** Було: `depends_on: [api]` чекав лише, поки контейнер API запуститься. Якщо карта відкривалась раніше, ніж uvicorn почав слухати порт, вона показувала повідомлення `MeteoError`, і лише наступне оновлення сторінки отримувало дані. Стало: `healthcheck` робить справжній HTTP-запит до API (`python -c "import urllib.request; …"` — у `python:3.12-slim` немає `curl`), а `condition: service_healthy` тримає `weather_map`, доки API не стане `healthy`. У виводі `up --wait` це видно за порядком: `api-1 Healthy` → `weather_map-1 Starting` ([depends_on](../10_docker_and_ci/compose.md#depends-on)).
+- **`(healthy)` лише в API.** У `weather_map` `healthcheck` немає, тому в `STATUS` просто `Up`. `--wait` вважає такий контейнер готовим, щойно його запущено, — звідси `weather_map-1 Healthy` у виводі `up`, хоча перевірки в нього немає.
 
 ## Тести { #tests }
 
 ```text
 $ pytest -v
-tests/test_api.py::test_station_and_404 PASSED                           [ 14%]
-tests/test_api.py::test_decoded_observation PASSED                       [ 28%]
-tests/test_api.py::test_fields_and_bad_fields PASSED                     [ 42%]
-tests/test_api.py::test_create_conflict_validation PASSED                [ 57%]
-tests/test_api.py::test_pagination PASSED                                [ 71%]
-tests/test_api.py::test_patch_and_delete PASSED                          [ 85%]
-tests/test_api.py::test_import_accepted PASSED                           [100%]
-============================== 7 passed in 0.63s ===============================
+tests/test_api.py::test_station_and_404 PASSED                           [  7%]
+tests/test_api.py::test_decoded_observation PASSED                       [ 14%]
+tests/test_api.py::test_fields_and_bad_fields PASSED                     [ 21%]
+tests/test_api.py::test_create_conflict_validation PASSED                [ 28%]
+tests/test_api.py::test_pagination PASSED                                [ 35%]
+tests/test_api.py::test_patch_and_delete PASSED                          [ 42%]
+tests/test_api.py::test_import_accepted PASSED                           [ 50%]
+tests/test_api.py::test_bad_time_in_path_is_422 PASSED                   [ 57%]
+tests/test_api.py::test_time_in_path_any_offset PASSED                   [ 64%]
+tests/test_api.py::test_patch_null_temperature_rejected PASSED           [ 71%]
+tests/test_api.py::test_unknown_body_fields_rejected PASSED              [ 78%]
+tests/test_api.py::test_broken_import_csv_is_422_with_line PASSED        [ 85%]
+tests/test_api.py::test_import_failure_is_reported PASSED                [ 92%]
+tests/test_api.py::test_openapi_has_schemas PASSED                       [100%]
+======================== 14 passed, 1 warning in 1.04s =========================
 ```
 
-Час залежить від машини. Тести створюють застосунок на фікстурі з однією справжньою телеграмою (Дніпро, 02.09.2024 18:00 UTC), тож вони не залежать ні від мережі, ні від знімка:
+Час залежить від машини; `1 warning` — попередження Starlette про `httpx` у `TestClient`, не про код прикладу. Тести створюють застосунок на фікстурі з однією справжньою телеграмою (Дніпро, 02.09.2024 18:00 UTC), тож вони не залежать ні від мережі, ні від знімка:
 
 ```python title="tests/test_api.py (фрагмент)"
 @pytest.fixture
@@ -371,19 +438,27 @@ def client():
 |---|---|
 | `test_station_and_404` | станція за WMO; невідома станція → `404` з номером у `detail` |
 | `test_decoded_observation` | декодер: `25.1` °C, `998.9` / `1015.1` гПа, вологість `47` % |
-| `test_fields_and_bad_fields` | `fields=time,temperature` → лише ці ключі; невідоме поле → `400` |
+| `test_fields_and_bad_fields` | `fields=time,temperature` → лише ці ключі; невідоме поле → `422` з `detail[0].loc == ["query", "fields"]` |
 | `test_create_conflict_validation` | `201` + `Location`; повтор → `409`; `99` °C → `422` |
 | `test_pagination` | `total`, `limit`, `next` з правильним `offset`; на останній сторінці `next is None` |
 | `test_patch_and_delete` | `PATCH` змінює одне поле, решта лишається; `204`, повтор → `404` |
 | `test_import_accepted` | `202` + `Location`; за ним — `done`, `added: 1` |
+| `test_bad_time_in_path_is_422` | `GET …/вчора`, `PATCH …/2024-13-40T99:00Z`, `DELETE …/not-a-time` → `422`, а не `500` |
+| `test_time_in_path_any_offset` | `…/2024-09-02T21:00+03:00` — той самий запис, що `18:00Z` (`25.1` °C) |
+| `test_patch_null_temperature_rejected` | `{"temperature": null}` → `422`, температура лишилась `25.1`; `{"wind_speed": null}` → `200` |
+| `test_unknown_body_fields_rejected` | `dew_point` у `POST`, одруківка `temprature` у `PATCH` → `422` |
+| `test_broken_import_csv_is_422_with_line` | `{"csv": "34504,2024,09\n"}` → `422`, у `msg` — `рядок 1` |
+| `test_import_failure_is_reported` | сховище кидає `RuntimeError("диск повний")` → `202`, далі `status: "failed"` і причина в `error` |
+| `test_openapi_has_schemas` | схема `200` у `GET …/{moment}` — `Observation`, є `404`; у `components.schemas` — `Station`, `ObservationPage`, `ImportJob`, `ErrorOut` |
 
 Чого тести **не** перевіряють:
 
 - **`MeteoClient`** — пагінацію клієнта й перетворення `404` на `StationNotFound`. Його можна тестувати проти `TestClient` або з підміненим транспортом ([тестування клієнтів](http_clients.md#testing)).
 - **Карту.** `AppTest`, як вище, дає тест сторінки без браузера.
 - **Інші стилі API** (`api_types.py`, `grpc_meteo.py`) — їх показує [`api_styles_demo.py`](https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/api_styles_demo.py), але він друкує результати і нічого не перевіряє.
-- **Помилки, знайдені в [кейсі v1 → v2](legacy_case.md#v2-gaps)**: `500` на неправильний момент, `PATCH null`, імпорт, що завис у `running`. Кожна така помилка — спершу тест, що падає, потім виправлення.
-- **`fetch_snapshot.py`** — і тому не помічено, що він не пише `stations_ua.csv`.
+- **`fetch_snapshot.py` і `MeteoRepository.default()`.** Тому й не помітили, що `default()` перевіряв `stations_ua.csv`, якого скрипт не писав, і свіжий знімок не підхоплювався ([дані](#snapshot)). Тест «після знімка `default()` бачить усі 12 станцій» зловив би це одразу.
+
+Сім останніх тестів у таблиці з'явились разом з виправленнями з [кейсу v1 → v2](legacy_case.md#v2-gaps): `500` на неправильний момент, `PATCH null`, мовчки відкинуті поля, імпорт, що завис у `running`, порожні схеми в OpenAPI, `400` для `fields=`. Порядок для кожної вади той самий: спершу тест, що падає, потім виправлення.
 
 ## У News Hub { #news-hub }
 
@@ -411,7 +486,7 @@ def client():
 
 - **Карта пише «API недоступний»** — перевір адресу: `echo $METEO_API_URL`, `curl $METEO_API_URL/api/v1/stations`. У Compose — `docker compose exec weather_map python -c "import urllib.request; print(urllib.request.urlopen('http://api:8032/api/v1/stations').status)"`.
 - **Що саме пішло в API** — вкладка «HTTP-інспектор» або `client.last_exchange` у скрипті: метод, повний URL з параметрами, статус, заголовки.
-- **Карта без точок** — у станцій немає `lat` / `lon`: подивись `GET /api/v1/stations`. Сховище читає знімок, лише коли є `stations_ua.csv` ([вище](#snapshot)).
+- **Карта без точок** — у станцій немає `lat` / `lon`: подивись `GET /api/v1/stations`. Координати беруться з `stations_ua.csv` (знімок) чи `stations_sample.csv` (фікстура); порожня клітинка в CSV стає `null`. Яке сховище взято, видно з кількості станцій: `total: 1` — фікстура, бо `synop_ua.csv` немає ([вище](#snapshot)).
 - **Чи бачить API запити карти** — `docker compose logs -f api`: адреса з мережі Compose (`192.168.x.y`, не `.1`) — це контейнер карти.
 - **Тест проходить, а живий сервер ні** — `TestClient` виконує фонові задачі до відповіді, а uvicorn — після. Перевір на живому сервері: `start_server()` у фоновому потоці.
 
@@ -439,7 +514,7 @@ def client():
     2. Тест передає своє сховище, і кожен тест отримує свіжий застосунок без спільного стану. Модульний `app` потрібен лише для `uvicorn meteo_api.app:app`.
     3. `MeteoClient` перетворює `requests.RequestException` на `MeteoError`, сторінка ловить її, показує `st.error` і зупиняється (`st.stop()`).
     4. Кожен контейнер має свій `localhost`. `api` — ім'я сервісу, яке DNS мережі Compose перетворює на адресу контейнера API.
-    5. Ні. Лише що контейнер API запущено. Готовність — `healthcheck` і `condition: service_healthy`.
+    5. Ні. Лише що контейнер API запущено. Готовність — `healthcheck` і `condition: service_healthy`, як тепер у `docker-compose.yml` прикладу.
     6. `MeteoClient`, карта, `api_types.py`, `fetch_snapshot.py`. Клієнт — тести проти `TestClient`; карта — `AppTest`; знімок — тест, що після скрипта `default()` бачить усі станції.
     7. Швидкість і незалежність: відповідь з пам'яті, а недоступний ogimet не ламає API й карту. До того ж ogimet не перевантажується запитами кожного користувача.
 

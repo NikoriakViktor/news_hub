@@ -290,7 +290,7 @@ log=json-file map[max-file:3 max-size:10m] restart=unless-stopped stop_timeout=3
 |---|---|---|
 | менеджер процесів | uvicorn, один процес; більше — `WEB_CONCURRENCY` | [`Dockerfile`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/Dockerfile) |
 | масштаб | `docker compose up -d --scale api=2`; ліміти й кеш у Redis | [крок 11: кілька копій](../tutorials/11_compose_deploy/deploy.md#replicas) |
-| проксі | nginx перезаписує `X-Forwarded-For $remote_addr`; `FORWARDED_ALLOW_IPS: 172.28.0.10` | [`nginx.conf`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/nginx/nginx.conf), [крок 11: nginx](../tutorials/11_compose_deploy/nginx_real_ip.md) |
+| проксі | nginx перезаписує `X-Forwarded-For $remote_addr`; `FORWARDED_ALLOW_IPS: ${NGINX_IP:-172.28.0.10}` | [`nginx.conf`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/nginx/nginx.conf), [крок 11: nginx](../tutorials/11_compose_deploy/nginx_real_ip.md) |
 | TLS | у `nginx.conf` немає; certbot або Caddy на сервері | [крок 11: HTTPS](../tutorials/11_compose_deploy/deploy.md#https) |
 | тайм-аут проксі | `proxy_read_timeout 65s`: webhook Telegram чекає відповідь до 60 с | `nginx.conf` |
 | зупинка | exec-форма `CMD`, `lifespan` закриває Redis, базу, бота | [крок 10: здоров'я і зупинка](../tutorials/10_docker/health_shutdown.md#stop) |

@@ -235,7 +235,7 @@ class RedactSecrets(logging.Filter):
 | nginx | `server_tokens off` — `Server: nginx` без версії; власних заголовків не додає; HSTS — лише в майбутньому блоці `listen 443 ssl` |
 | `TrustedHost` | немає, nginx — `server_name _`; застосунок не будує адрес з `Host` (`url_for` не використовується), тож зараз це без наслідків |
 | HTTPS | TLS знімається перед nginx (certbot чи Caddy, [крок 11](../tutorials/11_compose_deploy/deploy.md#https)); `nginx.conf` передає `X-Forwarded-Proto` |
-| IP клієнта | nginx **перезаписує** `X-Forwarded-For` адресою з'єднання; `FORWARDED_ALLOW_IPS: 172.28.0.10` — uvicorn вірить лише nginx з фіксованою адресою ([крок 11](../tutorials/11_compose_deploy/nginx_real_ip.md#change)) |
+| IP клієнта | nginx **перезаписує** `X-Forwarded-For` адресою з'єднання; `FORWARDED_ALLOW_IPS: ${NGINX_IP:-172.28.0.10}` — uvicorn вірить лише nginx з фіксованою адресою ([крок 11](../tutorials/11_compose_deploy/nginx_real_ip.md#change)) |
 | журнали | `request_context` пише `request.url.path` без query; токени — лише в заголовках; помилки старту — без значень секретів |
 | ліміт входу | два лічильники: за IP — 5 спроб за 300 с (`rate:login:<ip>`, рахує всі); за ім'ям — `LoginGuard`, 20 **невдалих** за 900 с з усіх адрес разом (`LOGIN_FAIL_LIMIT`, `LOGIN_FAIL_WINDOW`) |
 | відповідь з токеном | `Cache-Control: no-store`; bcrypt — у `run_in_threadpool` |

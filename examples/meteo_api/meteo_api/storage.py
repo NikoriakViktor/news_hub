@@ -37,11 +37,18 @@ def parse_ogimet_csv(lines):
     """Рядки у форматі ogimet getsynop → список сирих записів.
 
     Формат рядка: 33345,2024,09,02,18,00,AAXX 02181 33345 …=
+    Зламаний рядок — ValueError з його номером: імпорт відповідає 422 одразу, а не «завислим» завданням.
     """
     records = []
-    for row in csv.reader(line for line in lines if line.strip()):
-        wmo, year, month, day, hour, minute, telegram = row[:7]
-        moment = datetime(int(year), int(month), int(day), int(hour), int(minute), tzinfo=timezone.utc)
+    for number, row in enumerate(csv.reader(lines), 1):
+        if not "".join(row).strip():
+            continue
+        try:
+            wmo, year, month, day, hour, minute, telegram = row[:7]
+            moment = datetime(int(year), int(month), int(day), int(hour), int(minute), tzinfo=timezone.utc)
+        except ValueError as error:          # менше 7 полів, не число, 31 лютого
+            raise ValueError(f"рядок {number}: очікується «станція,рік,місяць,день,година,хвилина,телеграма» "
+                             f"({error})") from None
         records.append({"station": wmo, "time": moment, "telegram": telegram.strip()})
     return records
 
@@ -72,8 +79,13 @@ class MeteoRepository:
 
     @classmethod
     def default(cls):
-        """Знімок даних прикладу, а якщо його ще немає — маленька фікстура для тестів."""
-        if (DATA_DIR / "stations_ua.csv").exists():
+        """Знімок даних прикладу, а якщо його ще немає — маленька фікстура для тестів.
+
+        Станції (`stations_ua.csv`, координати — зі списку станцій NOAA ISD) лежать у репозиторії; телеграми
+        (`synop_ua.csv`) робить `fetch_snapshot.py`. Раніше перевірявся файл станцій, якого ніхто не створював,
+        тож свіжий знімок не підхоплювався ніколи.
+        """
+        if (DATA_DIR / "synop_ua.csv").exists():
             return cls.from_files(DATA_DIR / "stations_ua.csv", DATA_DIR / "synop_ua.csv")
         return cls.from_files(DATA_DIR / "stations_sample.csv", DATA_DIR / "synop_sample.csv")
 

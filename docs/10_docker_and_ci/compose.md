@@ -251,7 +251,7 @@ compose.yaml                 command [nginx …]       ports [18120]          en
 | Механізм | Як у News Hub | Де розібрано |
 |---|---|---|
 | ім'я проєкту | `name: news_hub` | — |
-| мережі | `backend` (api, база, Redis, міграції, бот), `edge` (nginx ↔ api) з `subnet: 172.28.0.0/24` і фіксованою адресою nginx | [крок 11: nginx](../tutorials/11_compose_deploy/nginx_real_ip.md#change) |
+| мережі | `backend` (api, база, Redis, міграції, бот), `edge` (nginx ↔ api) з `subnet: ${EDGE_SUBNET:-172.28.0.0/24}` і фіксованою адресою nginx `${NGINX_IP:-172.28.0.10}` | [крок 11: nginx](../tutorials/11_compose_deploy/nginx_real_ip.md#change) |
 | порти | лише nginx (`${HTTP_PORT:-80}:80`); база й Redis — без `ports` | [крок 11: деплой](../tutorials/11_compose_deploy/deploy.md#server) |
 | змінні | `env_file: .env` для api/bot/migrate + `environment` з `DATABASE_URL`, зібраним з `${POSTGRES_*}`; `${POSTGRES_PASSWORD:?…}` | [крок 11: секрети](../tutorials/11_compose_deploy/env_secrets.md) |
 | безпечне значення за замовчуванням | `DOCS_ENABLED: ${DOCS_ENABLED:-false}` в `api`: на сервері `/docs`, `/redoc` і `/openapi.json` вимкнено, якщо в `.env` явно не написано `true` (сам застосунок без змінної вмикає їх) | [сервер у production](production_server.md#news-hub) |

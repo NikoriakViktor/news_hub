@@ -57,7 +57,7 @@ flowchart TD
     end
     subgraph NEW ["крок 11: docker compose up -d --wait"]
         direction LR
-        U["клієнт, Telegram"] -- ":80" --> N["nginx<br>172.28.0.10"]
+        U["клієнт, Telegram"] -- ":80" --> N["nginx<br>типово 172.28.0.10"]
         N -- "X-Forwarded-For<br>мережа edge" --> A["api<br>uvicorn"]
         M["migrate<br>один раз"] --> PG["postgres<br>том pgdata"]
         A --> PG
@@ -149,9 +149,12 @@ alembic upgrade head && uvicorn news_hub.api:app --reload
     Усі виводи — зі справжніх запусків Docker Compose v2.40 (Docker 29.1) на машині, де вже працювали інші проєкти.
     Тому стек запускався з іменем проєкту `-p newshub-step11-bookcheck` (контейнери звуться
     `newshub-step11-bookcheck-api-1`, а не `news_hub-api-1`), з `HTTP_PORT=8091` (порт 80 був зайнятий) і з
-    файлом-доповненням, що міняє підмережу `edge` на `10.28.0.0/24`: `172.28.0.0/24` перетиналась з уже наявною
-    мережею Docker (див. [Типові помилки](checkpoint.md#mistakes)). Тому в журналах адреса nginx — `10.28.0.10`, а не
-    `172.28.0.10`. Решта файлів — без змін. Кроки на справжньому сервері не виконувались: див. [Деплой](deploy.md).
+    підмережею `edge` `10.28.0.0/24` замість типової `172.28.0.0/24`, яка перетиналась з уже наявною мережею Docker
+    (див. [Типові помилки](checkpoint.md#mistakes)). Тому в журналах адреса nginx — `10.28.0.10`, а не `172.28.0.10`.
+    Тоді підмережу міняв окремий файл-доповнення Compose; тепер для цього є змінні `EDGE_SUBNET` і `NGINX_IP` у `.env`
+    ([nginx і справжній IP клієнта](nginx_real_ip.md#change)), і `docker-compose.yml` не змінюється: smoke-тест
+    кроку 12 з `EDGE_SUBNET=10.231.9.0/24 NGINX_IP=10.231.9.10` пройшов усі перевірки. Кроки на справжньому сервері
+    не виконувались: див. [Деплой](deploy.md).
 
 ## Порівняння з кроком 10 { #diff }
 

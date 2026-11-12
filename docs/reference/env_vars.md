@@ -97,7 +97,9 @@ grep -n '\${\?[A-Z_]\+' docker-compose.yml Dockerfile scripts/*.sh .env.example
 | `POSTGRES_USER` | `news` | те саме | 3, 11 |
 | `POSTGRES_PASSWORD` | обов'язкова: `${POSTGRES_PASSWORD:?задай POSTGRES_PASSWORD у .env}` | те саме | 3, 11 |
 | `HTTP_PORT` | `80` | `docker-compose.yml` (порт nginx), `scripts/smoke.sh`, `scripts/make_env.py` | 11 |
-| `FORWARDED_ALLOW_IPS` | в uvicorn — `127.0.0.1,::1`; у Compose — `172.28.0.10` (адреса nginx) | uvicorn: кому вірити в `X-Forwarded-For` | 11 |
+| `FORWARDED_ALLOW_IPS` | в uvicorn — `127.0.0.1,::1`; у Compose — `${NGINX_IP:-172.28.0.10}` (адреса nginx) | uvicorn: кому вірити в `X-Forwarded-For` | 11 |
+| `EDGE_SUBNET` | `172.28.0.0/24` | `docker-compose.yml`: `ipam.config.subnet` мережі `edge`; задати, якщо Docker пише `Pool overlaps with other one on this address space` | 11 |
+| `NGINX_IP` | `172.28.0.10` | `docker-compose.yml`: `ipv4_address` nginx і `FORWARDED_ALLOW_IPS` для `api`; адреса з `EDGE_SUBNET`, міняється разом з нею | 11 |
 | `WEB_CONCURRENCY` | не задано → 1 процес | uvicorn: кількість воркерів, якщо немає `--workers` | 10 |
 | `ADMIN_PASSWORD` | `make_env.py` — випадковий; `smoke.sh` — обов'язкова | `scripts/make_env.py` (хеш у `.env`), `scripts/smoke.sh` (вхід) | 12 |
 | `COMPOSE_PROJECT_NAME` | ім'я з `name: news_hub` | Docker Compose; потрібна скриптам, якщо стек запущено з `-p <ім'я>` | 11 |

@@ -28,7 +28,7 @@ ADMIN_PASSWORD_HASH=
 JWT_SECRET=
 ```
 
-Далі в ньому — ліміт невдалих входів на одне ім'я, `WEBHOOK_SECRET`, `LLM_PROVIDER`, `GEMINI_API_KEY`, змінні Telegram, `HTTP_PORT=80` і `DOCS_ENABLED`:
+Далі в ньому — ліміт невдалих входів на одне ім'я, `WEBHOOK_SECRET`, `LLM_PROVIDER`, `GEMINI_API_KEY`, змінні Telegram, `HTTP_PORT=80`, закоментовані `EDGE_SUBNET` і `NGINX_IP` і `DOCS_ENABLED`:
 
 ```bash title=".env.example (фрагменти)"
 # Невдалих входів під одним іменем (з усіх адрес разом), після яких вхід закрито на вікно (секунд)
@@ -46,6 +46,11 @@ TELEGRAM_API_URL=
 # Порт nginx на сервері
 HTTP_PORT=80
 
+# Мережа edge (nginx ↔ api). Типово 172.28.0.0/24 і nginx на 172.28.0.10. Docker пише «Pool overlaps with
+# other one on this address space» — ця підмережа на машині зайнята: взяти іншу, NGINX_IP — адреса з неї
+#EDGE_SUBNET=10.231.9.0/24
+#NGINX_IP=10.231.9.10
+
 # /docs, /redoc і /openapi.json на сервері (Compose за замовчуванням — false)
 DOCS_ENABLED=false
 ```
@@ -58,7 +63,7 @@ DOCS_ENABLED=false
   api:
     environment:
       <<: *app-env
-      FORWARDED_ALLOW_IPS: 172.28.0.10
+      FORWARDED_ALLOW_IPS: ${NGINX_IP:-172.28.0.10}
       # /docs і /openapi.json на сервері — карта всіх ендпоінтів для будь-кого; увімкнути: DOCS_ENABLED=true у .env
       DOCS_ENABLED: ${DOCS_ENABLED:-false}
 ```

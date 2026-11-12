@@ -154,7 +154,7 @@
 
 | Повідомлення | Причина | Що зробити | Де |
 |---|---|---|---|
-| `failed to create network …_edge: … Pool overlaps with other one on this address space` | інша мережа Docker уже займає `172.28.0.0/…` | знайти: `docker network inspect $(docker network ls -q) --format '{{.Name}} {{range .IPAM.Config}}{{.Subnet}}{{end}}'`; змінити `subnet`, `ipv4_address` і `FORWARDED_ALLOW_IPS` разом | [крок 11](../tutorials/11_compose_deploy/checkpoint.md#mistakes) |
+| `failed to create network …_edge: … Pool overlaps with other one on this address space` | інша мережа Docker уже займає `172.28.0.0/…` (типова `EDGE_SUBNET`) | знайти: `docker network inspect $(docker network ls -q) --format '{{.Name}} {{range .IPAM.Config}}{{.Subnet}}{{end}}'`; задати в `.env` (або в оточенні shell) вільну підмережу й адресу nginx у ній: `EDGE_SUBNET=10.231.9.0/24`, `NGINX_IP=10.231.9.10`; `docker-compose.yml` не правити — `NGINX_IP` бере і `ipv4_address`, і `FORWARDED_ALLOW_IPS` | [крок 11](../tutorials/11_compose_deploy/checkpoint.md#mistakes) |
 | `required variable POSTGRES_PASSWORD is missing a value` | немає `.env` або пароль порожній | `cp .env.example .env` і заповнити | [крок 11](../tutorials/11_compose_deploy/checkpoint.md#mistakes) |
 | `The "pVoAkKpIgbdK5I" variable is not set. Defaulting to a blank string.` | значення з `$` у `.env` без лапок | одинарні лапки: `ADMIN_PASSWORD_HASH='$2b$12$…'` | [Секрети в `.env`](../tutorials/11_compose_deploy/env_secrets.md) |
 | `container …-api-1 is unhealthy` | `docker compose logs api`: часто обрізаний хеш | `python -m news_hub.security`, рядки як надруковано | [крок 11](../tutorials/11_compose_deploy/checkpoint.md#mistakes) |

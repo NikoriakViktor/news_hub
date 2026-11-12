@@ -32,7 +32,8 @@ def test_decoded_observation(client):
 def test_fields_and_bad_fields(client):
     items = client.get(OBS_URL, params={"fields": "time,temperature"}).json()["items"]
     assert items == [{"time": "2024-09-02T18:00Z", "temperature": 25.1}]
-    assert client.get(OBS_URL, params={"fields": "colour"}).status_code == 400
+    bad = client.get(OBS_URL, params={"fields": "colour"})
+    assert bad.status_code == 422 and bad.json()["detail"][0]["loc"] == ["query", "fields"]
 
 
 def test_create_conflict_validation(client):
@@ -67,3 +68,52 @@ def test_import_accepted(client):
     assert response.status_code == 202
     job = client.get(response.headers["Location"]).json()
     assert job["status"] == "done" and job["added"] == 1
+
+
+def test_bad_time_in_path_is_422(client):
+    assert client.get(f"{OBS_URL}/вчора").status_code == 422
+    assert client.patch(f"{OBS_URL}/2024-13-40T99:00Z", json={"temperature": 1}).status_code == 422
+    assert client.delete(f"{OBS_URL}/not-a-time").status_code == 422
+
+
+def test_time_in_path_any_offset(client):
+    assert client.get(f"{OBS_URL}/2024-09-02T21:00+03:00").json()["temperature"] == 25.1
+
+
+def test_patch_null_temperature_rejected(client):
+    url = f"{OBS_URL}/2024-09-02T18:00Z"
+    response = client.patch(url, json={"temperature": None})
+    assert response.status_code == 422
+    assert client.get(url).json()["temperature"] == 25.1
+    assert client.patch(url, json={"wind_speed": None}).status_code == 200
+
+
+def test_unknown_body_fields_rejected(client):
+    body = {"time": "2024-09-02T21:00Z", "temperature": 21.4, "dew_point": 12}
+    assert client.post(OBS_URL, json=body).status_code == 422
+    assert client.patch(f"{OBS_URL}/2024-09-02T18:00Z", json={"temprature": 1}).status_code == 422
+
+
+def test_broken_import_csv_is_422_with_line(client):
+    response = client.post("/api/v1/imports", json={"csv": "34504,2024,09\n"})
+    assert response.status_code == 422
+    assert "рядок 1" in response.json()["detail"][0]["msg"]
+
+
+def test_import_failure_is_reported(client, monkeypatch):
+    def broken(records):
+        raise RuntimeError("диск повний")
+    monkeypatch.setattr(client.app.state.repo, "import_records", broken)
+    csv_line = "34504,2024,09,02,18,00,AAXX 02181 34504 32975 51106 10251 20129 39989 40151 52027 80001 333 10330="
+    response = client.post("/api/v1/imports", json={"csv": csv_line})
+    assert response.status_code == 202
+    job = client.get(response.headers["Location"]).json()
+    assert job["status"] == "failed" and "диск повний" in job["error"]
+
+
+def test_openapi_has_schemas(client):
+    spec = client.get("/openapi.json").json()
+    get_obs = spec["paths"]["/api/v1/stations/{wmo}/observations/{moment}"]["get"]
+    assert get_obs["responses"]["200"]["content"]["application/json"]["schema"]["$ref"].endswith("/Observation")
+    assert "404" in get_obs["responses"]
+    assert {"Station", "ObservationPage", "ImportJob", "ErrorOut"} <= set(spec["components"]["schemas"])

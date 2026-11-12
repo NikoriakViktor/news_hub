@@ -43,7 +43,7 @@ Success: no issues found in 26 source files
 
 | Симптом | Причина | Що зробити |
 |---|---|---|
-| `failed to create network …_edge: … invalid pool request: Pool overlaps with other one on this address space` | на машині вже є мережа Docker, що перетинає `172.28.0.0/24` (тут була `172.28.0.0/16` іншого проєкту) | знайти: `docker network inspect $(docker network ls -q) --format '{{.Name}} {{range .IPAM.Config}}{{.Subnet}}{{end}}'`; змінити `subnet`, `ipv4_address` і `FORWARDED_ALLOW_IPS` разом (усі три — одна адреса nginx) |
+| `failed to create network …_edge: … invalid pool request: Pool overlaps with other one on this address space` | на машині вже є мережа Docker, що перетинає `172.28.0.0/24` (тут була `172.28.0.0/16` іншого проєкту) | знайти: `docker network inspect $(docker network ls -q) --format '{{.Name}} {{range .IPAM.Config}}{{.Subnet}}{{end}}'`; задати в `.env` (або в оточенні shell) вільну підмережу й адресу nginx у ній: `EDGE_SUBNET=10.231.9.0/24`, `NGINX_IP=10.231.9.10`; `docker-compose.yml` не правити — `NGINX_IP` бере і `ipv4_address`, і `FORWARDED_ALLOW_IPS` |
 | `required variable POSTGRES_PASSWORD is missing a value: задай POSTGRES_PASSWORD у .env` | `.env` немає або пароль порожній | `cp .env.example .env` і заповнити |
 | `The "pVoAkKpIgbdK5I" variable is not set. Defaulting to a blank string.` | значення з `$` у `.env` без лапок | одинарні лапки: `ADMIN_PASSWORD_HASH='$2b$12$…'` |
 | `container …-api-1 is unhealthy`, у `logs api` — `RuntimeError: ADMIN_PASSWORD_HASH …` | хеш обрізаний (див. попередній рядок) або там пароль, а не хеш | `python -m news_hub.security`, рядки — як надруковано |
@@ -90,7 +90,7 @@ rate:login:10.28.0.1
 
 ??? success "Що показав запуск"
 
-    1. `rate:login:10.28.0.10` — адреса nginx (у підмережі кроку — `172.28.0.10`): заголовку від нього uvicorn
+    1. `rate:login:10.28.0.10` — адреса nginx у підмережі перевірки `10.28.0.0/24` (з типовою — `172.28.0.10`): заголовку від нього uvicorn
        більше не вірить, і всі клієнти знову «одна людина».
     2. З довірою лише nginx — ні: `401 ×5, 429 ×2`, ключ — справжня адреса (uvicorn 0.54 бере крайню праву
        адресу, якій не довіряє). З `"*"` — так: 8 спроб, 8 ключів `rate:login:10.66.0.1…8`, жодного `429`.

@@ -8,6 +8,13 @@ services:
     command: uvicorn meteo_api.app:app --host 0.0.0.0 --port 8032
     ports:
       - "8032:8032"
+    healthcheck:
+      # «контейнер запущено» ≠ «API відповідає»: без перевірки карта стартує раніше й перші запити падають
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8032/api/v1/stations?limit=1', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
 
   weather_map:
     build: .
@@ -18,4 +25,5 @@ services:
     ports:
       - "8501:8501"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
