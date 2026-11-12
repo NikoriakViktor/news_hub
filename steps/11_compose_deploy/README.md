@@ -54,7 +54,8 @@ news_hub/
 ├── requirements-dev.txt ← крок 10: + pytest, mypy, fakeredis — для розробки й тестів
 ├── docker-compose.yml ← крок 11: уся система — postgres, redis, migrate, api, nginx; профілі polling (бот) і twin
 ├── docker-compose.dev.yml ← крок 11: розробка — порти бази й Redis лише на 127.0.0.1
-├── nginx/nginx.conf  ← крок 11: проксі до api, X-Forwarded-For перезаписується (реальний IP для rate limit)
+├── nginx/nginx.conf  ← крок 11: проксі до api, X-Forwarded-For перезаписується (реальний IP для rate limit),
+│                       server_tokens off (без версії nginx)
 ├── scripts/          ← крок 11: backup.sh / restore.sh — pg_dump з контейнера, set -euo pipefail
 ├── .env.example      ← крок 11: усі змінні стеку; значення з `$` — в одинарних лапках
 ├── postman/news_hub.postman_collection.json   ← 18 запитів з перевірками; пароль адміна — змінна adminPassword
@@ -83,7 +84,7 @@ news_hub/
 
 ```bash
 pip install -r requirements-dev.txt   # застосунок + pytest, mypy, fakeredis
-pytest                      # 343 тести: SQLite у пам'яті + fakeredis + локальні aiohttp-сервери + двійник Telegram + FakeLLM
+pytest                      # 363 тести: SQLite у пам'яті + fakeredis + локальні aiohttp-сервери + двійник Telegram + FakeLLM
 pytest -m unit              # лише швидкі, без бази, Redis і мережі
 pytest --cov=news_hub       # покриття (налаштування — .coveragerc)
 mypy --strict news_hub      # перевірка типів
@@ -113,6 +114,8 @@ docker compose down                   # зупинити (дані — у том
 
 - api назовні не відкритий — лише через nginx. IP клієнта (rate limit входу, крок 8) — з `X-Forwarded-For`, який nginx
   перезаписує, а uvicorn приймає лише від nginx (`FORWARDED_ALLOW_IPS=172.28.0.10`).
+- `/docs`, `/redoc` і `/openapi.json` у Compose вимкнено (`DOCS_ENABLED: ${DOCS_ENABLED:-false}`); увімкнути — `DOCS_ENABLED=true`
+  у `.env`. nginx не показує своєї версії (`server_tokens off`); заголовки безпеки ставить застосунок, HSTS — лише з TLS.
 - Міграції — окремий сервіс `migrate` (один раз, до api), а не при старті кожного api.
 - Бот у режимі polling: `docker compose --profile polling up -d`. З `TELEGRAM_WEBHOOK_URL` — усередині api;
   реєстрація в Telegram — у фоні з повторами, недоступний Telegram не зупиняє API.
@@ -168,10 +171,10 @@ curl localhost:8081/_twin/sent?chat_id=1001                                     
 | `BOT_TOKEN` | — | токен бота; без нього бот вимкнений |
 | `TELEGRAM_WEBHOOK_URL` / `TELEGRAM_WEBHOOK_SECRET` | — | webhook у FastAPI; секрет — 32–256 символів `A-Z a-z 0-9 _ -` |
 | `TELEGRAM_API_URL` | api.telegram.org | інший сервер Bot API (двійник, локальний Bot API server) |
-| `BOT_ADMIN_IDS` | — | `user_id` через кому: кому дозволено `/scrape` у боті |
+| `BOT_ADMIN_IDS` | — | `user_id` через кому: кому дозволено `/scrape` у боті. Частина адмін-доступу (`AdminSettings`): без `JWT_SECRET` і `ADMIN_PASSWORD_HASH` — помилка при старті, як і не числовий id |
 
 Команди: `/news [N]`, `/digest`, `/subscribe <слово>`, `/unsubscribe <слово>`, `/subscriptions`, `/help`;
-адміну — `/scrape [snapshot]`. Після кожного збору (API, фонова задача, RSS-джерело) нові новини, у заголовку
+адміну — `/scrape [snapshot]` (під тим самим лімітом, що `POST /api/scrape*`: `RATE_LIMIT_REQUESTS` за `RATE_LIMIT_WINDOW` с). Після кожного збору (API, фонова задача, RSS-джерело) нові новини, у заголовку
 яких є слово підписки, приходять у чат.
 
 ### Адмін, RSS-джерела і webhook (крок 8)
@@ -202,10 +205,19 @@ curl -X POST localhost:8000/api/scrape -H "Authorization: Bearer $TOKEN" -H 'Con
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD_HASH` | `admin` / — | вхід адміна; хеш — `python -m news_hub.security` |
 | `JWT_EXPIRE_MINUTES` | `30` | скільки живе токен |
 | `LOGIN_RATE_LIMIT` / `LOGIN_RATE_WINDOW` | `5` / `300` | спроб входу з однієї адреси за вікно, с |
+| `LOGIN_FAIL_LIMIT` / `LOGIN_FAIL_WINDOW` | `20` / `900` | невдалих входів під одним ім'ям з усіх адрес за вікно, с; далі — `429` до кінця вікна |
+| `DOCS_ENABLED` | `true` | `false` / `0` / `no` / `off` — без `/docs`, `/redoc` і `/openapi.json` (Compose на сервері задає `false`) |
 | `WEBHOOK_SECRET` | — | спільний секрет для підпису `POST /api/webhooks/scrape`; без нього — `503` |
 
-Webhook підписує відправник: `X-Webhook-Timestamp: <unix-час>` і
-`X-Webhook-Signature: sha256=<HMAC-SHA256(WEBHOOK_SECRET, "<час>." + тіло)>` (функція `news_hub.webhooks.sign`).
+Webhook підписує відправник: `X-Webhook-Timestamp: <unix-час>`, `X-Webhook-Delivery: <id події>` (8–64 символи
+`A-Z a-z 0-9 _ -`, наприклад `uuid4().hex`) і `X-Webhook-Signature: sha256=<HMAC-SHA256(WEBHOOK_SECRET, "<час>.<id>." + тіло)>`
+(функція `news_hub.webhooks.sign`). Повтор тієї самої доставки (той самий id, навіть з новим часом і підписом) — `200`
+з тим самим завданням, збір не запускається вдруге.
+
+Вхід адміна обмежено двічі: 5 спроб за 300 с з однієї адреси і 20 невдач за 900 с під одним ім'ям з усіх адрес
+(`LoginGuard`; ціна — чужий перебір може на ці 15 хв закрити вхід і справжньому адміну). Відповідь з токеном —
+`Cache-Control: no-store`. Кожна відповідь має заголовки безпеки (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
+`Referrer-Policy: no-referrer`, `Cross-Origin-Opener-Policy: same-origin`; JSON — ще CSP `default-src 'none'`).
 
 ### Аналіз LLM (крок 7)
 

@@ -9,6 +9,7 @@ import logging
 from ..cache import make_redis
 from ..db import SessionFactory
 from ..llm import make_llm
+from ..security import load_admin_settings, telegram_admin_ids
 from .factory import create_bot, create_dispatcher, set_commands
 from .settings import load_bot_settings
 
@@ -20,7 +21,7 @@ async def main() -> None:
         raise SystemExit("Задай BOT_TOKEN (від @BotFather); для двійника — ще TELEGRAM_API_URL")
     redis, llm = make_redis(), make_llm()
     bot = create_bot(settings.token, settings.api_url)
-    dp = create_dispatcher(SessionFactory, redis, llm, settings.admin_ids)
+    dp = create_dispatcher(SessionFactory, redis, llm, telegram_admin_ids(load_admin_settings()))
     try:
         await bot.delete_webhook()
         await set_commands(bot)

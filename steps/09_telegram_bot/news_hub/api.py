@@ -24,7 +24,7 @@
   (`dependencies=[AdminDep]`); читання новин лишається публічним;
 - RSS-джерела адміна: `POST/GET/DELETE /api/sources`, `POST /api/sources/{id}/fetch` — завантаження лише
   через `safe_fetch` (без SSRF);
-- `POST /api/webhooks/scrape` — збір за підписаним запитом зовнішнього планувальника (HMAC + час + повтор).
+- `POST /api/webhooks/scrape` — збір за підписаним запитом зовнішнього планувальника (HMAC + час + id доставки).
 Крок 9 — Telegram-бот (bot/, notify.py):
 - з `BOT_TOKEN` у lifespan збираються Bot і Dispatcher; з `TELEGRAM_WEBHOOK_URL` — `setWebhook` із секретом;
 - `POST /api/telegram/webhook` — update від Telegram (заголовок X-Telegram-Bot-Api-Secret-Token, `verify_secret_token`),
@@ -35,6 +35,7 @@
 (Redis: docker compose up -d redis; адреса — REDIS_URL)
 """
 import logging
+import os
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -42,6 +43,7 @@ from typing import Annotated, Literal
 
 from aiogram.types import Update
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query, Request, Response, status
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, TypeAdapter, ValidationError, field_validator
 from redis.asyncio import Redis
@@ -51,9 +53,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from .analysis import AnalysisCache, InvalidLLMOutput, NewsAnalysis, Sentiment, Topic, analyze_news
 from .cache import NewsCache, get_redis, make_redis
 from .db import SessionFactory, engine, get_db
-from .jobs import JobStatus, JobStore, run_analyze_job, run_scrape_job
+from .jobs import JobStatus, JobStore, new_job_id, run_analyze_job, run_scrape_job
 from .llm import CircuitBreaker, CircuitOpen, GuardedLLM, LLMClient, LLMError, make_llm
-from .middleware import invalidate_cache, rate_limit, request_context
+from .middleware import SecurityHeadersMiddleware, invalidate_cache, rate_limit, request_context
 from .models import NewsItem, is_rbc_host, validate_news
 from .bot.factory import create_bot, create_dispatcher, set_commands
 from .bot.settings import load_bot_settings
@@ -62,10 +64,11 @@ from .repository import NewsRepository, SourceRepository
 from .rss import parse_pravda_rss
 from .safe_fetch import DEFAULT_POLICY, FetchError, FetchPolicy, UnsafeURL, check_url, safe_fetch
 from .scraper import PageResult, ScrapeOutcome, scrape_all_async, scrape_sequential
-from .security import AdminDep, AdminSettingsDep, authenticate, create_access_token, load_admin_settings
+from .security import (AdminDep, AdminSettingsDep, LoginGuard, authenticate, create_access_token,
+                       load_admin_settings, telegram_admin_ids)
 from .snapshot import load_snapshot
 from .tables import NewsRow, SourceRow
-from .webhooks import WebhookRejected, load_webhook_secret, remember_delivery, verify_secret_token, verify_signature
+from .webhooks import WebhookRejected, claim_delivery, load_webhook_secret, verify_secret_token, verify_signature
 
 Scraper = Callable[[list[str] | None], Awaitable[ScrapeOutcome]]
 
@@ -104,15 +107,27 @@ async def start_bot(app: FastAPI) -> None:
     if settings is None:
         return
     app.state.bot = bot = create_bot(settings.token, settings.api_url)
-    app.state.dispatcher = create_dispatcher(SessionFactory, app.state.redis, app.state.llm, settings.admin_ids)
+    app.state.dispatcher = create_dispatcher(SessionFactory, app.state.redis, app.state.llm,
+                                             telegram_admin_ids(app.state.admin))
     if settings.webhook_url:
         await bot.set_webhook(settings.webhook_url, secret_token=settings.webhook_secret,
                               allowed_updates=["message"])
     await set_commands(bot)
 
 
+def docs_enabled(value: str | None = None) -> bool:
+    """/docs, /redoc і /openapi.json: локально — так; на публічному сервері — DOCS_ENABLED=false (Compose)."""
+    value = os.getenv("DOCS_ENABLED", "true") if value is None else value
+    return value.strip().lower() not in {"0", "false", "no", "off"}
+
+
+DOCS = docs_enabled()
+
 app = FastAPI(
     title="news_hub API",
+    docs_url="/docs" if DOCS else None,
+    redoc_url="/redoc" if DOCS else None,
+    openapi_url="/openapi.json" if DOCS else None,
     description="Новинний агрегатор: парсинг rbc.ua → перевірені `NewsItem` → база → кеш → API → "
                 "аналіз LLM; запис — лише адміну з JWT; Telegram-бот. Крок 9.",
     version="0.9.0",
@@ -129,10 +144,11 @@ app = FastAPI(
 )
 
 
-# Middleware: останній зареєстрований — зовнішній. Запит іде request_context → rate_limit → invalidate_cache
-# → ендпоінт, відповідь — у зворотному порядку.
+# Middleware: останній зареєстрований — зовнішній. Запит іде request_context → SecurityHeaders → rate_limit
+# → invalidate_cache → ендпоінт, відповідь — у зворотному порядку (тож і 429 отримує заголовки безпеки).
 app.middleware("http")(invalidate_cache)
 app.middleware("http")(rate_limit)
+app.add_middleware(SecurityHeadersMiddleware)
 app.middleware("http")(request_context)
 
 
@@ -531,10 +547,23 @@ class TokenResponse(BaseModel):
 @app.post("/api/admin/token", response_model=TokenResponse, tags=["admin"], summary="Вхід адміна → JWT",
           responses={401: {"description": "неправильне ім'я або пароль"},
                      429: {"description": "забагато спроб входу"}})
-async def admin_token(body: TokenRequest, settings: AdminSettingsDep) -> TokenResponse:
-    """Одна відповідь на «немає такого імені» і «не той пароль» — не підказуємо, що саме не так."""
-    if not authenticate(settings, body.username, body.password):
+async def admin_token(body: TokenRequest, settings: AdminSettingsDep, redis: RedisDep,
+                      response: Response) -> TokenResponse:
+    """Одна відповідь на «немає такого імені» і «не той пароль» — не підказуємо, що саме не так.
+
+    Два ліміти: middleware — спроби з однієї адреси, LoginGuard — невдачі на одне ім'я з усіх адрес.
+    bcrypt (~0,2 с) — у пулі потоків: інакше кожна спроба входу зупиняла б цикл подій для всіх запитів.
+    """
+    guard = LoginGuard(redis)
+    wait = await guard.retry_after(body.username)
+    if wait:
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, headers={"Retry-After": str(wait)},
+                            detail=f"забагато невдалих входів під цим іменем; спробуй через {wait} с")
+    if not await run_in_threadpool(authenticate, settings, body.username, body.password):
+        await guard.failed(body.username)
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="неправильне ім'я або пароль")
+    await guard.succeeded(body.username)
+    response.headers["Cache-Control"] = "no-store"           # токен не кешують ні браузер, ні проксі
     return TokenResponse(access_token=create_access_token(settings, body.username),
                          expires_in=settings.expire_minutes * 60)
 
@@ -663,18 +692,19 @@ def get_webhook_secret(request: Request) -> bytes:
 
 @app.post("/api/webhooks/scrape", response_model=JobStatus, status_code=status.HTTP_202_ACCEPTED,
           tags=["webhooks"], summary="Збір за підписаним запитом",
-          responses={401: {"description": "немає підпису, він не збігається або запит застарий"},
-                     409: {"description": "повтор уже отриманого запиту"}})
-async def scrape_webhook(request: Request, background: BackgroundTasks, redis: RedisDep, scrapers: ScrapersDep,
-                         notifier: NotifierDep,
+          responses={200: {"description": "повтор доставки з тим самим X-Webhook-Delivery: те саме завдання",
+                           "model": JobStatus},
+                     401: {"description": "немає підпису, він не збігається або запит застарий"},
+                     409: {"description": "та сама доставка ще обробляється"}})
+async def scrape_webhook(request: Request, response: Response, background: BackgroundTasks, redis: RedisDep,
+                         scrapers: ScrapersDep, notifier: NotifierDep,
                          secret: Annotated[bytes, Depends(get_webhook_secret)],
                          session_factory: Annotated[async_sessionmaker[AsyncSession], Depends(get_session_factory)],
                          ) -> JobStatus:
     """Тіло — як у POST /api/scrape/jobs. Спершу підпис сирих байтів, лише потім розбір JSON."""
     body = await request.body()
     try:
-        signature = verify_signature(secret, request.headers, body)
-        await remember_delivery(redis, signature)
+        delivery = verify_signature(secret, request.headers, body)
     except WebhookRejected as error:
         raise HTTPException(error.status_code, detail=str(error)) from error
     try:
@@ -682,7 +712,14 @@ async def scrape_webhook(request: Request, background: BackgroundTasks, redis: R
     except ValidationError as error:         # include_input=False: сирі bytes у відповідь JSON не серіалізуються
         raise HTTPException(422, detail=error.errors(include_url=False, include_context=False,
                                                       include_input=False)) from error
-    job = await JobStore(redis).create(scrape_request.source, scrape_request.mode)
+    store, job_id = JobStore(redis), new_job_id()
+    if (existing := await claim_delivery(redis, delivery, job_id)) is not None:
+        previous = await store.get(existing)
+        if previous is None:              # перша доставка ще не встигла створити завдання
+            raise HTTPException(status.HTTP_409_CONFLICT, detail="ця доставка ще обробляється")
+        response.status_code = status.HTTP_200_OK
+        return previous
+    job = await store.create(scrape_request.source, scrape_request.mode, job_id=job_id)
     background.add_task(run_scrape_job, job.job_id, lambda: collect(scrape_request, scrapers), redis, session_factory,
                         notifier)
     return job

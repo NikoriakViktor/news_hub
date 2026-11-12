@@ -6,8 +6,10 @@ from datetime import datetime, timedelta, timezone
 import jwt
 import pytest
 
-from news_hub.security import (AdminSettings, authenticate, create_access_token, decode_token, env_lines,
-                               hash_password, load_admin_settings, verify_password)
+import fakeredis
+
+from news_hub.security import (AdminSettings, LoginGuard, authenticate, create_access_token, decode_token,
+                               env_lines, hash_password, load_admin_settings, telegram_admin_ids, verify_password)
 
 SECRET = "s" * 64
 SETTINGS = AdminSettings(jwt_secret=SECRET, username="admin", password_hash=hash_password("правильний", rounds=4))
@@ -114,3 +116,38 @@ def test_truncated_hash_fails_at_startup() -> None:
     with pytest.raises(RuntimeError, match="одинарних лапках"):
         load_admin_settings({"JWT_SECRET": SECRET, "ADMIN_PASSWORD_HASH": truncated})
     assert load_admin_settings({"JWT_SECRET": SECRET, "ADMIN_PASSWORD_HASH": full}) is not None
+
+
+GOOD_ENV = {"JWT_SECRET": SECRET, "ADMIN_PASSWORD_HASH": SETTINGS.password_hash}
+
+
+def test_bot_admins_are_part_of_admin_settings() -> None:
+    """Одне правило «хто адмін»: адміни бота — з тих самих налаштувань, що й адмін API."""
+    settings = load_admin_settings({**GOOD_ENV, "BOT_ADMIN_IDS": "1001, 2002"})
+    assert settings is not None and telegram_admin_ids(settings) == {1001, 2002}
+    assert telegram_admin_ids(load_admin_settings(GOOD_ENV)) == frozenset()
+    assert telegram_admin_ids(None) == frozenset()                      # адмінку не налаштовано — адмінів немає
+
+
+@pytest.mark.parametrize("env", [
+    {"BOT_ADMIN_IDS": "1001"},                                          # бот з адмінами, а адмінки API немає
+    {**GOOD_ENV, "BOT_ADMIN_IDS": "1001,@olena"},                       # не числовий id
+    {**GOOD_ENV, "BOT_ADMIN_IDS": "１００１"},                           # «цифри» не ASCII: isdecimal() — True
+])
+def test_bad_bot_admins_fail_at_start(env: dict[str, str]) -> None:
+    with pytest.raises(RuntimeError, match="BOT_ADMIN_IDS"):
+        load_admin_settings(env)
+
+
+@pytest.mark.asyncio
+async def test_login_guard_counts_per_name_and_resets_on_success() -> None:
+    guard = LoginGuard(fakeredis.FakeAsyncRedis(decode_responses=True), limit=3, window=60)
+    for _ in range(3):
+        assert await guard.retry_after("admin") == 0
+        await guard.failed("admin")
+    assert 0 < await guard.retry_after("admin") <= 60
+    assert await guard.retry_after("ADMIN") > 0                          # регістр не допомагає обійти
+    assert await guard.retry_after("editor") == 0
+    await guard.succeeded("admin")
+    assert await guard.retry_after("admin") == 0
+    assert "admin" not in LoginGuard.key("admin")                        # у Redis — хеш, а не рядок від клієнта

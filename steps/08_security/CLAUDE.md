@@ -34,4 +34,13 @@
   через `safe_fetch`, не напряму `aiohttp`/`httpx`; тести на локальному сервері — з явною `FetchPolicy`, не через
   змінні середовища. (`scraper.py` ходить лише на сторінки rbc.ua — `is_rbc_host`; перенаправлення поки не перевіряє.)
 - Секрети порівнюються `hmac.compare_digest`, не `==`; секрет не кладемо в URL (шлях потрапляє в журнали).
+- bcrypt (і будь-яка інша робота процесора на десяті частки секунди) в `async def` — лише через `run_in_threadpool`;
+  тести цього не ловлять (з прямим викликом усі зелені), це пункт рецензії.
+- Вхід адміна — два ліміти: на адресу (`LIMITS["login"]`, middleware) і на ім'я (`LoginGuard`, security.py). Відповідь
+  з токеном — `Cache-Control: no-store`.
+- Webhook: повтор розпізнається за `X-Webhook-Delivery` (`claim_delivery`), а не за підписом; повтор → `200` з тим самим
+  завданням. Id доставки — частина підпису.
+- Новий middleware, якому не потрібне тіло, — чистий ASGI (`app.add_middleware`, як `SecurityHeadersMiddleware`), а не ще
+  один `@app.middleware("http")`: кожен шар BaseHTTPMiddleware змінює, коли закінчуються фонові задачі.
+- Ліміти — лише з таблиці `LIMITS` (middleware.py), не новими числами в коді.
 - Анотації типів скрізь; `logging.getLogger("news_hub")` замість `print`; коментарі й docstring — українською.

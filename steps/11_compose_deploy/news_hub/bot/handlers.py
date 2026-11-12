@@ -5,7 +5,8 @@
 - замість розмови з LLM — команди новинного агрегатора над тим самим `NewsRepository`, що в API;
 - кожен рядок, що прийшов ззовні (ім'я, заголовок, слово), — через `esc` / `link` (formatting.py);
 - `/scrape` — лише для `BOT_ADMIN_IDS`: бот — ще один вхід у застосунок, і правило «хто може
-  змінювати» (крок 8) діє й тут.
+  змінювати» (крок 8) діє й тут. Список адмінів — з `AdminSettings` (security.py), ліміт збору — з тієї ж
+  таблиці `LIMITS`, що й для `POST /api/scrape*` (ключ — `tg<id>` замість адреси).
 
 Порядок у роутері важливий: aiogram перевіряє handlers згори донизу, тому «будь-який текст» — останній.
 Роутер будує функція `build_router()`, а не змінна модуля: aiogram прив'язує Router лише до одного
@@ -20,6 +21,7 @@ from redis.asyncio import Redis
 
 from ..analysis import AnalysisCache, analyze_news
 from ..llm import LLMClient, LLMError
+from ..middleware import LIMITS, RateLimiter
 from ..models import validate_news
 from ..notify import notify_subscribers
 from ..repository import NewsRepository, SubscriptionRepository
@@ -133,11 +135,16 @@ async def cmd_subscriptions(message: Message, subscriptions: SubscriptionReposit
 
 
 async def cmd_scrape(message: Message, command: CommandObject, bot: Bot, news: NewsRepository,
-                     subscriptions: SubscriptionRepository, admin_ids: frozenset[int]) -> None:
+                     subscriptions: SubscriptionRepository, admin_ids: frozenset[int], redis: Redis) -> None:
     """Адмін-команда: зібрати новини (`/scrape snapshot` — зі знімка) і сповістити підписників."""
     if message.from_user is None or message.from_user.id not in admin_ids:
         logger.warning("/scrape від не-адміна %s", message.from_user.id if message.from_user else None)
         await message.answer("Ця команда — лише для адміністратора.")
+        return
+    limit, window = LIMITS["scrape"]
+    allowed, _, ttl = await RateLimiter(redis, limit=limit, window=window).hit(f"tg{message.from_user.id}", "scrape")
+    if not allowed:
+        await message.answer(f"Забагато зборів: {limit} за {window} с; спробуй через {ttl} с.")
         return
     raw = load_snapshot() if (command.args or "").strip() == "snapshot" else (await scrape_all_async()).news
     valid, rejected = validate_news(raw)

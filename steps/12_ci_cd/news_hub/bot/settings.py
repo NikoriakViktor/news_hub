@@ -14,7 +14,7 @@ class BotSettings:
     api_url: str | None = None            # двійник або локальний Bot API server; None — api.telegram.org
     webhook_url: str | None = None        # задано — webhook; ні — polling (python -m news_hub.bot)
     webhook_secret: str | None = None
-    admin_ids: frozenset[int] = frozenset()
+    # Хто адмін у боті (BOT_ADMIN_IDS) — не тут, а в AdminSettings (security.py): одне правило для API і бота
 
 
 def load_bot_settings(env: Mapping[str, str] = os.environ) -> BotSettings | None:
@@ -29,6 +29,5 @@ def load_bot_settings(env: Mapping[str, str] = os.environ) -> BotSettings | None
         if secret is None or not SECRET_TOKEN.fullmatch(secret):
             raise RuntimeError("TELEGRAM_WEBHOOK_SECRET: 32–256 символів A-Z a-z 0-9 _ - "
                                "(згенеруй: python -c 'import secrets; print(secrets.token_urlsafe(48))')")
-    admin_ids = frozenset(int(item) for item in env.get("BOT_ADMIN_IDS", "").replace(" ", "").split(",") if item)
     return BotSettings(token=token, api_url=env.get("TELEGRAM_API_URL") or None, webhook_url=webhook_url,
-                       webhook_secret=secret, admin_ids=admin_ids)
+                       webhook_secret=secret)

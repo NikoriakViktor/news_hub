@@ -2,21 +2,24 @@
 import json
 import os
 import time
+import uuid
 
 import pytest
 from fastapi.testclient import TestClient
 
 from news_hub.api import app
-from news_hub.webhooks import SIGNATURE_HEADER, TIMESTAMP_HEADER, sign
+from news_hub.webhooks import DELIVERY_HEADER, SIGNATURE_HEADER, TIMESTAMP_HEADER, sign
 
 SECRET = os.environ["WEBHOOK_SECRET"].encode()      # з conftest.py
 BODY = json.dumps({"source": "snapshot"}).encode()
 
 
-def signed(body: bytes = BODY, secret: bytes = SECRET, timestamp: int | None = None) -> dict[str, str]:
+def signed(body: bytes = BODY, secret: bytes = SECRET, timestamp: int | None = None,
+           delivery: str | None = None) -> dict[str, str]:
     timestamp = int(time.time()) if timestamp is None else timestamp
-    return {SIGNATURE_HEADER: sign(secret, timestamp, body), TIMESTAMP_HEADER: str(timestamp),
-            "Content-Type": "application/json"}
+    delivery = delivery or uuid.uuid4().hex
+    return {SIGNATURE_HEADER: sign(secret, timestamp, delivery, body), TIMESTAMP_HEADER: str(timestamp),
+            DELIVERY_HEADER: delivery, "Content-Type": "application/json"}
 
 
 def test_signed_request_starts_job_without_jwt(anon: TestClient) -> None:
@@ -38,11 +41,24 @@ def test_rejected_is_401(anon: TestClient, case: str, body: bytes, headers: dict
     assert anon.get("/api/news/count").json() == {"count": 0}
 
 
-def test_replay_is_409(anon: TestClient) -> None:
+def test_exact_replay_returns_same_job(anon: TestClient) -> None:
     headers = signed()
-    assert anon.post("/api/webhooks/scrape", content=BODY, headers=headers).status_code == 202
+    first = anon.post("/api/webhooks/scrape", content=BODY, headers=headers)
     again = anon.post("/api/webhooks/scrape", content=BODY, headers=headers)
-    assert (again.status_code, again.json()["detail"]) == (409, "цей запит уже отримано (повтор)")
+    assert (first.status_code, again.status_code) == (202, 200)
+    assert again.json()["job_id"] == first.json()["job_id"]
+
+
+def test_resent_delivery_with_new_signature_does_not_scrape_twice(anon: TestClient) -> None:
+    """Раніше ключем повтору був підпис: повтор з новим часом мав новий підпис і запускав збір удруге."""
+    delivery = uuid.uuid4().hex
+    first = anon.post("/api/webhooks/scrape", content=BODY,
+                      headers=signed(delivery=delivery, timestamp=int(time.time()) - 30))
+    again = anon.post("/api/webhooks/scrape", content=BODY, headers=signed(delivery=delivery))
+    assert (first.status_code, again.status_code) == (202, 200)
+    assert again.json()["job_id"] == first.json()["job_id"]
+    other = anon.post("/api/webhooks/scrape", content=BODY, headers=signed())       # нова доставка — нове завдання
+    assert other.status_code == 202 and other.json()["job_id"] != first.json()["job_id"]
 
 
 def test_signature_is_checked_before_json(anon: TestClient) -> None:

@@ -44,5 +44,11 @@ saved="$(curl -sf -X POST "$base/api/scrape" -H "Authorization: Bearer $token" -
 check "збір зі знімка" 168 "$saved"
 check "новини в PostgreSQL" '{"count":168}' "$(curl -sf "$base/api/news/count")"
 
+check "/docs на сервері закрито (DOCS_ENABLED=false)" 404 "$(curl -s -o /dev/null -w '%{http_code}' "$base/docs")"
+check "заголовки безпеки через nginx" nosniff \
+    "$(curl -s -D - -o /dev/null "$base/api/news/count" | tr -d '\r' | awk -F': ' 'tolower($1)=="x-content-type-options" {print $2}')"
+check "nginx без версії" "nginx" \
+    "$(curl -sI "$base/nginx-health" | tr -d '\r' | awk -F': ' 'tolower($1)=="server" {print $2}')"
+
 check "база й Redis без портів назовні" "" "$(docker compose ps postgres redis --format '{{.Ports}}' | grep -- '->' || true)"
 echo "smoke: усе гаразд"

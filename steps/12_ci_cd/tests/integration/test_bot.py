@@ -5,6 +5,7 @@
 """
 import pytest
 
+from news_hub.middleware import LIMITS
 from news_hub.models import NewsItem
 from news_hub.repository import NewsRepository, SubscriptionRepository
 from news_hub.snapshot import load_snapshot
@@ -92,6 +93,15 @@ async def test_scrape_is_admin_only(telegram: BotHarness) -> None:
     assert reply == f"Зібрано: 168, нових: {len(valid)}, відхилено: {len(rejected)}; сповіщено чатів: 1"
     [notice] = telegram.twin.sent(2002)[-1:]
     assert notice.startswith("🔔 Нові новини за підписками (зеленський):")
+
+
+async def test_scrape_uses_the_same_rate_limit_as_api(telegram: BotHarness, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Збір — дорога дія, з якого б входу він не прийшов: бот бере ліміт з тієї ж таблиці LIMITS, що й API."""
+    monkeypatch.setitem(LIMITS, "scrape", (1, 60))
+    [first] = await telegram.say("/scrape snapshot")
+    assert first.startswith("Зібрано: 168")
+    [second] = await telegram.say("/scrape snapshot")
+    assert second.startswith("Забагато зборів: 1 за 60 с")
 
 
 async def test_unknown_text(telegram: BotHarness) -> None:

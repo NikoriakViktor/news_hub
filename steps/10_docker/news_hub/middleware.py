@@ -2,6 +2,7 @@
 
 Порядок (зовнішній → внутрішній), як їх реєструє api.py:
     request_context   — X-Request-ID, X-Process-Time, рядок журналу;
+    SecurityHeadersMiddleware — заголовки безпеки на кожній відповіді (чистий ASGI);
     rate_limit        — POST /api/scrape* і аналіз LLM: не більше N запитів за вікно з однієї адреси → 429;
     invalidate_cache  — успішний запис у новини → нова версія кешу (після COMMIT).
 
@@ -15,6 +16,11 @@ Rate limit — `RateLimitRepository` + `RateLimitMiddleware` стартовог�
 Крок 7: аналіз LLM коштує грошей і квоти — свій ліміт (`ANALYZE_RATE_LIMIT`), ключ `rate:analyze:<адреса>`.
 Крок 8: вхід адміна — `LOGIN_RATE_LIMIT` спроб за `LOGIN_RATE_WINDOW` с з однієї адреси: пароль не підбереш
 перебором (bcrypt сповільнює кожну спробу, ліміт — їхню кількість); збір з RSS-джерела теж скидає кеш.
+Виправлення безпеки (після рецензії):
+- `LIMITS` — одна таблиця лімітів: бот (`/scrape`) бере ліміт збору звідси ж, а не має власного (чи жодного);
+- `SecurityHeadersMiddleware` — браузер не вгадує тип (`nosniff`), не вбудовує відповіді у фрейм, не передає
+  Referer; на JSON-відповідях — CSP `default-src 'none'`. Сторінки /docs і /redoc без CSP: Swagger UI
+  вантажить скрипти з CDN. HSTS ставить той, хто знімає TLS (nginx чи Caddy), а не застосунок.
 """
 import logging
 import os
@@ -25,6 +31,8 @@ from collections.abc import Awaitable, Callable
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
+from starlette.datastructures import MutableHeaders
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from .cache import NewsCache, get_redis
 
@@ -38,6 +46,19 @@ ANALYZE_RATE_LIMIT = int(os.getenv("ANALYZE_RATE_LIMIT", "10"))    # запит�
 LOGIN_RATE_LIMIT = int(os.getenv("LOGIN_RATE_LIMIT", "5"))         # крок 8: спроб входу за вікно
 LOGIN_RATE_WINDOW = int(os.getenv("LOGIN_RATE_WINDOW", "300"))     # секунд
 
+# дія → (запитів, за скільки секунд); ключ лічильника — rate:<дія>:<клієнт>
+LIMITS = {"scrape": (RATE_LIMIT_REQUESTS, RATE_LIMIT_WINDOW), "analyze": (ANALYZE_RATE_LIMIT, RATE_LIMIT_WINDOW),
+          "login": (LOGIN_RATE_LIMIT, LOGIN_RATE_WINDOW)}
+
+SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",        # JSON — це JSON, а не «може, HTML»
+    "X-Frame-Options": "DENY",                  # не вбудовувати в чужі сторінки (clickjacking)
+    "Referrer-Policy": "no-referrer",
+    "Cross-Origin-Opener-Policy": "same-origin",
+}
+API_CSP = "default-src 'none'; frame-ancestors 'none'"   # API віддає дані, а не сторінки: нічого не вантажити
+DOCS_PATHS = ("/docs", "/redoc")
+
 
 async def request_context(request: Request, call_next: CallNext) -> Response:
     """Найзовнішній шар: бачить увесь час обробки, зокрема інших middleware."""
@@ -50,6 +71,35 @@ async def request_context(request: Request, call_next: CallNext) -> Response:
     logger.info("%s %s %s → %s %.1f ms", request_id, request.method, request.url.path,
                 response.status_code, elapsed_ms)
     return response
+
+
+class SecurityHeadersMiddleware:
+    """Чистий ASGI-middleware, а не `@app.middleware("http")`: лише дописує заголовки в початок відповіді.
+
+    Кожен шар `app.middleware("http")` (BaseHTTPMiddleware) змінює, коли саме закінчуються фонові задачі
+    відносно відповіді, — з ще одним таким шаром тести фонового аналізу почали іноді падати (3 з 20 прогонів). Цьому
+    шару тіло запиту й відповіді не потрібне, тож він працює на рівні ASGI-повідомлень і нічого не змінює.
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        is_docs = str(scope["path"]).startswith(DOCS_PATHS)
+
+        async def send_with_headers(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                headers = MutableHeaders(scope=message)
+                for name, value in SECURITY_HEADERS.items():
+                    headers.setdefault(name, value)
+                if not is_docs:
+                    headers.setdefault("Content-Security-Policy", API_CSP)
+            await send(message)
+
+        await self.app(scope, receive, send_with_headers)
 
 
 class RateLimiter:
@@ -87,9 +137,7 @@ async def rate_limit(request: Request, call_next: CallNext) -> Response:
     action = limited_action(request)
     if action is None:
         return await call_next(request)
-    limits = {"scrape": (RATE_LIMIT_REQUESTS, RATE_LIMIT_WINDOW), "analyze": (ANALYZE_RATE_LIMIT, RATE_LIMIT_WINDOW),
-              "login": (LOGIN_RATE_LIMIT, LOGIN_RATE_WINDOW)}
-    limit, window = limits[action]
+    limit, window = LIMITS[action]
     limiter = RateLimiter(get_redis(request), limit=limit, window=window)
     client = request.client.host if request.client else "unknown"
     allowed, count, ttl = await limiter.hit(client, action)

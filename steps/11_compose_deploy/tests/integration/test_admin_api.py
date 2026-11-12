@@ -6,8 +6,9 @@ import pytest
 from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
 
-from news_hub.api import app
-from news_hub.security import AdminSettings, create_access_token, load_admin_settings, require_admin
+from news_hub.api import app, docs_enabled
+from news_hub.middleware import LIMITS
+from news_hub.security import LOGIN_FAIL_LIMIT, AdminSettings, create_access_token, load_admin_settings, require_admin
 
 from .conftest import ADMIN_PASSWORD
 
@@ -71,6 +72,7 @@ def test_login_and_use_token(anon: TestClient) -> None:
     assert response.status_code == 200
     body = response.json()
     assert (body["token_type"], body["expires_in"]) == ("bearer", 1800)
+    assert response.headers["Cache-Control"] == "no-store"          # токен не осідає в кешах
     headers = _token_headers(body["access_token"])
     assert anon.post("/api/scrape", json={"source": "snapshot"}, headers=headers).status_code == 200
 
@@ -128,3 +130,38 @@ def test_swagger_has_authorize_button(anon: TestClient) -> None:
     assert schema["components"]["securitySchemes"]["HTTPBearer"]["scheme"] == "bearer"
     assert schema["paths"]["/api/news"]["delete"]["security"] == [{"HTTPBearer": []}]
     assert "security" not in schema["paths"]["/api/news"]["get"]
+
+
+def test_login_lockout_counts_failures_per_name_from_any_address(anon: TestClient,
+                                                                 monkeypatch: pytest.MonkeyPatch) -> None:
+    """Ліміт на адресу не бачить атаку з тисячі адрес; лічильник на ім'я — бачить.
+
+    Тисячу адрес імітуємо, знявши ліміт на адресу: усі спроби тут — з однієї (testclient).
+    """
+    monkeypatch.setitem(LIMITS, "login", (1000, 300))
+    codes = [anon.post("/api/admin/token", json={"username": "admin", "password": f"guess-{i}"}).status_code
+             for i in range(LOGIN_FAIL_LIMIT)]
+    assert codes == [401] * LOGIN_FAIL_LIMIT
+    locked = anon.post("/api/admin/token", json={"username": "admin", "password": ADMIN_PASSWORD})
+    assert locked.status_code == 429 and "під цим іменем" in locked.json()["detail"]
+    assert int(locked.headers["Retry-After"]) > 0
+    other = anon.post("/api/admin/token", json={"username": "editor", "password": "x"})
+    assert other.status_code == 401                                  # інше ім'я не закрите
+
+
+def test_security_headers_on_every_answer(anon: TestClient) -> None:
+    for response in (anon.get("/api/news"), anon.get("/api/news/999999"), anon.delete("/api/news")):
+        assert response.headers["X-Content-Type-Options"] == "nosniff"
+        assert response.headers["X-Frame-Options"] == "DENY"
+        assert response.headers["Content-Security-Policy"] == "default-src 'none'; frame-ancestors 'none'"
+    docs = anon.get("/docs")
+    assert docs.status_code == 200 and "Content-Security-Policy" not in docs.headers   # Swagger UI — скрипти з CDN
+    assert docs.headers["X-Frame-Options"] == "DENY"
+
+
+@pytest.mark.parametrize(("value", "enabled"), [
+    ("true", True), ("1", True), ("", True), ("false", False), ("0", False), (" Off ", False), ("no", False),
+])
+def test_docs_enabled(value: str, enabled: bool) -> None:
+    """DOCS_ENABLED=false (Compose на сервері) — /docs, /redoc і /openapi.json не публікуються."""
+    assert docs_enabled(value) is enabled

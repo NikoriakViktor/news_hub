@@ -2,7 +2,8 @@
 # Основа — .github/workflows/django-tests.yml Django-книги notes_chat_app: services PostgreSQL, кеш pip, paths.
 # Що змінено і чому — docs/tutorials/12_ci_cd/ у книзі.
 #
-#   PR (у будь-яку гілку) → тести ×2 версії Python, мінімальні версії, PostgreSQL + Redis, mypy, образ + smoke
+#   PR (у будь-яку гілку) → тести ×2 версії Python, мінімальні версії, PostgreSQL + Redis, mypy, образ + smoke,
+#                           залежності (lock, відомі вразливості) і секрети в історії git
 #   push у main          → те саме + публікація образу в GitHub Container Registry (ghcr.io)
 
 name: news_hub — CI/CD
@@ -13,10 +14,12 @@ on:
     paths:
       - 'steps/12_ci_cd/**'
       - '.github/workflows/news_hub.yml'
+      - '.gitleaks.toml'
   pull_request:                      # без branches: PR у будь-яку гілку (зокрема PR поверх іншого PR)
     paths:
       - 'steps/12_ci_cd/**'
       - '.github/workflows/news_hub.yml'
+      - '.gitleaks.toml'
   workflow_dispatch:
 
 permissions:
@@ -123,6 +126,28 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: mypy --strict news_hub
 
+  supply-chain:
+    name: залежності й секрети
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0             # уся історія: секрет, видалений наступним комітом, у git лишається
+      - uses: astral-sh/setup-uv@v6
+      - name: requirements.lock відповідає requirements.txt
+        # uv бере версії з наявного lock: файл змінюється, лише коли змінився requirements.txt
+        run: |
+          uv pip compile requirements.txt --universal --python-version 3.10 --generate-hashes -o requirements.lock
+          git diff --exit-code -- requirements.lock
+      - name: відомі вразливості в залежностях образу (pip-audit, база PyPA)
+        run: uvx pip-audit==2.10.1 -r requirements.lock --require-hashes --disable-pip --progress-spinner off
+      - name: секрети в історії git (gitleaks; навчальні значення — .gitleaks.toml)
+        working-directory: .
+        run: >-
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/repo:ro"
+          ghcr.io/gitleaks/gitleaks:v8.30.1 git /repo --config /repo/.gitleaks.toml --redact --no-banner
+
   docker:
     name: образ і smoke-тест Compose
     needs: tests                     # образ збираємо, лише коли код пройшов тести
@@ -149,7 +174,7 @@ jobs:
 
   publish:
     name: публікація образу в ghcr.io
-    needs: [tests, min-versions, postgres, types, docker]
+    needs: [tests, min-versions, postgres, types, supply-chain, docker]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15

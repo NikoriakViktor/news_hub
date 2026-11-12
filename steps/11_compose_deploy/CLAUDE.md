@@ -41,6 +41,18 @@
   через `safe_fetch`, не напряму `aiohttp`/`httpx`; тести на локальному сервері — з явною `FetchPolicy`, не через
   змінні середовища. (`scraper.py` ходить лише на сторінки rbc.ua — `is_rbc_host`; перенаправлення поки не перевіряє.)
 - Секрети порівнюються `hmac.compare_digest`, не `==`; секрет не кладемо в URL (шлях потрапляє в журнали).
+- bcrypt (і будь-яка інша робота процесора на десяті частки секунди) в `async def` — лише через `run_in_threadpool`;
+  тести цього не ловлять (з прямим викликом усі зелені), це пункт рецензії.
+- Вхід адміна — два ліміти: на адресу (`LIMITS["login"]`, middleware) і на ім'я (`LoginGuard`, security.py). Відповідь
+  з токеном — `Cache-Control: no-store`.
+- Webhook: повтор розпізнається за `X-Webhook-Delivery` (`claim_delivery`), а не за підписом; повтор → `200` з тим самим
+  завданням. Id доставки — частина підпису.
+- Новий middleware, якому не потрібне тіло, — чистий ASGI (`app.add_middleware`, як `SecurityHeadersMiddleware`), а не ще
+  один `@app.middleware("http")`: кожен шар BaseHTTPMiddleware змінює, коли закінчуються фонові задачі.
+- Ліміти — лише з таблиці `LIMITS` (middleware.py), не новими числами в коді.
+- Хто адмін у боті — `AdminSettings.telegram_ids` (`BOT_ADMIN_IDS`, security.py); власного списку адмінів у бота немає,
+  без адмін-доступу API (`JWT_SECRET`, `ADMIN_PASSWORD_HASH`) адмінів у боті теж немає. `/scrape` у боті — під тим
+  самим `LIMITS["scrape"]`, що й `POST /api/scrape*`.
 - Бот відповідає в HTML: усе, що прийшло ззовні (ім'я, заголовок, слово), — через `esc` / `link` (bot/formatting.py);
   довгий текст — `split_message` (по рядках, ≤ 4096), ніколи зрізом рядка.
 - Новий handler бота — у `build_router()`; «будь-який текст» — останнім. Роутер не робити змінною модуля.
@@ -48,5 +60,5 @@
 - Образ: нова залежність для роботи — у `requirements.txt`, для тестів — у `requirements-dev.txt`. Новий файл із секретами
   чи локальними даними — одразу в `.dockerignore`. CMD лише в exec-формі (JSON-масив), користувач — `app`, не root.
 - Compose: адреси сервісів — за іменами (`postgres`, `redis`), не localhost; нова змінна — у `.env.example`; значення з `$` — в
-  одинарних лапках. Порти бази й Redis назовні не відкривати. Зовнішні сервіси (Telegram, LLM) не мають зупиняти старт API.
+  одинарних лапках. На сервері `DOCS_ENABLED=false` (Compose так і задає): `/docs` і `/openapi.json` не публікуються. Порти бази й Redis назовні не відкривати. Зовнішні сервіси (Telegram, LLM) не мають зупиняти старт API.
 - Анотації типів скрізь; `logging.getLogger("news_hub")` замість `print`; коментарі й docstring — українською.

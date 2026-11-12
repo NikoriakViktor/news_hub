@@ -13,12 +13,18 @@
 - ім'я порівнюється `hmac.compare_digest`, а пароль перевіряється завжди, навіть для чужого імені:
   за часом відповіді не видно, чи вгадали ім'я;
 - алгоритм зафіксовано в коді (HS256), `decode` вимагає `exp`, `sub` і `role`.
+Виправлення безпеки (після рецензії):
+- `LoginGuard` — невдалі входи рахуються ще й на **ім'я**, а не лише на адресу (middleware): підбір пароля
+  до єдиного адміна з тисячі адрес упирається в `LOGIN_FAIL_LIMIT` за `LOGIN_FAIL_WINDOW`, а не лише в bcrypt;
+- адміни Telegram (`BOT_ADMIN_IDS`) — частина тих самих `AdminSettings`: одне місце, одне правило
+  «адмін-доступ не налаштовано — адміна немає ніде», ні в API, ні в боті.
 
 JWT: header.payload.signature, підпис — HMAC-SHA256(header.payload, JWT_SECRET). Сервер нічого не
 зберігає: будь-хто, хто знає секрет, може випустити токен — тому секрет довгий, випадковий і лише в env.
 """
 import argparse
 import getpass
+import hashlib
 import hmac
 import os
 import secrets
@@ -31,10 +37,13 @@ import bcrypt
 import jwt
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from redis.asyncio import Redis
 
 JWT_ALGORITHM = "HS256"          # у коді, а не з env: алгоритм — не налаштування
 MIN_SECRET_LENGTH = 32
 BCRYPT_MAX_BYTES = 72
+LOGIN_FAIL_LIMIT = int(os.getenv("LOGIN_FAIL_LIMIT", "20"))       # невдалих входів на одне ім'я за вікно
+LOGIN_FAIL_WINDOW = int(os.getenv("LOGIN_FAIL_WINDOW", "900"))    # секунд
 
 
 @dataclass(frozen=True)
@@ -43,12 +52,26 @@ class AdminSettings:
     username: str
     password_hash: str
     expire_minutes: int = 30
+    telegram_ids: frozenset[int] = frozenset()     # адміни в боті: /scrape (крок 9)
+
+
+def parse_telegram_ids(raw: str) -> frozenset[int]:
+    """BOT_ADMIN_IDS=1001, 2002 → {1001, 2002}. Не число — помилка при старті, а не «адміна немає»."""
+    items = [item for item in raw.replace(" ", "").split(",") if item]
+    if not all(item.isascii() and item.isdecimal() for item in items):
+        raise RuntimeError("BOT_ADMIN_IDS — числові id Telegram через кому, наприклад 1001,2002")
+    return frozenset(int(item) for item in items)
 
 
 def load_admin_settings(env: Mapping[str, str] = os.environ) -> AdminSettings | None:
     """None — адмінку не налаштовано (ендпоінти запису → 503). Налаштовано погано — RuntimeError при старті."""
     secret, password_hash = env.get("JWT_SECRET", ""), env.get("ADMIN_PASSWORD_HASH", "")
+    telegram_ids = parse_telegram_ids(env.get("BOT_ADMIN_IDS", ""))
     if not secret and not password_hash:
+        if telegram_ids:
+            # Раніше бот мав власний список адмінів і працював без адмінки API: два правила «хто адмін».
+            raise RuntimeError("BOT_ADMIN_IDS задано, а адмін-доступ — ні: задай JWT_SECRET і ADMIN_PASSWORD_HASH "
+                               "(адмін один для API і бота)")
         return None
     if len(secret) < MIN_SECRET_LENGTH:
         raise RuntimeError(f"JWT_SECRET має бути не коротшим за {MIN_SECRET_LENGTH} символи; "
@@ -58,7 +81,13 @@ def load_admin_settings(env: Mapping[str, str] = os.environ) -> AdminSettings | 
                            "згенеруй: python -m news_hub.security")
     return AdminSettings(jwt_secret=secret, username=env.get("ADMIN_USERNAME", "admin"),
                          password_hash=password_hash,
-                         expire_minutes=int(env.get("JWT_EXPIRE_MINUTES", "30")))
+                         expire_minutes=int(env.get("JWT_EXPIRE_MINUTES", "30")),
+                         telegram_ids=telegram_ids)
+
+
+def telegram_admin_ids(settings: AdminSettings | None) -> frozenset[int]:
+    """Кому в боті можна /scrape: адмінку не налаштовано — нікому."""
+    return settings.telegram_ids if settings is not None else frozenset()
 
 
 # ---------------------------------------------------------------------------
@@ -84,6 +113,41 @@ def authenticate(settings: AdminSettings, username: str, password: str) -> bool:
     name_ok = hmac.compare_digest(username.encode(), settings.username.encode())
     password_ok = verify_password(password, settings.password_hash)     # завжди — однаковий час
     return name_ok and password_ok
+
+
+class LoginGuard:
+    """Невдалі входи на одне ім'я — з будь-яких адрес разом.
+
+    Ліміт middleware рахує спроби з однієї адреси: атака з тисячі адрес його не помічає. Тут лічильник —
+    на ім'я: після LOGIN_FAIL_LIMIT невдач за вікно вхід під цим іменем закритий (429) до кінця вікна,
+    і bcrypt навіть не запускається. Ціна — атакувальник може на ці хвилини закрити вхід і справжньому
+    адміну; для єдиного адміна це краще, ніж необмежений підбір. Ім'я в ключі — хешем: у Redis не
+    потрапляє довільний рядок від клієнта, а для чужих імен відповідь така сама — ім'я не вгадаєш.
+    """
+
+    def __init__(self, redis: Redis, limit: int = LOGIN_FAIL_LIMIT, window: int = LOGIN_FAIL_WINDOW) -> None:
+        self._redis, self.limit, self.window = redis, limit, window
+
+    @staticmethod
+    def key(username: str) -> str:
+        return "login:fail:" + hashlib.sha256(username.casefold().encode()).hexdigest()[:32]
+
+    async def retry_after(self, username: str) -> int:
+        """0 — можна пробувати; інакше — скільки секунд вхід під цим іменем закритий."""
+        key = self.key(username)
+        count = await self._redis.get(key)
+        if count is None or int(count) < self.limit:
+            return 0
+        return max(int(await self._redis.ttl(key)), 1)
+
+    async def failed(self, username: str) -> None:
+        async with self._redis.pipeline(transaction=True) as pipe:      # INCR + EXPIRE NX — разом, як у RateLimiter
+            pipe.incr(self.key(username))
+            pipe.expire(self.key(username), self.window, nx=True)
+            await pipe.execute()
+
+    async def succeeded(self, username: str) -> None:
+        await self._redis.delete(self.key(username))
 
 
 # ---------------------------------------------------------------------------

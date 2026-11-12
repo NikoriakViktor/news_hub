@@ -51,12 +51,17 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+def new_job_id() -> str:
+    return uuid.uuid4().hex[:12]
+
+
 class JobStore:
     def __init__(self, redis: Redis) -> None:
         self._redis = redis
 
-    async def create(self, source: str, mode: str, kind: Literal["scrape", "analyze"] = "scrape") -> JobStatus:
-        job = JobStatus(job_id=uuid.uuid4().hex[:12], kind=kind, status="queued", source=source, mode=mode,
+    async def create(self, source: str, mode: str, kind: Literal["scrape", "analyze"] = "scrape",
+                     job_id: str | None = None) -> JobStatus:
+        job = JobStatus(job_id=job_id or new_job_id(), kind=kind, status="queued", source=source, mode=mode,
                         created_at=_now())
         await self._save(job.job_id, job.model_dump(exclude_none=True))
         return job

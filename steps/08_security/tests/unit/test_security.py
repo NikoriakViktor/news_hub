@@ -6,8 +6,10 @@ from datetime import datetime, timedelta, timezone
 import jwt
 import pytest
 
-from news_hub.security import (AdminSettings, authenticate, create_access_token, decode_token, hash_password,
-                               load_admin_settings, verify_password)
+import fakeredis
+
+from news_hub.security import (AdminSettings, LoginGuard, authenticate, create_access_token, decode_token,
+                               hash_password, load_admin_settings, verify_password)
 
 SECRET = "s" * 64
 SETTINGS = AdminSettings(jwt_secret=SECRET, username="admin", password_hash=hash_password("правильний", rounds=4))
@@ -82,3 +84,17 @@ def test_settings_from_env() -> None:
                 {**good, "ADMIN_PASSWORD_HASH": "change-me"}, {"ADMIN_PASSWORD_HASH": SETTINGS.password_hash}):
         with pytest.raises(RuntimeError):
             load_admin_settings(bad)
+
+
+@pytest.mark.asyncio
+async def test_login_guard_counts_per_name_and_resets_on_success() -> None:
+    guard = LoginGuard(fakeredis.FakeAsyncRedis(decode_responses=True), limit=3, window=60)
+    for _ in range(3):
+        assert await guard.retry_after("admin") == 0
+        await guard.failed("admin")
+    assert 0 < await guard.retry_after("admin") <= 60
+    assert await guard.retry_after("ADMIN") > 0                          # регістр не допомагає обійти
+    assert await guard.retry_after("editor") == 0
+    await guard.succeeded("admin")
+    assert await guard.retry_after("admin") == 0
+    assert "admin" not in LoginGuard.key("admin")                        # у Redis — хеш, а не рядок від клієнта

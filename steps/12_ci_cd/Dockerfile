@@ -18,10 +18,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# 1. Залежності — окремий шар: він перезбирається, лише коли змінився requirements.txt.
+# 1. Залежності — окремий шар: він перезбирається, лише коли змінився requirements.lock.
 #    Тут лише залежності роботи; pytest, mypy, fakeredis — requirements-dev.txt, в образ не йдуть.
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+#    Крок 12: не requirements.txt (діапазони «>=»: сьогодні одна версія, завтра інша), а requirements.lock —
+#    точні версії всіх пакетів разом із залежностями залежностей і sha256 кожного файлу. --require-hashes:
+#    підмінений на PyPI чи по дорозі пакет не встановиться. Оновити: uv pip compile (команда — у файлі).
+COPY requirements.lock .
+RUN pip install --no-cache-dir --require-hashes -r requirements.lock
 
 # 2. Користувач без root: зламаний процес не отримає root у контейнері.
 #    Фіксований UID — щоб права на томі збігались між перезбираннями й машинами.

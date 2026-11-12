@@ -74,8 +74,8 @@ def test_build_messages_only_matching_news() -> None:
 
 def test_bot_settings() -> None:
     assert load_bot_settings({}) is None                                       # без токена — бота немає
-    settings = load_bot_settings({"BOT_TOKEN": "1:x", "BOT_ADMIN_IDS": "1001, 2002"})
-    assert settings is not None and settings.admin_ids == {1001, 2002} and settings.webhook_url is None
+    settings = load_bot_settings({"BOT_TOKEN": "1:x"})
+    assert settings is not None and settings.webhook_url is None    # адміни — у AdminSettings (test_security.py)
     good = "s" * 40
     for env in ({"TELEGRAM_WEBHOOK_URL": "http://news.example/hook", "TELEGRAM_WEBHOOK_SECRET": good},
                 {"TELEGRAM_WEBHOOK_URL": "https://news.example/hook"},

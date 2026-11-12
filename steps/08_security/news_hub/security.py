@@ -13,11 +13,15 @@
 - ім'я порівнюється `hmac.compare_digest`, а пароль перевіряється завжди, навіть для чужого імені:
   за часом відповіді не видно, чи вгадали ім'я;
 - алгоритм зафіксовано в коді (HS256), `decode` вимагає `exp`, `sub` і `role`.
+Виправлення безпеки (після рецензії):
+- `LoginGuard` — невдалі входи рахуються ще й на **ім'я**, а не лише на адресу (middleware): підбір пароля
+  до єдиного адміна з тисячі адрес упирається в `LOGIN_FAIL_LIMIT` за `LOGIN_FAIL_WINDOW`, а не лише в bcrypt;
 
 JWT: header.payload.signature, підпис — HMAC-SHA256(header.payload, JWT_SECRET). Сервер нічого не
 зберігає: будь-хто, хто знає секрет, може випустити токен — тому секрет довгий, випадковий і лише в env.
 """
 import getpass
+import hashlib
 import hmac
 import os
 import secrets
@@ -30,10 +34,13 @@ import bcrypt
 import jwt
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from redis.asyncio import Redis
 
 JWT_ALGORITHM = "HS256"          # у коді, а не з env: алгоритм — не налаштування
 MIN_SECRET_LENGTH = 32
 BCRYPT_MAX_BYTES = 72
+LOGIN_FAIL_LIMIT = int(os.getenv("LOGIN_FAIL_LIMIT", "20"))       # невдалих входів на одне ім'я за вікно
+LOGIN_FAIL_WINDOW = int(os.getenv("LOGIN_FAIL_WINDOW", "900"))    # секунд
 
 
 @dataclass(frozen=True)
@@ -83,6 +90,41 @@ def authenticate(settings: AdminSettings, username: str, password: str) -> bool:
     name_ok = hmac.compare_digest(username.encode(), settings.username.encode())
     password_ok = verify_password(password, settings.password_hash)     # завжди — однаковий час
     return name_ok and password_ok
+
+
+class LoginGuard:
+    """Невдалі входи на одне ім'я — з будь-яких адрес разом.
+
+    Ліміт middleware рахує спроби з однієї адреси: атака з тисячі адрес його не помічає. Тут лічильник —
+    на ім'я: після LOGIN_FAIL_LIMIT невдач за вікно вхід під цим іменем закритий (429) до кінця вікна,
+    і bcrypt навіть не запускається. Ціна — атакувальник може на ці хвилини закрити вхід і справжньому
+    адміну; для єдиного адміна це краще, ніж необмежений підбір. Ім'я в ключі — хешем: у Redis не
+    потрапляє довільний рядок від клієнта, а для чужих імен відповідь така сама — ім'я не вгадаєш.
+    """
+
+    def __init__(self, redis: Redis, limit: int = LOGIN_FAIL_LIMIT, window: int = LOGIN_FAIL_WINDOW) -> None:
+        self._redis, self.limit, self.window = redis, limit, window
+
+    @staticmethod
+    def key(username: str) -> str:
+        return "login:fail:" + hashlib.sha256(username.casefold().encode()).hexdigest()[:32]
+
+    async def retry_after(self, username: str) -> int:
+        """0 — можна пробувати; інакше — скільки секунд вхід під цим іменем закритий."""
+        key = self.key(username)
+        count = await self._redis.get(key)
+        if count is None or int(count) < self.limit:
+            return 0
+        return max(int(await self._redis.ttl(key)), 1)
+
+    async def failed(self, username: str) -> None:
+        async with self._redis.pipeline(transaction=True) as pipe:      # INCR + EXPIRE NX — разом, як у RateLimiter
+            pipe.incr(self.key(username))
+            pipe.expire(self.key(username), self.window, nx=True)
+            await pipe.execute()
+
+    async def succeeded(self, username: str) -> None:
+        await self._redis.delete(self.key(username))
 
 
 # ---------------------------------------------------------------------------
