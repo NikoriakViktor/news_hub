@@ -14,6 +14,7 @@
 | [Версіонування API](versioning.md) | `examples/versioning/versioning_app.py`, `versioning_demo.py` | готово |
 | [Формат помилок: RFC 9457](errors.md) | `examples/errors/problem_app.py`, `naive_app.py` | готово |
 | [Які бувають API](api_styles.md) | `examples/meteo_api/api_styles_demo.py`, `examples/realtime/realtime_app.py` | готово |
+| [HTTP-клієнти: requests, httpx, aiohttp](http_clients.md) | `examples/http_clients/` | готово |
 | Кейс: API v1 → v2 | `meteo_api/legacy/` | у роботі |
 | Архітектура: API, клієнт і карта | `examples/meteo_api` | у роботі |
 

@@ -7,22 +7,22 @@
 ```text
 $ pip install -r requirements-dev.txt
 $ pytest -q -p no:cacheprovider
-........................................................................ [ 21%]
+........................................................................ [ 20%]
 …
 ....................................................                     [100%]
-340 passed, 8 deselected in 33.98s
+360 passed, 8 deselected in 27.60s
 $ mypy --strict news_hub
 Success: no issues found in 26 source files
 ```
 
-Порівняно з кроком 9 (335 тестів) додалось 5: три для `/health/ready` (`tests/integration/test_health.py`) і два для `env_lines` — з лапками й без. `8 deselected` — 2 тести `llm` і 6 тестів `docker`: `pytest.ini` вимикає їх за замовчуванням (`addopts = -m "not llm and not docker"`).
+Порівняно з кроком 9 (355 тестів) додалось 5: три для `/health/ready` (`tests/integration/test_health.py`) і два для `env_lines` — з лапками й без. `8 deselected` — 2 тести `llm` і 6 тестів `docker`: `pytest.ini` вимикає їх за замовчуванням (`addopts = -m "not llm and not docker"`).
 
 Образ — теж код, і його перевіряють тестами:
 
 ```text
 $ pytest -m docker -q -p no:cacheprovider
 ......                                                                   [100%]
-6 passed, 342 deselected in 103.03s (0:01:43)
+6 passed, 362 deselected in 28.43s
 ```
 
 `tests/docker/test_image.py` збирає образ з копії проєкту, куди навмисно покладено те, що в образ потрапити не має права: `.env` з «секретом», `.venv`, файл бази, `__pycache__` у `news_hub/`. Далі — справжні `docker run` і `docker stop`. Без Docker тести пропускаються (`skipif`, «немає Docker»).

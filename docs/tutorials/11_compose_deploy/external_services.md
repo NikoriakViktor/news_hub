@@ -35,7 +35,8 @@ async def start_bot(app: FastAPI) -> None:
     if settings is None:
         return
     app.state.bot = bot = create_bot(settings.token, settings.api_url)
-    app.state.dispatcher = create_dispatcher(SessionFactory, app.state.redis, app.state.llm, settings.admin_ids)
+    app.state.dispatcher = create_dispatcher(SessionFactory, app.state.redis, app.state.llm,
+                                             telegram_admin_ids(app.state.admin))
     # Крок 11: реєстрація в Telegram — у фоні. Раніше збій мережі до Telegram у lifespan зупиняв старт
     # усього API («Application startup failed»): контейнер перезапускався по колу, новини були недоступні.
     app.state.bot_setup = asyncio.create_task(register_bot(bot, settings))

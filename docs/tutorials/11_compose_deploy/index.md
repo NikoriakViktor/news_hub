@@ -33,8 +33,8 @@ docker run -d --name api --network news -p 8000:8000 -v news_data:/data \
 | Що | Де | Розділ |
 |---|---|---|
 | уся система: `postgres`, `redis`, `migrate`, `api`, `nginx`; `depends_on` з умовами, healthchecks, профілі `polling` і `twin` | `docker-compose.yml` | [Порядок запуску: healthy, а не «запущено»](startup_order.md) |
-| nginx перед API, мережі `backend` і `edge`, `FORWARDED_ALLOW_IPS` | `nginx/nginx.conf`, `docker-compose.yml` | [nginx і справжній IP клієнта](nginx_real_ip.md) |
-| `.env` поза git, значення з `$` в одинарних лапках, перевірка повного bcrypt-хешу | `.env.example`, `.gitignore`, `news_hub/security.py` | [Секрети в `.env`](env_secrets.md) |
+| nginx перед API, мережі `backend` і `edge`, `FORWARDED_ALLOW_IPS`, `server_tokens off` | `nginx/nginx.conf`, `docker-compose.yml` | [nginx і справжній IP клієнта](nginx_real_ip.md) |
+| `.env` поза git, значення з `$` в одинарних лапках, перевірка повного bcrypt-хешу; `DOCS_ENABLED=false` на сервері | `.env.example`, `.gitignore`, `news_hub/security.py` | [Секрети в `.env`](env_secrets.md) |
 | реєстрація бота в Telegram — у фоні з повторами | `news_hub/api.py` | [Зовнішній сервіс не зупиняє старт](external_services.md) |
 | сервер: firewall, `.env` з правами 600, HTTPS, оновлення, репліки; порти бази лише для розробки | `docker-compose.dev.yml` | [Деплой на сервер](deploy.md) |
 | бекап і відновлення бази | `scripts/backup.sh`, `scripts/restore.sh` | [Бекап і відновлення](backup_restore.md) |
@@ -92,10 +92,10 @@ flowchart TD
 
 | Файл | Що в ньому | Новий? |
 |---|---|---|
-| [`docker-compose.yml`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/docker-compose.yml) | `x-app`, сервіси `postgres`, `redis`, `migrate`, `api`, `nginx`, `bot` (профіль `polling`), `twin` (профіль `twin`); мережі `backend`, `edge` | переписаний: у кроці 10 — лише `db` і `redis` для розробки |
+| [`docker-compose.yml`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/docker-compose.yml) | `x-app`, сервіси `postgres`, `redis`, `migrate`, `api`, `nginx`, `bot` (профіль `polling`), `twin` (профіль `twin`); мережі `backend`, `edge`; `DOCS_ENABLED: ${DOCS_ENABLED:-false}` для `api` | переписаний: у кроці 10 — лише `db` і `redis` для розробки |
 | [`docker-compose.dev.yml`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/docker-compose.dev.yml) | порти `127.0.0.1:5432` і `127.0.0.1:6379` для `uvicorn --reload` на своєму комп'ютері | новий |
-| [`nginx/nginx.conf`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/nginx/nginx.conf) | `upstream` на `api:8000`, `/nginx-health`, `X-Forwarded-For $remote_addr`, `client_max_body_size 1m`, `proxy_read_timeout 65s` | новий |
-| [`.env.example`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/.env.example) | усі змінні стеку; правило про `$` і одинарні лапки | новий |
+| [`nginx/nginx.conf`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/nginx/nginx.conf) | `upstream` на `api:8000`, `/nginx-health`, `X-Forwarded-For $remote_addr`, `client_max_body_size 1m`, `proxy_read_timeout 65s`, `server_tokens off` | новий |
+| [`.env.example`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/.env.example) | усі змінні стеку (зокрема `LOGIN_FAIL_*`, `DOCS_ENABLED`); правило про `$` і одинарні лапки | новий |
 | [`.gitignore`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/.gitignore) | `.env`, `backups/` | новий |
 | [`scripts/backup.sh`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/scripts/backup.sh), [`scripts/restore.sh`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/scripts/restore.sh) | `pg_dump` / `psql` у контейнері `postgres`, `set -euo pipefail` | нові |
 | [`news_hub/api.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/news_hub/api.py) | `register_bot` з повторами, `TELEGRAM_RETRY_DELAYS`; версія `0.11.0` | змінений |
@@ -123,7 +123,7 @@ flowchart TD
 
 ```bash
 pip install -r requirements-dev.txt
-pytest -q                             # 343 passed, 8 deselected
+pytest -q                             # 363 passed, 8 deselected
 mypy --strict news_hub                # Success: no issues found in 26 source files
 
 cp .env.example .env                  # заповнити: POSTGRES_PASSWORD, рядки з python -m news_hub.security

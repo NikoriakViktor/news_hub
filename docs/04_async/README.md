@@ -6,10 +6,11 @@ ASGI проти WSGI, три типи ендпоінтів і що з ними �
 
 | Розділ | Код | Стан |
 |---|---|---|
-| ASGI і WSGI | — | у роботі |
-| Три типи ендпоінтів | — | у роботі |
-| Блокуючий код: каскадний ефект | — | у роботі |
-| Паралельний збір і виміри | `steps/02/news_hub/scraper.py` | у роботі |
+| [Чекати чи рахувати](concurrency_basics.md) | `examples/async_concurrency/basics_demo.py` | готово |
+| [ASGI і WSGI](asgi_vs_wsgi.md) | — | готово |
+| [Три типи ендпоінтів](endpoint_types.md) | — | готово |
+| [Блокуючий код: каскадний ефект](blocking_code.md) | — | готово |
+| [Паралельні запити](concurrency_patterns.md) | `steps/02/news_hub/scraper.py` | готово |
 
 ## На практиці — Zero to Hero
 

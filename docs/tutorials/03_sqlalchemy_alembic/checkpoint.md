@@ -242,7 +242,7 @@ IntegrityError UNIQUE constraint failed: news.url
 |---|---|
 | `DATABASE_URL` | діалект+драйвер://користувач:пароль@хост:порт/база; зі змінної середовища |
 | `create_async_engine` | пул з'єднань; для PostgreSQL — `asyncpg`, для SQLite — `aiosqlite` |
-| `Mapped` / `mapped_column` | таблиця як клас; `X \| None` — `NULL` дозволено |
+| `Mapped` / `mapped_column` | таблиця як клас; <code>X &#124; None</code> — `NULL` дозволено |
 | Pydantic vs SQLAlchemy модель | перевірка даних vs рядок таблиці; `from_attributes=True` з'єднує їх у відповіді |
 | Сесія | робоче місце запиту: зміни → `flush` (SQL у транзакції) → `commit` |
 | `get_db` + `scope="function"` | одна сесія й транзакція на запит, COMMIT до відповіді |

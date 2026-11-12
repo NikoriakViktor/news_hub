@@ -73,6 +73,10 @@ server {
     server_name _;
 
     client_max_body_size 1m;          # API приймає JSON, не файли
+    server_tokens off;                # без версії nginx у заголовку Server і на сторінках помилок
+
+    # Заголовки безпеки ставить сам застосунок (middleware.security_headers) — тут їх не дублюємо.
+    # HSTS (Strict-Transport-Security) — лише в блоці `listen 443 ssl`, коли буде TLS: по http він не діє.
 
     # Перевірка самого nginx (healthcheck Compose): не залежить від API
     location = /nginx-health {
@@ -240,6 +244,9 @@ api-1  | INFO:     10.28.0.1:0 - "GET /health/ready HTTP/1.1" 200 OK
 | `proxy_set_header Host $http_host` | передати `Host` разом з портом, як його надіслав клієнт. `$host` порт відкидає: застосунок, що порівнює `Origin` з `Host` (CSRF у Django), за nginx на порту 8080 відхилятиме кожну форму |
 | `X-Forwarded-Proto $scheme` | `http` чи `https` — щоб застосунок за проксі знав, як до нього прийшли ([HTTPS](deploy.md#https)) |
 | `client_max_body_size 1m` | тіло більше за 1 МБ відхиляє nginx (`413`), ще до Python. `max_length` у Pydantic перевіряється вже після того, як тіло прочитано |
+| `server_tokens off` | без нього nginx пише свою версію в заголовок `Server: nginx/1.x.y` і на сторінки помилок (`502`, `413`) — підказка, які відомі вразливості саме цієї версії пробувати. З ним — просто `Server: nginx` (перевіряє smoke-тест [кроку 12](../12_ci_cd/what_to_check.md)) |
+| заголовків безпеки немає | `X-Content-Type-Options`, `X-Frame-Options`, CSP ставить застосунок ([крок 8](../08_security/admin_jwt.md#security-headers)) — і вони однакові з nginx і без нього, в тестах і на сервері. Дублювати їх `add_header` у nginx — два місця, які розходяться |
+| HSTS — ні | `Strict-Transport-Security` браузер враховує лише на `https`; його місце — блок `listen 443 ssl` у тому, хто знімає TLS ([HTTPS](deploy.md#https)) |
 | `proxy_read_timeout 65s` | webhook Telegram чекає відповідь до 60 с — nginx не має обірвати раніше |
 | `location = /nginx-health` | healthcheck самого nginx, що не залежить від API: інакше nginx ставав би «unhealthy» щоразу, коли перезапускається API |
 

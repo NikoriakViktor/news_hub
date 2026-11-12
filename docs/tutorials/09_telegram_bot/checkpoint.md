@@ -6,28 +6,30 @@
 
 ```text
 $ pytest -q -p no:cacheprovider
-........................................................................ [ 21%]
+........................................................................ [ 20%]
 ...
-335 passed, 2 deselected in 20.42s
+355 passed, 2 deselected in 18.00s
 $ mypy --strict news_hub
 Success: no issues found in 26 source files
 ```
 
-`2 deselected` — живі тести LLM (`tests/live/`, лише `pytest -m llm`). Порівняно з кроком 8 (279 тестів) додалось 56:
+`2 deselected` — живі тести LLM (`tests/live/`, лише `pytest -m llm`). Порівняно з кроком 8 (294 тести) додалось 61:
 
 | Файл | Що перевіряє | Тестів |
 |---|---|---|
 | `tests/unit/test_bot_formatting.py` | правила HTML двійника; екранування; `link` з лапками в URL; розріз між рядками (і що розріз кожні N символів ламає розмітку); слова підписки; збіги; налаштування бота | 33 |
-| `tests/integration/test_bot.py` | команди через `dp.feed_update`: ім'я з `<` і `&`, `/news` (найновіші, HTML у заголовку), підписки й ліміт 10, `/digest` з LLM і без, rate limit, `/scrape` лише адміну, група з id > 32 біт | 10 |
+| `tests/integration/test_bot.py` | команди через `dp.feed_update`: ім'я з `<` і `&`, `/news` (найновіші, HTML у заголовку), підписки й ліміт 10, `/digest` з LLM і без, rate limit, `/scrape` лише адміну і під лімітом збору API, група з id > 32 біт | 11 |
 | `tests/integration/test_notify.py` | через API: сповіщення один раз, заблокований чат (403) втрачає підписки, 429 → `retry_after`, розбиття на частини, фонова задача, без бота нічого не ламається | 6 |
 | `tests/integration/test_telegram_webhook.py` | webhook: секрет, 401 (зокрема з JWT адміна), 400, 503 без бота; `lifespan` ставить webhook і не видаляє його | 7 |
+| `tests/unit/test_security.py` (+4) | `BOT_ADMIN_IDS` — частина `AdminSettings`; без адмін-доступу API, не число, не ASCII-цифри → помилка при старті | 4 |
 
 Ті самі тести на PostgreSQL і Redis — `TEST_DATABASE_URL=postgresql+asyncpg://news:news@localhost:5432/news_hub_test TEST_REDIS_URL=redis://localhost:6379/15 pytest` (як у кроці 8). Лише там `chat_id` групи (`-1001234567890`) перевіряється на справжньому `BIGINT`: SQLite зберігає будь-яке ціле.
 
 ## Чекліст { #checklist }
 
 - [ ] `python -m tests.telegram_twin --port 8081` + `python -m news_hub.bot` з `BOT_TOKEN=123456:TEST-TOKEN TELEGRAM_API_URL=http://127.0.0.1:8081`: `/news` через `/_twin/say` → `Новин поки немає.`
-- [ ] `/scrape snapshot` від адміна (`BOT_ADMIN_IDS`) → `Зібрано: 168, нових: 168, відхилено: 0; …`; від інших → `Ця команда — лише для адміністратора.`
+- [ ] `BOT_ADMIN_IDS=1001` без `JWT_SECRET` і `ADMIN_PASSWORD_HASH` → бот не стартує: `RuntimeError: BOT_ADMIN_IDS задано, а адмін-доступ — ні …`.
+- [ ] `/scrape snapshot` від адміна (`BOT_ADMIN_IDS`) → `Зібрано: 168, нових: 168, відхилено: 0; …`; від інших → `Ця команда — лише для адміністратора.`; шостий `/scrape` за хвилину → `Забагато зборів: 5 за 60 с; …`
 - [ ] `/start` з `first_name` `<Олена & Ко>` → `Привіт, <b>&lt;Олена &amp; Ко&gt;</b>! …`, двійник прийняв повідомлення.
 - [ ] `/subscribe Зеленськ`, потім `POST /api/scrape` зі знімком → одне сповіщення `🔔 Нові новини за підписками (зеленськ):`; повторний збір → нового сповіщення немає.
 - [ ] uvicorn з `TELEGRAM_WEBHOOK_URL` і `TELEGRAM_WEBHOOK_SECRET`: `getWebhookInfo` показує адресу; запит без заголовка → `401`; після зупинки webhook лишається.
@@ -40,6 +42,8 @@ Success: no issues found in 26 source files
 | `Задай BOT_TOKEN (від @BotFather); для двійника — ще TELEGRAM_API_URL`, вихід з кодом 1 | `python -m news_hub.bot` без `BOT_TOKEN` | задай токен; без мережі — двійник і `TELEGRAM_API_URL` |
 | `RuntimeError: TELEGRAM_WEBHOOK_URL: Telegram надсилає webhook лише на https://`, потім `Application startup failed. Exiting.` | webhook на `http://` без `TELEGRAM_API_URL` | `https://` на сервері; `http://` — лише з двійником або локальним Bot API server |
 | `RuntimeError: TELEGRAM_WEBHOOK_SECRET: 32–256 символів …` | секрету немає, він короткий або з пробілом | `python -c 'import secrets; print(secrets.token_urlsafe(48))'` |
+| `RuntimeError: BOT_ADMIN_IDS задано, а адмін-доступ — ні` | адмінів бота задано, а `JWT_SECRET` і `ADMIN_PASSWORD_HASH` — ні | `python -m news_hub.security` і обидва рядки в середовище; адмін один для API і бота |
+| `RuntimeError: BOT_ADMIN_IDS — числові id Telegram через кому` | у списку `@username` чи інший не числовий запис | числовий `user_id` (його показує, наприклад, журнал `/scrape від не-адміна …`) |
 | бот мовчить, у журналі `TelegramBadRequest: … can't parse entities` | у HTML потрапив чужий текст без `esc` | `esc` / `link` для всього, що прийшло ззовні ([розділ 2](html_replies.md)) |
 | `RuntimeError: Router is already attached to <Dispatcher …>` | роутер — змінна модуля, а диспетчерів два (API і тест) | новий роутер на кожен диспетчер: `build_router()` |
 | бот відповідає `Не знаю такої команди` на кожну команду | `F.text` зареєстровано раніше за команди | `F.text` — останнім у `build_router()` |
@@ -177,6 +181,7 @@ async def test_start_greets_user(telegram: BotHarness) -> None:
 5. Чому бот у режимі webhook не видаляє webhook при зупинці?
 6. Чому `POST /api/telegram/webhook` у `PUBLIC`, а не під `AdminDep`? Що його захищає?
 7. Що перевіряє двійник Telegram, а чого він перевірити не може?
+8. Чому `BOT_ADMIN_IDS` читає `load_admin_settings`, а не `load_bot_settings`?
 
 ??? success "Відповіді"
 
@@ -187,6 +192,7 @@ async def test_start_greets_user(telegram: BotHarness) -> None:
     5. Під час перезапуску новий процес уже зареєстрував webhook. Старий, видаляючи його при зупинці, лишив би бота без update.
     6. У Telegram немає нашого JWT. Захист — секретний заголовок `X-Telegram-Bot-Api-Secret-Token`, який ми самі передали в `setWebhook`; порівняння — `compare_digest`, до розбору тіла. Тест `test_wrong_secret_is_401` перевіряє, що JWT адміна тут нічого не дає.
     7. Перевіряє формат викликів бота: метод, чат, текст, HTML за правилами документації, ліміт 4096, реакцію на `401` / `403` / `429` / `409`. Не перевіряє справжню поведінку Telegram поза цими правилами: доставку на пристрої, реальні ліміти, нові зміни API. Для цього — справжній токен і окремий тестовий бот.
+    8. Щоб правило «хто адмін» було одне. Коли бот мав свій список, `/scrape` працював і без адмін-доступу API (де запис — `503`), а помилку в списку видно було лише як `ValueError`. Тепер адмін-доступ не налаштовано — адмінів немає ніде; `BOT_ADMIN_IDS` без нього або з не числовим id — `RuntimeError` при старті. А ліміт збору бот бере з тієї ж `LIMITS`, що й API.
 
 ## Що далі { #next }
 

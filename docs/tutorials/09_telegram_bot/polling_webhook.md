@@ -52,7 +52,7 @@ class BotSettings:
     api_url: str | None = None            # двійник або локальний Bot API server; None — api.telegram.org
     webhook_url: str | None = None        # задано — webhook; ні — polling (python -m news_hub.bot)
     webhook_secret: str | None = None
-    admin_ids: frozenset[int] = frozenset()
+    # Хто адмін у боті (BOT_ADMIN_IDS) — не тут, а в AdminSettings (security.py): одне правило для API і бота
 
 
 def load_bot_settings(env: Mapping[str, str] = os.environ) -> BotSettings | None:
@@ -67,9 +67,8 @@ def load_bot_settings(env: Mapping[str, str] = os.environ) -> BotSettings | None
         if secret is None or not SECRET_TOKEN.fullmatch(secret):
             raise RuntimeError("TELEGRAM_WEBHOOK_SECRET: 32–256 символів A-Z a-z 0-9 _ - "
                                "(згенеруй: python -c 'import secrets; print(secrets.token_urlsafe(48))')")
-    admin_ids = frozenset(int(item) for item in env.get("BOT_ADMIN_IDS", "").replace(" ", "").split(",") if item)
     return BotSettings(token=token, api_url=env.get("TELEGRAM_API_URL") or None, webhook_url=webhook_url,
-                       webhook_secret=secret, admin_ids=admin_ids)
+                       webhook_secret=secret)
 ```
 
 | Змінна | За замовчуванням | Що робить |
@@ -78,7 +77,7 @@ def load_bot_settings(env: Mapping[str, str] = os.environ) -> BotSettings | None
 | `TELEGRAM_WEBHOOK_URL` | — | задано — режим webhook; лише `https://`, крім випадку з `TELEGRAM_API_URL` |
 | `TELEGRAM_WEBHOOK_SECRET` | — | обов'язковий з webhook: 32–256 символів `A-Z a-z 0-9 _ -` |
 | `TELEGRAM_API_URL` | api.telegram.org | інший сервер Bot API: двійник або локальний Bot API server |
-| `BOT_ADMIN_IDS` | — | `user_id` через кому: кому дозволено `/scrape` у боті |
+| `BOT_ADMIN_IDS` | — | `user_id` через кому: кому дозволено `/scrape` у боті; читає `load_admin_settings` (нижче) |
 
 Telegram сам дозволяє `secret_token` довжиною від 1 символу; `news_hub` вимагає щонайменше 32 — як `JWT_SECRET` у кроці 8. Перевірка на старті, а не на першому update: краще застосунок, що не стартує з поясненням, ніж бот, що мовчить.
 
@@ -98,13 +97,78 @@ for env in ({"TELEGRAM_WEBHOOK_URL": "http://news.example/hook", "TELEGRAM_WEBHO
 
 ```text
 None
-BotSettings(token='1:x', api_url=None, webhook_url=None, webhook_secret=None, admin_ids=frozenset({1001, 2002}))
+BotSettings(token='1:x', api_url=None, webhook_url=None, webhook_secret=None)
 RuntimeError: TELEGRAM_WEBHOOK_URL: Telegram надсилає webhook лише на https://
 RuntimeError: TELEGRAM_WEBHOOK_SECRET: 32–256 символів A-Z a-z 0-9 _ - (згенеруй: python -c 'import secrets; print(secrets.token_urlsafe(48))')
 RuntimeError: TELEGRAM_WEBHOOK_SECRET: 32–256 символів A-Z a-z 0-9 _ - (згенеруй: python -c 'import secrets; print(secrets.token_urlsafe(48))')
 ```
 
-Без секрету взагалі і з закоротким секретом — та сама помилка. `secrets.token_urlsafe(48)` дає 64 символи з потрібного набору.
+Без секрету взагалі і з закоротким секретом — та сама помилка. `secrets.token_urlsafe(48)` дає 64 символи з потрібного набору. `BOT_ADMIN_IDS` у `BotSettings` більше не потрапляє — чому, далі.
+
+### Хто адмін у боті — там само, де адмін API { #bot-admins }
+
+**Було.** Перша версія кроку читала `BOT_ADMIN_IDS` тут же, у `load_bot_settings`, і клала в `BotSettings.admin_ids`. Вийшло два незалежні правила «хто адмін»: адмін API — з `AdminSettings` (крок 8), адмін бота — зі свого списку. Бот з `BOT_ADMIN_IDS=1001` давав `/scrape`, навіть коли адмін-доступ API не налаштовано зовсім (запис в API — `503`). А `BOT_ADMIN_IDS=1001,@olena` падав на старті з голим `ValueError: invalid literal for int() with base 10: '@olena'`.
+
+**Стало.** `BOT_ADMIN_IDS` — поле тих самих `AdminSettings`, що й ім'я та хеш пароля:
+
+```python title="news_hub/security.py (фрагмент)"
+@dataclass(frozen=True)
+class AdminSettings:
+    jwt_secret: str
+    username: str
+    password_hash: str
+    expire_minutes: int = 30
+    telegram_ids: frozenset[int] = frozenset()     # адміни в боті: /scrape (крок 9)
+
+
+def parse_telegram_ids(raw: str) -> frozenset[int]:
+    """BOT_ADMIN_IDS=1001, 2002 → {1001, 2002}. Не число — помилка при старті, а не «адміна немає»."""
+    items = [item for item in raw.replace(" ", "").split(",") if item]
+    if not all(item.isascii() and item.isdecimal() for item in items):
+        raise RuntimeError("BOT_ADMIN_IDS — числові id Telegram через кому, наприклад 1001,2002")
+    return frozenset(int(item) for item in items)
+
+
+def load_admin_settings(env: Mapping[str, str] = os.environ) -> AdminSettings | None:
+    secret, password_hash = env.get("JWT_SECRET", ""), env.get("ADMIN_PASSWORD_HASH", "")
+    telegram_ids = parse_telegram_ids(env.get("BOT_ADMIN_IDS", ""))
+    if not secret and not password_hash:
+        if telegram_ids:
+            # Раніше бот мав власний список адмінів і працював без адмінки API: два правила «хто адмін».
+            raise RuntimeError("BOT_ADMIN_IDS задано, а адмін-доступ — ні: задай JWT_SECRET і ADMIN_PASSWORD_HASH "
+                               "(адмін один для API і бота)")
+        return None
+    ...                                            # перевірки секрету й хешу — як у кроці 8
+    return AdminSettings(..., telegram_ids=telegram_ids)
+
+
+def telegram_admin_ids(settings: AdminSettings | None) -> frozenset[int]:
+    """Кому в боті можна /scrape: адмінку не налаштовано — нікому."""
+    return settings.telegram_ids if settings is not None else frozenset()
+```
+
+```python
+ADMIN = {"JWT_SECRET": "j" * 64, "ADMIN_PASSWORD_HASH": hash_password("пароль", rounds=4)}
+print(telegram_admin_ids(load_admin_settings({**ADMIN, "BOT_ADMIN_IDS": "1001, 2002"})))
+print(telegram_admin_ids(load_admin_settings(ADMIN)))
+print(telegram_admin_ids(load_admin_settings({})))
+for env in ({"BOT_ADMIN_IDS": "1001"}, {**ADMIN, "BOT_ADMIN_IDS": "1001,@olena"}, {**ADMIN, "BOT_ADMIN_IDS": "１００１"}):
+    try:
+        load_admin_settings(env)
+    except RuntimeError as error:
+        print("RuntimeError:", error)
+```
+
+```text
+frozenset({1001, 2002})
+frozenset()
+frozenset()
+RuntimeError: BOT_ADMIN_IDS задано, а адмін-доступ — ні: задай JWT_SECRET і ADMIN_PASSWORD_HASH (адмін один для API і бота)
+RuntimeError: BOT_ADMIN_IDS — числові id Telegram через кому, наприклад 1001,2002
+RuntimeError: BOT_ADMIN_IDS — числові id Telegram через кому, наприклад 1001,2002
+```
+
+`１００１` — «повноширинні» цифри: `isdecimal()` для них `True`, тому потрібен ще `isascii()` (та сама пастка, що з `²` у часі webhook, [крок 8](../08_security/webhooks.md#change)). Тести — `test_bot_admins_are_part_of_admin_settings` і `test_bad_bot_admins_fail_at_start` (3 випадки) у `tests/unit/test_security.py`. Правило те саме, що для секретів у кроці 8: погано налаштовано — застосунок не стартує; адмін-доступ не налаштовано — адміна немає **ніде**, ні в API, ні в боті.
 
 ## Зміна 2: polling для розробки { #polling }
 
@@ -116,7 +180,7 @@ async def main() -> None:
         raise SystemExit("Задай BOT_TOKEN (від @BotFather); для двійника — ще TELEGRAM_API_URL")
     redis, llm = make_redis(), make_llm()
     bot = create_bot(settings.token, settings.api_url)
-    dp = create_dispatcher(SessionFactory, redis, llm, settings.admin_ids)
+    dp = create_dispatcher(SessionFactory, redis, llm, telegram_admin_ids(load_admin_settings()))
     try:
         await bot.delete_webhook()
         await set_commands(bot)
@@ -128,17 +192,24 @@ async def main() -> None:
 
 `delete_webhook()` — першим: Telegram не віддає update обома способами одночасно, і поки на боті висить webhook (наприклад, від сервера), `getUpdates` отримує `409`.
 
-Наживо, з папки кроку, проти двійника (база — файл `news_hub.db` після `alembic upgrade head`, Redis — `fakeredis://`):
+Наживо, з папки кроку, проти двійника (база — файл `news_hub.db` після `alembic upgrade head`, Redis — `fakeredis://`). `BOT_ADMIN_IDS` працює лише разом з адміном API, тож у середовищі — ще `JWT_SECRET` і `ADMIN_PASSWORD_HASH` з `python -m news_hub.security` ([крок 8](../08_security/admin_jwt.md#bcrypt)):
 
 ```bash
 python -m tests.telegram_twin --port 8081
+export ADMIN_PASSWORD_HASH='$2b$12$…' JWT_SECRET='…'
 REDIS_URL=fakeredis:// BOT_TOKEN=123456:TEST-TOKEN TELEGRAM_API_URL=http://127.0.0.1:8081 \
     BOT_ADMIN_IDS=1001 python -m news_hub.bot
 ```
 
 ```text
-2026-11-11 21:12:31,892 INFO aiogram.dispatcher: Start polling
-2026-11-11 21:12:31,895 INFO aiogram.dispatcher: Run polling for bot @news_hub_bot id=123456 - 'news_hub'
+2026-11-12 05:18:07,998 INFO aiogram.dispatcher: Start polling
+2026-11-12 05:18:07,999 INFO aiogram.dispatcher: Run polling for bot @news_hub_bot id=123456 - 'news_hub'
+```
+
+Без `JWT_SECRET` і `ADMIN_PASSWORD_HASH` бот не стартує:
+
+```text
+RuntimeError: BOT_ADMIN_IDS задано, а адмін-доступ — ні: задай JWT_SECRET і ADMIN_PASSWORD_HASH (адмін один для API і бота)
 ```
 
 У третьому терміналі — «користувач» 1001 (він же адмін):
@@ -183,7 +254,8 @@ async def start_bot(app: FastAPI) -> None:
     if settings is None:
         return
     app.state.bot = bot = create_bot(settings.token, settings.api_url)
-    app.state.dispatcher = create_dispatcher(SessionFactory, app.state.redis, app.state.llm, settings.admin_ids)
+    app.state.dispatcher = create_dispatcher(SessionFactory, app.state.redis, app.state.llm,
+                                             telegram_admin_ids(app.state.admin))
     if settings.webhook_url:
         await bot.set_webhook(settings.webhook_url, secret_token=settings.webhook_secret,
                               allowed_updates=["message"])

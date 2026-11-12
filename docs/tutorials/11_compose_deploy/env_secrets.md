@@ -28,7 +28,42 @@ ADMIN_PASSWORD_HASH=
 JWT_SECRET=
 ```
 
-Далі в ньому — `WEBHOOK_SECRET`, `LLM_PROVIDER`, `GEMINI_API_KEY`, змінні Telegram (`BOT_TOKEN`, `BOT_ADMIN_IDS`, `TELEGRAM_WEBHOOK_URL`, `TELEGRAM_WEBHOOK_SECRET`, `TELEGRAM_API_URL`) і `HTTP_PORT=80`. Усі вони необов'язкові: без ключа LLM аналіз відповідає `503`, без `BOT_TOKEN` бота немає.
+Далі в ньому — ліміт невдалих входів на одне ім'я, `WEBHOOK_SECRET`, `LLM_PROVIDER`, `GEMINI_API_KEY`, змінні Telegram, `HTTP_PORT=80` і `DOCS_ENABLED`:
+
+```bash title=".env.example (фрагменти)"
+# Невдалих входів під одним іменем (з усіх адрес разом), після яких вхід закрито на вікно (секунд)
+LOGIN_FAIL_LIMIT=20
+LOGIN_FAIL_WINDOW=900
+
+# Telegram (крок 9), необов'язково: без BOT_TOKEN бота немає
+BOT_TOKEN=
+# id адмінів у Telegram через кому (/scrape). Працює лише разом з адміном вище (JWT_SECRET і хеш пароля)
+BOT_ADMIN_IDS=
+TELEGRAM_WEBHOOK_URL=
+TELEGRAM_WEBHOOK_SECRET=
+TELEGRAM_API_URL=
+
+# Порт nginx на сервері
+HTTP_PORT=80
+
+# /docs, /redoc і /openapi.json на сервері (Compose за замовчуванням — false)
+DOCS_ENABLED=false
+```
+
+Усі вони необов'язкові: без ключа LLM аналіз відповідає `503`, без `BOT_TOKEN` бота немає. `LOGIN_FAIL_*` — лічильник невдач на ім'я з [кроку 8](../08_security/admin_jwt.md#login-lockout). Коментар над `BOT_ADMIN_IDS` — не формальність: `BOT_ADMIN_IDS` без `JWT_SECRET` і `ADMIN_PASSWORD_HASH` зупиняє старт `api` і `bot` ([крок 9](../09_telegram_bot/polling_webhook.md#bot-admins)).
+
+**`DOCS_ENABLED` — у `docker-compose.yml`, не лише в `.env`.** Локально (`uvicorn` без змінної) `/docs` працює, як і в усіх попередніх кроках. Сервер — інша справа: Swagger і `/openapi.json` — повна карта ендпоінтів для будь-кого в інтернеті. Тому Compose вимикає їх для `api` сам, навіть якщо рядка в `.env` немає:
+
+```yaml title="docker-compose.yml (фрагмент)"
+  api:
+    environment:
+      <<: *app-env
+      FORWARDED_ALLOW_IPS: 172.28.0.10
+      # /docs і /openapi.json на сервері — карта всіх ендпоінтів для будь-кого; увімкнути: DOCS_ENABLED=true у .env
+      DOCS_ENABLED: ${DOCS_ENABLED:-false}
+```
+
+`${DOCS_ENABLED:-false}` — значення з `.env`, а якщо його немає — `false`. Безпечне значення — за замовчуванням; щоб увімкнути документацію на сервері, треба написати `DOCS_ENABLED=true` свідомо. Перевірка — у smoke-тесті [кроку 12](../12_ci_cd/what_to_check.md): `/docs` через nginx → `404`.
 
 Compose читає `.env` поруч із `docker-compose.yml` **двічі**:
 
@@ -158,7 +193,7 @@ flowchart TD
 
 ```text
 $ pytest -q tests/unit/test_security.py tests/integration/test_telegram_webhook.py
-28 passed
+33 passed in 1.60s
 ```
 
 І наживо: той самий `.env` без лапок, `docker compose up -d --wait`:

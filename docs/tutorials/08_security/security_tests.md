@@ -17,18 +17,18 @@
 
 | Файл | Що перевіряє | Тестів |
 |---|---|---:|
-| [`tests/unit/test_security.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/tests/unit/test_security.py) | хеш і сіль, 72 байти, вхід (4 випадки), строк дії; 7 підроблених токенів (інший секрет, `alg: none`, HS512 тим самим секретом, змінений payload, без `role`, без `exp`, не JWT); налаштування з середовища | 16 |
+| [`tests/unit/test_security.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/tests/unit/test_security.py) | хеш і сіль, 72 байти, вхід (4 випадки), строк дії; 7 підроблених токенів (інший секрет, `alg: none`, HS512 тим самим секретом, змінений payload, без `role`, без `exp`, не JWT); налаштування з середовища; `LoginGuard` — лічильник на ім'я, регістр, скидання після успіху | 17 |
 | [`tests/unit/test_safe_fetch.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/tests/unit/test_safe_fetch.py) | 16 адрес `is_public_ip`; 14 заборонених URL; 3 дозволені; явна політика; IPv4 всередині IPv6 | 35 |
-| [`tests/unit/test_webhooks.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/tests/unit/test_webhooks.py) | підпис; 8 способів підробити (змінене тіло, інший порядок байтів, чужий секрет, старий і майбутній час, змінений час, немає заголовків, час не число); повтор; секрет Telegram | 11 |
-| [`tests/integration/test_admin_api.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/tests/integration/test_admin_api.py) | `PUBLIC` = усі незахищені маршрути; кожен закритий без токена → 401 (14 випадків); вхід, 4 погані входи, brute-force → 429, прострочений, `alg: none`, роль → 403, не налаштовано → 503, Swagger | 27 |
+| [`tests/unit/test_webhooks.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/tests/unit/test_webhooks.py) | підпис повертає id доставки; 11 способів підробити (змінене тіло, інший порядок байтів, чужий секрет, старий і майбутній час, змінений час, змінений id, немає id, id з `../`, немає заголовків, час не число); id займається один раз; повтор з новим часом — той самий id; секрет Telegram | 15 |
+| [`tests/integration/test_admin_api.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/tests/integration/test_admin_api.py) | `PUBLIC` = усі незахищені маршрути; кожен закритий без токена → 401 (14 випадків); вхід, 4 погані входи, brute-force → 429, прострочений, `alg: none`, роль → 403, не налаштовано → 503, Swagger; токен — `no-store`; 20 невдач на одне ім'я → 429; заголовки безпеки; `DOCS_ENABLED` (7 значень) | 36 |
 | [`tests/integration/test_sources_ssrf.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/tests/integration/test_sources_ssrf.py) | справжній aiohttp проти двох локальних серверів: стрічка через перенаправлення; перенаправлення на внутрішній сервіс, метадані, `file://` → 400 (внутрішній сервер — 0 запитів); HTML, ~2,6 МБ без `Content-Length`, петля → 502; `localhost` за DNS → 400; 5 небезпечних джерел не зберігаються; CRUD джерел | 14 |
-| [`tests/integration/test_webhooks_api.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/tests/integration/test_webhooks_api.py) | 202 без JWT; 4 × 401; повтор 409; непідписане сміття — 401, а не 422; без секрету — 503 | 8 |
-| **разом** | | **111** |
+| [`tests/integration/test_webhooks_api.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/tests/integration/test_webhooks_api.py) | 202 без JWT; 4 × 401; точний повтор → 200 і те саме завдання; повтор з новим підписом не збирає вдруге; непідписане сміття — 401, а не 422; без секрету — 503 | 9 |
+| **разом** | | **126** |
 
 ```text
 $ pytest -q tests/unit/test_security.py tests/unit/test_safe_fetch.py tests/unit/test_webhooks.py \
       tests/integration/test_admin_api.py tests/integration/test_sources_ssrf.py tests/integration/test_webhooks_api.py
-111 passed in 3.88s
+126 passed in 1.38s
 ```
 
 Ні мережі, ні справжнього DNS-сервера: SSRF-тести працюють проти локальних aiohttp-серверів, а `localhost` резолвиться без мережі.
@@ -112,7 +112,7 @@ FAILED tests/integration/test_admin_api.py::test_unsigned_token_is_401 - KeyE...
 FAILED tests/integration/test_admin_api.py::test_valid_token_without_admin_role_is_403
 FAILED tests/integration/test_admin_api.py::test_not_configured_is_503 - Asse...
 FAILED tests/integration/test_admin_api.py::test_swagger_has_authorize_button
-8 failed, 19 passed in 2.37s
+8 failed, 28 passed in 0.95s
 ```
 
 У повідомленні першого тесту видно, який саме маршрут лишився відкритим:
@@ -169,7 +169,22 @@ async def test_redirect_is_checked_again(aclient: httpx.AsyncClient, feed: TestS
     assert internal.app[HITS] == []
 ```
 
-Для webhook — випадки підробки й повтору, і окремий тест порядку перевірок: непідписане сміття — `401`, а підписане — `422`.
+Для webhook — випадки підробки й повтору, і окремий тест порядку перевірок: непідписане сміття — `401`, а підписане — `422`. Повтор перевіряють двома тестами API: точна копія запиту і та сама доставка, підписана заново з новим часом. Другий — саме той випадок, який пропускала перша версія кроку:
+
+```python title="tests/integration/test_webhooks_api.py (фрагмент)"
+def test_resent_delivery_with_new_signature_does_not_scrape_twice(anon: TestClient) -> None:
+    """Раніше ключем повтору був підпис: повтор з новим часом мав новий підпис і запускав збір удруге."""
+    delivery = uuid.uuid4().hex
+    first = anon.post("/api/webhooks/scrape", content=BODY,
+                      headers=signed(delivery=delivery, timestamp=int(time.time()) - 30))
+    again = anon.post("/api/webhooks/scrape", content=BODY, headers=signed(delivery=delivery))
+    assert (first.status_code, again.status_code) == (202, 200)
+    assert again.json()["job_id"] == first.json()["job_id"]
+    other = anon.post("/api/webhooks/scrape", content=BODY, headers=signed())       # нова доставка — нове завдання
+    assert other.status_code == 202 and other.json()["job_id"] != first.json()["job_id"]
+```
+
+Для входу — `test_login_lockout_counts_failures_per_name_from_any_address`. «Тисячу адрес» тест імітує, знявши ліміт на адресу: `monkeypatch.setitem(LIMITS, "login", (1000, 300))` — для цього `LIMITS` і винесено на рівень модуля.
 
 ## Що ловлять тести, а що — ні { #mutations }
 
@@ -178,19 +193,23 @@ async def test_redirect_is_checked_again(aclient: httpx.AsyncClient, feed: TestS
 | Поломка | Результат `pytest` |
 |---|---|
 | прибрати `dependencies=[AdminDep]` з `DELETE /api/news` | `8 failed, 19 passed` у `test_admin_api.py` |
-| прибрати `nx=True` у `remember_delivery` | `2 failed, 277 passed`: `test_replay_is_409` в unit і integration |
+| прибрати `nx=True` у `claim_delivery` | `3 failed, 291 passed`: `test_same_delivery_is_claimed_once` (unit), `test_exact_replay_returns_same_job` і `test_resent_delivery_with_new_signature_does_not_scrape_twice` (API) |
+| прибрати `await guard.failed(...)` в `admin_token` | `1 failed, 293 passed`: `test_login_lockout_counts_failures_per_name_from_any_address` |
+| прибрати `app.add_middleware(SecurityHeadersMiddleware)` | `1 failed, 293 passed`: `test_security_headers_on_every_answer` |
+| прибрати `Cache-Control: no-store` з відповіді входу | `1 failed, 293 passed`: `test_login_and_use_token` (`KeyError`) |
 | `max_redirects=0` у фікстурі `local_policy` | `1 failed, 13 passed` у `test_sources_ssrf.py` — розбір у [контрольній точці](checkpoint.md#modify) |
-| `hmac.compare_digest(...)` → `signature != sign(...)` | **`279 passed`** — жоден тест не впав |
+| `hmac.compare_digest(...)` → `signature != sign(...)` | **`294 passed`** — жоден тест не впав |
+| `await run_in_threadpool(authenticate, ...)` → `authenticate(...)` | **`294 passed`** — жоден тест не впав |
 
-Остання поломка не видна тестам: обидва порівняння дають **той самий результат**, різниця лише в **часі**. `!=` зупиняється на першому неспівпадінні, і за часом відповіді підпис можна підбирати по символу. Функціональний тест такого не бачить. Тому правило записано в `CLAUDE.md` кроку для AI-асистента — «Секрети порівнюються `hmac.compare_digest`, не `==`» — і це пункт рецензії коду.
+Дві останні поломки не видні тестам: код дає **той самий результат**, різниця лише в **часі**. Для `compare_digest` — у часі порівняння. Для `run_in_threadpool` — у тому, чи чекають інші запити, поки bcrypt рахує 0,2 с ([вимір](admin_jwt.md#threadpool)): тест робить один запит за раз і цього не бачить. А `!=` зупиняється на першому неспівпадінні, і за часом відповіді підпис можна підбирати по символу. Функціональний тест такого не бачить. Тому обидва правила записано в `CLAUDE.md` кроку для AI-асистента — «Секрети порівнюються `hmac.compare_digest`, не `==`» і «bcrypt в `async def` — лише через `run_in_threadpool`» — і це пункти рецензії коду.
 
 ## Запуск { #run }
 
 ```text
 $ pytest -q
-279 passed, 2 deselected in 18.66s
+294 passed, 2 deselected in 8.18s
 $ pytest -q -m unit
-167 passed, 114 deselected in 9.04s
+172 passed, 124 deselected in 3.87s
 $ mypy --strict news_hub
 Success: no issues found in 18 source files
 ```
@@ -207,6 +226,6 @@ bcrypt>=4.0            # крок 8: хеш пароля адміна — нап
 ## Правило { #rule }
 
 !!! tip "Правило"
-    Кожен спосіб обходу — окремий випадок тесту; для SSRF перевіряй, що запит **не дійшов**, а не лише код відповіді. Список публічних маршрутів — явний, а тест порівнює його з усіма маршрутами застосунку. Те, що впливає лише на час (порівняння секретів), тести не бачать — це правило проєкту й пункт рецензії.
+    Кожен спосіб обходу — окремий випадок тесту; для SSRF перевіряй, що запит **не дійшов**, а не лише код відповіді. Список публічних маршрутів — явний, а тест порівнює його з усіма маршрутами застосунку. Те, що впливає лише на час (порівняння секретів, bcrypt у циклі подій), тести не бачать — це правило проєкту й пункт рецензії.
 
 **Далі:** [Контрольна точка](checkpoint.md).

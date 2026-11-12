@@ -26,7 +26,7 @@ flowchart LR
 
 | Анотація | FastAPI / Pydantic під час роботи | mypy |
 |---|---|---|
-| `X \| None` | дозволяє `null`; **обов'язковість задає `= None`, а не `\| None`** | вимагає перевірити `None` перед використанням |
+| <code>X &#124; None</code> | дозволяє `null`; **обов'язковість задає `= None`, а не <code>&#124; None</code>** | вимагає перевірити `None` перед використанням |
 | `list[str]` | перевіряє кожен елемент; схема `array` з `items` | перевіряє, що в список кладуть рядки |
 | `Literal["a", "b"]` | приймає лише ці значення (`literal_error`); схема `enum` | забороняє інші значення; ловить пропущену гілку |
 | `Annotated[T, ...]` | читає метадані: `Query`, `Depends`, `Field`, `AfterValidator` | бачить лише `T`, метадані ігнорує |
@@ -136,7 +136,7 @@ mypy_only.py:58: note:         def send(self, text: str, to: str) -> None
 
 | Рядок | Що зловив mypy | Що зробив Python |
 |---|---|---|
-| 36 | `name[0]`, де `name: str \| None` | нічого: функцію не викликали з `None` — поки що |
+| 36 | `name[0]`, де <code>name: str &#124; None</code> | нічого: функцію не викликали з `None` — поки що |
 | 39 | `label()` для `Literal` без гілки `"done"` | повернув `None` замість рядка |
 | 48 | `bad_title: Annotated[str, Field(min_length=3)] = 42` | нічого: `Field` поза моделлю нічого не перевіряє |
 | 55 | одруківка `"yy"` у ключі `TypedDict` | створив словник з одруківкою |
@@ -198,7 +198,7 @@ $ python future_gotcha.py
 |---|---|---|
 | `TypedDict RawNews` | `parser.py`: новина так, як її дає HTML, лише рядки ([крок 1](../tutorials/01_typing_pydantic/index.md)) | mypy в парсері; Pydantic — у `snapshot.py` через `TypeAdapter(list[RawNews])` |
 | `Literal` | `ScrapeRequest.source`/`mode`, `NewsItem.lang`, `JobStatus.status`, теми й тональність аналізу LLM | FastAPI (`422` і `enum` у `/docs`), mypy |
-| `X \| None` | `published_time: time \| None` — у 31 зі 168 новин часу немає | mypy змушує перевірити `None` |
+| <code>X &#124; None</code> | <code>published_time: time &#124; None</code> — у 31 зі 168 новин часу немає | mypy змушує перевірити `None` |
 | `Annotated[..., Depends(...)]` | `SessionDep`, `RedisDep`, `LLMDep` у `api.py` | FastAPI |
 | `Protocol LLMClient` | `llm.py`: `GeminiClient`, `AnthropicClient`, `FakeLLM` для тестів — без спільного базового класу | лише mypy; FastAPI бачить його в `Depends` і не перевіряє |
 
@@ -217,7 +217,7 @@ examples/after_typed.py:11: error: Item "None" of "time | None" has no attribute
 
 | Помилка | Наслідок | Як правильно |
 |---|---|---|
-| `x: str \| None` і чекати, що поле необов'язкове | `422 Field required` | `x: str \| None = None` |
+| <code>x: str &#124; None</code> і чекати, що поле необов'язкове | `422 Field required` | <code>x: str &#124; None = None</code> |
 | `items: list` без параметра | будь-які елементи; у схемі `items: {}` | `list[str]` |
 | `-> list[dict]` або `-> dict` у маршруті | клієнт отримує всі поля, включно зі службовими | `-> list[NewsOut]` |
 | `Protocol` як поле моделі чи тіло | застосунок не запускається | `BaseModel` для даних; `Protocol` — для залежностей і сервісів |

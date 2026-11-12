@@ -232,10 +232,10 @@ class NewsPatchSafe(BaseModel):
 |---|---|---|
 | `model_dump()` без параметрів у `PATCH` | поля, яких не передали, перезаписуються `None` і значеннями за замовчуванням | `exclude_unset=True` |
 | `exclude_none` або `exclude_defaults` у `PATCH` | свідомо передане `false` / `0` зникає, або непередане потрапляє | `exclude_unset=True` |
-| `str \| None = None` у `PATCH` без перевірки на `null` | `{"title": null}` доходить до бази — `500` | валідатор, що забороняє `None` |
+| <code>str &#124; None = None</code> у `PATCH` без перевірки на `null` | `{"title": null}` доходить до бази — `500` | валідатор, що забороняє `None` |
 | `json.dumps(model.model_dump())` | `TypeError` на `UUID`, `datetime`, `Decimal` | `model_dump(mode="json")` або `model_dump_json()` |
 | `class Config: orm_mode = True` у Pydantic 2 | `from_orm` / `model_validate` з об'єкта падає, попри «renamed» у попередженні | `model_config = ConfigDict(from_attributes=True)` |
-| чекати, що `Optional[X]` необов'язкове | `422 Field required` після міграції | `X \| None = None` |
+| чекати, що `Optional[X]` необов'язкове | `422 Field required` після міграції | <code>X &#124; None = None</code> |
 | `model_copy(update=...)` для даних ззовні | значення не перевіряються | `model_validate` зі зміненим словником |
 | `default=[]` замість `default_factory=list` у звичайному класі | спільний список на всі екземпляри | у моделях Pydantic `[]` безпечний (копіюється), але `default_factory` зрозуміліший і працює скрізь |
 | `SerializeAsAny` «щоб віддавало все» | службові поля підкласу йдуть клієнту | окрема модель відповіді |

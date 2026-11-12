@@ -6,15 +6,15 @@
 
 ```text
 $ pytest -q -p no:cacheprovider
-........................................................................ [ 20%]
+........................................................................ [ 19%]
 …
-.......................................................                  [100%]
-343 passed, 8 deselected in 33.86s
+...                                                                      [100%]
+363 passed, 8 deselected in 18.54s
 $ mypy --strict news_hub
 Success: no issues found in 26 source files
 ```
 
-Порівняно з кроком 10 (340 тестів) додалось 3:
+Порівняно з кроком 10 (360 тестів) додалось 3:
 
 | Де | Що перевіряє |
 |---|---|
@@ -32,7 +32,8 @@ Success: no issues found in 26 source files
 - [ ] `docker compose up -d --build --wait` повертає 0; у `docker compose ps` чотири сервіси `(healthy)`, `migrate` — `Exited (0)`.
 - [ ] `curl localhost/health/ready` → `{"status":"ok","checks":{"database":"ok","redis":"ok"}}`.
 - [ ] Назовні відкритий лише порт nginx: у `ps` в `api`, `postgres`, `redis` — порт без `0.0.0.0:…->`.
-- [ ] 7 невдалих входів з вигаданим `X-Forwarded-For` → `401 ×5, 429 ×2`; у Redis один ключ `rate:login:<твоя адреса>`.
+- [ ] 7 невдалих входів з вигаданим `X-Forwarded-For` → `401 ×5, 429 ×2`; у Redis один ключ `rate:login:<твоя адреса>` (`--scan --pattern 'rate:*'`; поруч — `login:fail:…`, лічильник невдач на ім'я з кроку 8, він від адреси не залежить).
+- [ ] `curl -s -o /dev/null -w '%{http_code}' localhost/docs` → `404` (Compose задає `DOCS_ENABLED=false`); `curl -sI localhost/nginx-health` → `Server: nginx` без версії; `curl -sI localhost/api/news/count` → є `x-content-type-options: nosniff`.
 - [ ] Хеш без лапок у `.env` → `api` не стартує з `RuntimeError … в одинарних лапках`.
 - [ ] Бот з `TELEGRAM_API_URL=http://twin:8081`, але без `--profile twin` → `api` healthy, у журналі `Telegram недоступний … повтор через …`.
 - [ ] `./scripts/backup.sh` → `DELETE /api/news` → `./scripts/restore.sh …` → `count` знову 168.

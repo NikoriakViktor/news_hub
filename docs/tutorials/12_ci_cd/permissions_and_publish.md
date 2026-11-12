@@ -90,7 +90,7 @@ $ echo $?
 ```yaml title="news_hub.yml → job publish"
   publish:
     name: публікація образу в ghcr.io
-    needs: [tests, min-versions, postgres, types, docker]
+    needs: [tests, min-versions, postgres, types, supply-chain, docker]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -129,7 +129,7 @@ $ echo $?
 
 - **Тег `sha-…`** відповідає на питання «яка версія зараз на сервері?»: кожен образ прив'язаний до коміту. `latest` зручний, але сам по собі нічого не каже й перезаписується з кожним злиттям.
 - **Нижній регістр.** Реєстр приймає лише імена в нижньому регістрі, а власник репозиторію — `NikoriakViktor`. `metadata-action` переводить ім'я сам: для цього репозиторію образ — `ghcr.io/nikoriakviktor/news_hub/news_hub`. `docker push ghcr.io/NikoriakViktor/…` реєстр відхилив би.
-- **Той самий коміт, але не той самий образ.** `publish` — окрема машина: він збирає образ заново з того самого коміту, а не бере зібраний у job `docker` (там образ лишився на іншій машині). `Dockerfile` той самий, але версії пакетів з `requirements.txt` ставляться в момент збірки. Щоб публікувати **саме** перевірений образ, його збирають один раз і передають далі (артефакт або тимчасовий тег у реєстрі) — складніше, тут цього немає.
+- **Той самий коміт, але не той самий образ.** `publish` — окрема машина: він збирає образ заново з того самого коміту, а не бере зібраний у job `docker` (там образ лишився на іншій машині). `Dockerfile` той самий, і пакети теж: з кроку 12 образ ставить `requirements.lock` з `--require-hashes` — ті самі версії й ті самі файли, що в job `docker` ([розділ 2](what_to_check.md#lock)). Але базовий образ `python:3.12-slim` — тег, який з часом указує на нові збірки, і байт-у-байт образ інший. Щоб публікувати **саме** перевірений образ, його збирають один раз і передають далі (артефакт або тимчасовий тег у реєстрі) — складніше, тут цього немає.
 - На PR цей job — `skipped` ([трасування](order_and_parallel.md#trace-pr)). Прогонів `publish` у цьому репозиторії на момент написання ще не було.
 
 !!! warning "Чому в імені образу є назва репозиторію"
@@ -151,7 +151,7 @@ sequenceDiagram
     participant C as ghcr.io
     participant S as сервер
     D->>G: git push у гілку PR
-    G->>R: pull_request (paths збігся): 6 jobs, 7 запусків
+    G->>R: pull_request (paths збігся): 7 jobs, 8 запусків
     R-->>G: статуси jobs → галочка чи хрестик у PR
     D->>G: merge у main (після рев'ю)
     G->>R: push у main: ті самі jobs + publish

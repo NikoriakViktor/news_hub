@@ -286,16 +286,38 @@ flowchart TD
 
 ## `/scrape` — лише адміну { #admin }
 
-Бот — ще один вхід у застосунок, і правило кроку 8 «змінювати може лише адмін» діє й тут. JWT у Telegram немає, тому адміни — це список `user_id` у `BOT_ADMIN_IDS`:
+Бот — ще один вхід у застосунок, і правило кроку 8 «змінювати може лише адмін» діє й тут. JWT у Telegram немає, тому адміни — це список `user_id` у `BOT_ADMIN_IDS`. Список читає не бот, а `load_admin_settings` (`AdminSettings.telegram_ids`): без адмін-доступу API адмінів немає й у боті ([Polling і webhook](polling_webhook.md#bot-admins)).
 
 ```python title="news_hub/bot/handlers.py (фрагмент)"
+async def cmd_scrape(message: Message, command: CommandObject, bot: Bot, news: NewsRepository,
+                     subscriptions: SubscriptionRepository, admin_ids: frozenset[int], redis: Redis) -> None:
+    """Адмін-команда: зібрати новини (`/scrape snapshot` — зі знімка) і сповістити підписників."""
     if message.from_user is None or message.from_user.id not in admin_ids:
         logger.warning("/scrape від не-адміна %s", message.from_user.id if message.from_user else None)
         await message.answer("Ця команда — лише для адміністратора.")
         return
+    limit, window = LIMITS["scrape"]
+    allowed, _, ttl = await RateLimiter(redis, limit=limit, window=window).hit(f"tg{message.from_user.id}", "scrape")
+    if not allowed:
+        await message.answer(f"Забагато зборів: {limit} за {window} с; спробуй через {ttl} с.")
+        return
+    ...
 ```
 
 Спроба не-адміна потрапляє в журнал (`/scrape від не-адміна 2002`) — як невдалий вхід у API.
+
+**Збір — під тим самим лімітом, що в API.** `POST /api/scrape*` обмежено `LIMITS["scrape"]` (5 за 60 с з адреси, крок 4). Перша версія бота мала лише загальний ліміт повідомлень (20 за 60 с), тож через `/scrape` адмін — або той, хто вкрав його Telegram, — міг запускати збір учетверо частіше, ніж через API. Тепер `cmd_scrape` бере ліміт з тієї самої таблиці `LIMITS` (`middleware.py`), ключ — `rate:scrape:tg<user_id>`. Наживо, адмін 1001 шість разів `/scrape snapshot` через двійник:
+
+```text
+1 'Зібрано: 168, нових: 168, відхилено: 0; сповіщено чатів: 0'
+2 'Зібрано: 168, нових: 0, відхилено: 0; сповіщено чатів: 0'
+3 'Зібрано: 168, нових: 0, відхилено: 0; сповіщено чатів: 0'
+4 'Зібрано: 168, нових: 0, відхилено: 0; сповіщено чатів: 0'
+5 'Зібрано: 168, нових: 0, відхилено: 0; сповіщено чатів: 0'
+6 'Забагато зборів: 5 за 60 с; спробуй через 52 с.'
+```
+
+Тест — `test_scrape_uses_the_same_rate_limit_as_api`: `monkeypatch.setitem(LIMITS, "scrape", (1, 60))`, і другий `/scrape` уже відповідає `Забагато зборів: 1 за 60 с`. Одна таблиця лімітів — одне місце, де змінюють «скільки зборів можна».
 
 ## Звідки взялося { #origin }
 

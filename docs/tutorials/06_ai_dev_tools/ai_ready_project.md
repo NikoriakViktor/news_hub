@@ -214,7 +214,7 @@ Run Claude Code interactively here once and accept the trust dialog, …
 | Запис | Що означає |
 |---|---|
 | `PostToolUse` | подія: **після** того, як інструмент виконано |
-| `"matcher": "Edit\|Write"` | лише для інструментів редагування й створення файлів, не для `Read` чи `Bash` |
+| <code>"matcher": "Edit&#124;Write"</code> | лише для інструментів редагування й створення файлів, не для `Read` чи `Bash` |
 | `"type": "command"` | запустити команду оболонки |
 | `$CLAUDE_PROJECT_DIR` | корінь проєкту — hook знайдеться, хоч би в якій підпапці агент працював |
 

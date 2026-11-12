@@ -1,0 +1,19 @@
+# Сервер: docker compose -f compose.yaml -f compose.prod.yaml up -d --wait
+# (override для розробки тоді НЕ підхоплюється: -f перелічує файли явно)
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"                                 # без цього журнал контейнера росте, доки не скінчиться диск
+    max-file: "3"
+
+services:
+  api:
+    restart: unless-stopped
+    stop_grace_period: 30s                          # довгі запити встигнуть завершитися (за замовчуванням 10 с)
+    logging: *logging
+  redis:
+    restart: unless-stopped
+    logging: *logging
+  nginx:
+    restart: unless-stopped
+    logging: *logging

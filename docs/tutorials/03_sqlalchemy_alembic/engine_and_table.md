@@ -115,7 +115,7 @@ class NewsRow(Base):
 | Запис | Що дає в таблиці |
 |---|---|
 | `Mapped[str]` | стовпець `NOT NULL` |
-| `Mapped[time \| None]` | `NULL` дозволено |
+| <code>Mapped[time &#124; None]</code> | `NULL` дозволено |
 | `primary_key=True` | `id` — первинний ключ, номер дає база |
 | `unique=True` | обмеження `UNIQUE (url)` |
 | `index=True` | індекс: фільтри `?lang=`, `?source=`, `?category=` не перебирають усю таблицю |

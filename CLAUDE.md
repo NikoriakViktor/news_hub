@@ -91,6 +91,8 @@ security and production notes. Record every source → book mapping in the local
   Instead: a link to `steps/NN/...`.
 - Links to code: `https://github.com/NikoriakViktor/news_hub/blob/main/steps/NN_<topic>/<path>`.
 - Explicit heading anchors `{ #id }` for anything linked from another page (Cyrillic slugs are unreliable).
+- A `|` inside code in a table row: write `<code>X &#124; None</code>`, not `` `X \| None` `` — the escaped form
+  renders with a visible backslash. Outside tables, plain `` `X | None` `` is fine.
 
 ### Page templates
 

@@ -6,11 +6,11 @@
 
 | Розділ | Код | Стан |
 |---|---|---|
-| Docker-образ | `steps/10/Dockerfile`, `.dockerignore` | у роботі |
-| Docker Compose | `steps/11/docker-compose.yml`, `nginx/` | у роботі |
-| Деплой на сервер | — | у роботі |
-| CI/CD на GitHub Actions | `.github/workflows/news_hub.yml` | у роботі |
-| Мікросервіси: коли варто | — | у роботі |
+| [Docker-образ](docker_image.md) | `steps/10/Dockerfile`, `.dockerignore` | готово |
+| [Docker Compose](compose.md) | `steps/11/docker-compose.yml`, `nginx/` | готово |
+| [Сервер у production](production_server.md) | — | готово |
+| [CI/CD на GitHub Actions](ci_cd.md) | `.github/workflows/news_hub.yml` | готово |
+| [Мікросервіси: коли варто](microservices.md) | — | готово |
 
 ## На практиці — Zero to Hero
 

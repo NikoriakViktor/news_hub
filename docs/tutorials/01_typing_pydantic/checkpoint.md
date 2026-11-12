@@ -32,7 +32,7 @@ $ python -c "from news_hub.snapshot import load_snapshot; from news_hub.models i
 |---|---|---|
 | `ModuleNotFoundError: No module named 'news_hub'` | скрипт запущено не з папки кроку, або `python шлях/до/script.py` (у `sys.path` потрапляє папка скрипта, а не поточна) | працюй з `steps/01_typing_pydantic`: Python-консоль, `python -c "…"` або `pytest` (у `pytest.ini` є `pythonpath = .`) |
 | `PydanticUserError: Please use typing_extensions.TypedDict instead of typing.TypedDict on Python < 3.12.` | `TypedDict` імпортовано з `typing` на Python 3.10–3.11 | `from typing_extensions import TypedDict`, як у `parser.py` |
-| `error: Item "None" of "time \| None" has no attribute "hour"  [union-attr]` | `published_time` може бути `None` (31 новина знімка) | спершу `if item.published_time is not None:` |
+| <code>error: Item "None" of "time &#124; None" has no attribute "hour"  [union-attr]</code> | `published_time` може бути `None` (31 новина знімка) | спершу `if item.published_time is not None:` |
 | `error: Missing type arguments for generic type "dict"  [type-arg]` | `mypy --strict` не приймає «голий» `dict` | `dict[str, str]` або, краще, `TypedDict` |
 | `Instance is frozen` | присвоєння полю моделі з `frozen=True` | створи нову модель; `model_copy(update={...})` теж працює, але **не перевіряє** нові значення |
 | `TypeError: Object of type HttpUrl is not JSON serializable` | `json.dumps(item.model_dump())` | `item.model_dump(mode="json")` або `item.model_dump_json()` |
@@ -141,7 +141,7 @@ URL — справжній, зі знімка. Чому категорія «Aut
 |---|---|
 | Анотації типів | підказки: `def f(x: int) -> str`; Python їх не перевіряє під час роботи |
 | `mypy` | перевіряє типи **до запуску**; `--strict` — найсуворіше |
-| `X \| None` | змушує обробити `None` |
+| <code>X &#124; None</code> | змушує обробити `None` |
 | `Literal[...]` | лише дозволені значення |
 | `TypedDict` | словник з відомими ключами: mypy ловить одруківки; на Python < 3.12 — з `typing_extensions` |
 | Pydantic `BaseModel` | перевірка й приведення даних **під час роботи**; помилка — `ValidationError` з усіма полями |

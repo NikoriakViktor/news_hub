@@ -38,7 +38,7 @@ async def list_news(
 | Запис | Що відбувається з запитом `GET /api/news?limit=abc&lang=en` |
 |---|---|
 | `limit: int = Query(50, ge=1, le=1000)` | `"abc"` → не число → `422`; `0` → менше `ge=1` → `422`; немає → `50` |
-| `lang: Literal["uk", "ru"] \| None` | `"en"` → не зі списку → `422` |
+| <code>lang: Literal["uk", "ru"] &#124; None</code> | `"en"` → не зі списку → `422` |
 | `response_model=list[NewsItem]` | відповідь перетворюється на JSON за моделлю: `url` → рядок, `published_time` → `"14:19:00"` |
 | `tags`, `summary`, docstring | потрапляють в OpenAPI → `/docs` |
 
@@ -160,8 +160,8 @@ API не писали з нуля. Основа — перший FastAPI-про�
 | Було в прототипі | Стало | Навіщо |
 |---|---|---|
 | друга модель новини — 13 полів окремо від парсера | `response_model=list[NewsItem]` з кроку 1 | одна модель на весь проєкт |
-| `lang: str = Query(default="", description="uk \| ru \| unknown")` | `lang: Literal["uk", "ru"] \| None` | `?lang=en` — `422`, а не порожній список |
-| `mode: str = Field(pattern="^(async\|sequential)$")` | `mode: Literal["async", "sequential"]` | те саме без regex; mypy знає значення |
+| <code>lang: str = Query(default="", description="uk &#124; ru &#124; unknown")</code> | <code>lang: Literal["uk", "ru"] &#124; None</code> | `?lang=en` — `422`, а не порожній список |
+| <code>mode: str = Field(pattern="^(async&#124;sequential)$")</code> | `mode: Literal["async", "sequential"]` | те саме без regex; mypy знає значення |
 | `from fastapi import HTTPException` усередині функцій | імпорти вгорі модуля | читабельність |
 | 16 ендпоінтів | 6 + `openapi_tags` | ядро, згруповане в `/docs` |
 

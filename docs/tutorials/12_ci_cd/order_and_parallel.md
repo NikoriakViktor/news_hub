@@ -5,7 +5,7 @@
 
 ## Задача { #task }
 
-Шість jobs, один з них — matrix на дві версії Python: сім запусків. Якщо виконувати їх один за одним, PR чекатиме суму всіх тривалостей. Але й «усе одночасно» — погано:
+Сім jobs, один з них — matrix на дві версії Python: вісім запусків. Якщо виконувати їх один за одним, PR чекатиме суму всіх тривалостей. Але й «усе одночасно» — погано:
 
 - збирати образ і піднімати весь стек (найдовший job) немає сенсу, коли код уже не пройшов тести;
 - публікувати образ можна лише тоді, коли пройшло **все**;
@@ -22,17 +22,18 @@ jobs:
   min-versions:   # needs немає
   postgres:       # needs немає
   types:          # needs немає
+  supply-chain:   # needs немає: lock, pip-audit, gitleaks
 
   docker:
     needs: tests                     # образ збираємо, лише коли код пройшов тести
 
   publish:
-    needs: [tests, min-versions, postgres, types, docker]
+    needs: [tests, min-versions, postgres, types, supply-chain, docker]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 ```
 
-- `docker` чекає лише `tests` — **обидва** варіанти matrix. Не чекає `min-versions`, `postgres`, `types`: це окремі обіцянки, а smoke — найдовший job, тож хай стартує якомога раніше.
-- `publish` чекає всіх: образ у реєстр — лише з коміту, що пройшов усі перевірки.
+- `docker` чекає лише `tests` — **обидва** варіанти matrix. Не чекає `min-versions`, `postgres`, `types`, `supply-chain`: це окремі обіцянки, а smoke — найдовший job, тож хай стартує якомога раніше.
+- `publish` чекає всіх: образ у реєстр — лише з коміту, що пройшов усі перевірки, зокрема `supply-chain` ([розділ 2](what_to_check.md#supply-chain)): без відомих вразливостей у lock і без секретів в історії.
 
 ## Результат: хвилі { #waves }
 
@@ -65,7 +66,7 @@ print("workflow permissions:", wf["permissions"])
 
 ```text
 $ python waves.py .github/workflows/news_hub.yml
-хвиля 1: tests, min-versions, postgres, types
+хвиля 1: tests, min-versions, postgres, types, supply-chain
 хвиля 2: docker
 хвиля 3: publish
 tests: matrix {'python': ['3.10', '3.13']} → 2 запуски(в)
@@ -88,9 +89,9 @@ flowchart TD
         direction LR
         P0{"paths: змінено<br>steps/12_ci_cd/**?"} -- "так" --> Q0["news_hub — CI/CD"]
     end
-    subgraph T1 ["хвиля 1: п'ять запусків паралельно"]
+    subgraph T1 ["хвиля 1: шість запусків паралельно"]
         direction LR
-        A1["pytest 3.10"] ~~~ B1["pytest 3.13"] ~~~ C1["мін. версії"] ~~~ D1["mypy"] ~~~ E1["PostgreSQL<br>+ Redis"]
+        A1["pytest 3.10"] ~~~ B1["pytest 3.13"] ~~~ C1["мін. версії"] ~~~ D1["mypy"] ~~~ E1["PostgreSQL<br>+ Redis"] ~~~ K1["lock, pip-audit,<br>gitleaks"]
     end
     subgraph T2 ["хвиля 2: needs tests (обидва з matrix)"]
         direction LR
@@ -104,11 +105,11 @@ flowchart TD
 
     class P0,G3 decision
     class Q0 step
-    class A1,B1,C1,D1,E1,F2 success
+    class A1,B1,C1,D1,E1,K1,F2 success
     class H3 warning
 ```
 
-На PR `publish` завжди `skipped`: умова `if` не виконується. Тривалість кожного job видно у вкладці **Actions** прогону; час усього прогону — це найдовший запуск хвилі 1 плюс `docker`, а не сума семи.
+На PR `publish` завжди `skipped`: умова `if` не виконується. Тривалість кожного job видно у вкладці **Actions** прогону; час усього прогону — це найдовший запуск хвилі 1 плюс `docker`, а не сума восьми.
 
 ## Трасування: упала одна версія Python { #trace-fail }
 
@@ -122,7 +123,7 @@ flowchart TD
 
     subgraph W1 ["хвиля 1"]
         direction LR
-        A1["pytest 3.10:<br>failed"] ~~~ B1["pytest 3.13: доходить<br>до кінця (fail-fast: false)"] ~~~ C1["мін. версії,<br>mypy, PostgreSQL"]
+        A1["pytest 3.10:<br>failed"] ~~~ B1["pytest 3.13: доходить<br>до кінця (fail-fast: false)"] ~~~ C1["мін. версії, mypy,<br>PostgreSQL, supply-chain"]
     end
     subgraph W2 ["хвиля 2"]
         direction LR
@@ -165,7 +166,7 @@ flowchart TD
 | Job | `timeout-minutes` |
 |---|---:|
 | `tests`, `min-versions`, `postgres`, `publish` | 15 |
-| `types` | 10 |
+| `types`, `supply-chain` | 10 |
 | `docker` | 20 |
 
 Без `timeout-minutes` job може йти до шести годин — стільки дозволяє GitHub. Тест, що чекає на мережу без тайм-ауту, або `docker compose up --wait`, що не дочекався healthy, займали б раннер увесь цей час. Межа — з запасом над нормальною тривалістю; у `smoke.sh` своя, коротша: `--wait-timeout 180`.

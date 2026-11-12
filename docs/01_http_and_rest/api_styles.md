@@ -304,6 +304,6 @@ WebSocket і SSE в News Hub немає: новини з'являються ра
 
 ## Що далі { #next }
 
-[Частина I. HTTP і дизайн REST API](README.md) — решта розділів частини.
+[HTTP-клієнти: requests, httpx, aiohttp](http_clients.md) — досі сервер лише відповідав; тепер він сам іде до інших серверів: тайм-аути, пул з'єднань, повтори, кодування.
 
 **Джерела:** FastAPI — [WebSockets](https://fastapi.tiangolo.com/advanced/websockets/), [Server-Sent Events](https://fastapi.tiangolo.com/tutorial/server-sent-events/), [OpenAPI Webhooks](https://fastapi.tiangolo.com/advanced/openapi-webhooks/); [Starlette — WebSockets](https://starlette.dev/websockets/); [HTML Living Standard — Server-sent events](https://html.spec.whatwg.org/multipage/server-sent-events.html); [RFC 6455 — The WebSocket Protocol](https://www.rfc-editor.org/rfc/rfc6455) (§7.4 коди закриття); [GraphQL — Specification](https://spec.graphql.org/), [Strawberry — FastAPI](https://strawberry.rocks/docs/integrations/fastapi); [gRPC — Introduction](https://grpc.io/docs/what-is-grpc/introduction/), [gRPC — Python quick start](https://grpc.io/docs/languages/python/quickstart/); [OpenAPI 3.1 — webhooks](https://spec.openapis.org/oas/v3.1.0#oasWebhooks).

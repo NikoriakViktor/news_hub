@@ -1,0 +1,31 @@
+# Багатоетапна збірка: компілятор лише в етапі builder, у фінальний образ іде готове віртуальне середовище.
+#   docker build -f Dockerfile.multistage -t part10-multi .                      # фінальний образ
+#   docker build -f Dockerfile.multistage --target builder -t part10-builder .   # «усе в одному»
+#
+# NO_BINARY імітує залежність без готового колеса під твою платформу: pip збирає її з сирців,
+# і для цього потрібні gcc та заголовки Python. За замовчуванням так збирається httptools.
+ARG PYTHON=3.12
+
+FROM python:${PYTHON}-slim AS builder
+ARG NO_BINARY=httptools
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_ROOT_USER_ACTION=ignore
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential \
+    && rm -rf /var/lib/apt/lists/*
+RUN python -m venv /opt/venv
+ENV PATH=/opt/venv/bin:$PATH
+COPY requirements.txt .
+RUN pip install --no-cache-dir --no-binary "$NO_BINARY" -r requirements.txt
+
+FROM python:${PYTHON}-slim AS runtime
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH=/opt/venv/bin:$PATH
+RUN useradd --uid 10001 --no-create-home --shell /usr/sbin/nologin app
+# з builder — лише venv: ні gcc, ні заголовків, ні apt-кешу
+COPY --from=builder /opt/venv /opt/venv
+WORKDIR /app
+COPY . .
+USER app
+EXPOSE 8000
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

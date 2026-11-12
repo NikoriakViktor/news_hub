@@ -166,7 +166,7 @@ flowchart TD
 
 ```bash
 pip install -r requirements-dev.txt   # застосунок + pytest, mypy, fakeredis
-pytest -q                             # 340 passed, 8 deselected (6 docker + 2 llm)
+pytest -q                             # 360 passed, 8 deselected (6 docker + 2 llm)
 mypy --strict news_hub                # Success: no issues found in 26 source files
 pytest -m docker                      # 6 passed — потрібен Docker, хвилина-дві
 ```
@@ -200,7 +200,7 @@ git diff --no-index steps/09_telegram_bot/news_hub steps/10_docker/news_hub
 git diff --no-index steps/09_telegram_bot/requirements.txt steps/10_docker/requirements.txt
 ```
 
-Нові файли — `Dockerfile`, `.dockerignore`, `requirements-dev.txt`, `tests/docker/`, `tests/integration/test_health.py`. У коді застосунку змінились лише `api.py` (`/health/ready`) і `security.py` (`--env-file`). Тестів стало 340 замість 335: 3 для `/health/ready` і 2 для `env_lines`; ще 6 тестів образу запускаються окремо.
+Нові файли — `Dockerfile`, `.dockerignore`, `requirements-dev.txt`, `tests/docker/`, `tests/integration/test_health.py`. У коді застосунку змінились лише `api.py` (`/health/ready`) і `security.py` (`--env-file`). Тестів стало 360 замість 355: 3 для `/health/ready` і 2 для `env_lines`; ще 6 тестів образу запускаються окремо.
 
 ## Що далі { #next }
 

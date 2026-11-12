@@ -178,7 +178,7 @@ GET /users/me → 422 ['path', 'user_id'] Input should be a valid integer, unabl
 | Прийом | Де в [кроці 2](https://github.com/NikoriakViktor/news_hub/blob/main/steps/02_fastapi_basics/news_hub/api.py) |
 |---|---|
 | `Query(ge=, le=)` | `GET /api/news`: `skip`, `limit` |
-| `Literal[...] \| None` | `lang: Literal["uk", "ru"] \| None` |
+| <code>Literal[...] &#124; None</code> | <code>lang: Literal["uk", "ru"] &#124; None</code> |
 | тіло — модель з валідатором | `ScrapeRequest` з `@field_validator("pages")` |
 | `response_model` | `list[NewsItem]`, `ScrapeReport`, `Stats` |
 | форма відповіді з анотації | `/health -> dict[str, str]` |

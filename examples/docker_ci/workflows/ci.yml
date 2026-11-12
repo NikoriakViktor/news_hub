@@ -1,0 +1,170 @@
+# Приклад workflow для сторінки «CI/CD на GitHub Actions» (Частина X).
+# Це НЕ workflow цього репозиторію: GitHub запускає лише файли з .github/workflows/ у корені.
+# Спробувати у своєму репозиторії: скопіюй у .github/workflows/ci.yml і поправ APP_DIR.
+#
+#   PR            → lint → тести ×3 (матриця, Redis у services) → образ (без публікації)
+#   push у main   → те саме + образ у ghcr.io + деплой на staging (environment)
+#   тег v*        → те саме + деплой на production (environment з підтвердженням людиною)
+name: example — CI/CD
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Після збірки задеплоїти на staging"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read                         # найменше потрібне; більше — лише окремим jobs
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}   # main і теги не скасовуємо
+
+env:
+  APP_DIR: examples/docker_ci/app
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: pipx run ruff check .
+
+  test:
+    name: pytest · Python ${{ matrix.python }}
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: ${{ matrix.experimental }}   # нова версія Python може впасти — PR це не блокує
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.13"]
+        experimental: [false]
+        include:
+          - python: "3.14"
+            experimental: true
+    services:
+      redis:                             # контейнер поруч з job; services працюють лише на Linux-раннерах
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      REDIS_URL: redis://localhost:6379/0
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: ${{ env.APP_DIR }}/requirements*.txt   # ключ кешу — хеш цих файлів
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - run: pytest -q --junitxml=junit-${{ matrix.python }}.xml
+      - uses: actions/upload-artifact@v4
+        if: always()                     # звіт потрібен саме тоді, коли тести впали
+        with:
+          name: junit-${{ matrix.python }}
+          path: ${{ env.APP_DIR }}/junit-*.xml   # шлях від кореня репозиторію, working-directory тут не діє
+          retention-days: 7
+
+  image:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write                    # job-рівень ЗАМІНЮЄ блок workflow: contents повторено
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        if: github.event_name != 'pull_request'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/example-app
+          tags: |
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=sha
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.APP_DIR }}
+          push: ${{ github.event_name != 'pull_request' }}   # PR: лише перевірити, що образ збирається
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha           # шари з попередніх прогонів (кеш GitHub Actions)
+          cache-to: type=gha,mode=max
+
+  deploy-staging:
+    needs: image
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || inputs.deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: staging                      # секрети environment видно лише jobs з цим environment
+      url: https://staging.example.com
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false          # деплой не обривають посередині — наступний чекає
+    steps:
+      - name: деплой образу за digest
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}/example-app@${{ needs.image.outputs.digest }}
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          HOST: ${{ vars.DEPLOY_HOST }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          ssh -o StrictHostKeyChecking=accept-new "deploy@$HOST" \
+            "cd /srv/app && IMAGE='$IMAGE' docker compose pull && IMAGE='$IMAGE' docker compose up -d --wait"
+
+  deploy-production:
+    needs: image                         # не deploy-staging: на тег staging пропущено, а пропущений needs пропускає й цей job
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: production                   # Settings → Environments: required reviewers — людина натискає «Approve»
+      url: https://example.com
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: деплой образу за digest
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}/example-app@${{ needs.image.outputs.digest }}
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          HOST: ${{ vars.DEPLOY_HOST }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          ssh -o StrictHostKeyChecking=accept-new "deploy@$HOST" \
+            "cd /srv/app && IMAGE='$IMAGE' docker compose pull && IMAGE='$IMAGE' docker compose up -d --wait"

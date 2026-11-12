@@ -6,10 +6,11 @@
 
 | Розділ | Код | Стан |
 |---|---|---|
-| AI-інструменти розробника | — | у роботі |
-| LLM API: інтерфейс, схема, промпт | `steps/07/news_hub/llm.py`, `analysis.py` | у роботі |
-| Надійність і вартість LLM | — | у роботі |
-| Telegram-бот на aiogram | `steps/09/news_hub/bot/` | у роботі |
+| [AI-агент у проєкті](ai_dev_tools.md) | — | готово |
+| [LLM API](llm_api.md) | `steps/07/news_hub/llm.py`, `analysis.py` | готово |
+| [Надійність LLM](llm_reliability.md) | — | готово |
+| [Telegram-бот на aiogram](telegram_bots.md) | `steps/09/news_hub/bot/` | готово |
+| [WebSocket у FastAPI](websockets.md) | `examples/integrations/ws_app.py` | готово |
 
 ## На практиці — Zero to Hero
 

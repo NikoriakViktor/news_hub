@@ -77,20 +77,22 @@ flowchart TD
 | Файл | Що в ньому | Новий? |
 |---|---|---|
 | [`news_hub/bot/factory.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/news_hub/bot/factory.py) | `create_bot` (з `TELEGRAM_API_URL`), `create_dispatcher`, меню команд `COMMANDS`, ліміт 20 повідомлень за 60 с | новий |
-| [`news_hub/bot/handlers.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/news_hub/bot/handlers.py) | `/start`, `/help`, `/news [N]`, `/digest`, `/subscribe`, `/unsubscribe`, `/subscriptions`, `/scrape`; `build_router()` | новий |
+| [`news_hub/bot/handlers.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/news_hub/bot/handlers.py) | `/start`, `/help`, `/news [N]`, `/digest`, `/subscribe`, `/unsubscribe`, `/subscriptions`, `/scrape` (ліміт `LIMITS["scrape"]`, як в API); `build_router()` | новий |
 | [`news_hub/bot/middlewares.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/news_hub/bot/middlewares.py) | `RateLimitMiddleware` (outer), `InjectMiddleware` (inner: сесія бази на update, COMMIT) | новий |
 | [`news_hub/bot/formatting.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/news_hub/bot/formatting.py) | `esc`, `link`, `split_message`, `MAX_MESSAGE = 4096`, `normalize_keyword`, `matches` | новий |
-| [`news_hub/bot/settings.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/news_hub/bot/settings.py) | `BotSettings`, `load_bot_settings`: `BOT_TOKEN`, `TELEGRAM_*`, `BOT_ADMIN_IDS` | новий |
+| [`news_hub/bot/settings.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/news_hub/bot/settings.py) | `BotSettings`, `load_bot_settings`: `BOT_TOKEN`, `TELEGRAM_*` (адміни бота — не тут, а в `security.py`) | новий |
 | [`news_hub/bot/__main__.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/news_hub/bot/__main__.py) | режим polling: `python -m news_hub.bot` | новий |
 | [`news_hub/notify.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/news_hub/notify.py) | `build_messages`, `notify_subscribers` (403 → видалити підписки, 429 → `retry_after`), `Notifier` | новий |
-| [`news_hub/api.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/news_hub/api.py) | `start_bot` у `lifespan`, `NotifierDep` у збору, `POST /api/telegram/webhook` | змінений |
+| [`news_hub/api.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/news_hub/api.py) | `start_bot` у `lifespan` (адміни — `telegram_admin_ids(app.state.admin)`), `NotifierDep` у збору, `POST /api/telegram/webhook` | змінений |
+| [`news_hub/security.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/news_hub/security.py) | `BOT_ADMIN_IDS` → `AdminSettings.telegram_ids`, `parse_telegram_ids`, `telegram_admin_ids`; без адмін-доступу API — помилка при старті | змінений |
 | [`news_hub/repository.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/news_hub/repository.py) | `insert_new` → `list[NewNews]`, `latest`, `SubscriptionRepository` | змінений |
 | [`news_hub/tables.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/news_hub/tables.py), [`migrations/versions/0004_subscriptions_table.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/migrations/versions/0004_subscriptions_table.py) | таблиця `subscriptions` (`chat_id` — `BigInteger`, унікальна пара «чат + слово») | змінений / новий |
 | [`news_hub/jobs.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/news_hub/jobs.py) | `run_scrape_job(..., notify)` — розсилка після COMMIT | змінений |
 | [`tests/telegram_twin.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/tests/telegram_twin.py) | двійник Telegram Bot API на aiohttp: записує виклики, правила HTML, 401 / 403 / 429 / 409 | новий |
 | [`tests/unit/test_bot_formatting.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/tests/unit/test_bot_formatting.py) | 33 тести: HTML, розріз, слова підписки, налаштування | новий |
-| [`tests/integration/test_bot.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/tests/integration/test_bot.py), [`test_notify.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/tests/integration/test_notify.py), [`test_telegram_webhook.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/tests/integration/test_telegram_webhook.py) | 10 + 6 + 7 тестів: команди, розсилка через API, webhook | нові |
+| [`tests/integration/test_bot.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/tests/integration/test_bot.py), [`test_notify.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/tests/integration/test_notify.py), [`test_telegram_webhook.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/tests/integration/test_telegram_webhook.py) | 11 + 6 + 7 тестів: команди, розсилка через API, webhook | нові |
 | [`tests/integration/test_admin_api.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/tests/integration/test_admin_api.py) | `PUBLIC` += `("POST", "/api/telegram/webhook")` з поясненням | змінений |
+| [`tests/unit/test_security.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/09_telegram_bot/tests/unit/test_security.py) | + 4 тести: адміни бота в `AdminSettings`, 3 погані `BOT_ADMIN_IDS` | змінений |
 | `requirements.txt` | `aiogram>=3.15` | змінений |
 
 ## Порядок читання { #reading-order }
@@ -109,7 +111,7 @@ flowchart TD
 
 ```bash
 pip install -r requirements.txt
-pytest -q                           # 335 passed, 2 deselected
+pytest -q                           # 355 passed, 2 deselected
 mypy --strict news_hub              # Success: no issues found in 26 source files
 alembic upgrade head                # … Running upgrade 0003 -> 0004, subscriptions — …
 ```
@@ -118,6 +120,7 @@ alembic upgrade head                # … Running upgrade 0003 -> 0004, subscrip
 
 ```bash
 python -m tests.telegram_twin --port 8081                  # «Telegram» на 127.0.0.1:8081
+export ADMIN_PASSWORD_HASH='$2b$12$…' JWT_SECRET='…'        # BOT_ADMIN_IDS — лише разом з адміном API (крок 8)
 REDIS_URL=fakeredis:// BOT_TOKEN=123456:TEST-TOKEN TELEGRAM_API_URL=http://127.0.0.1:8081 \
     BOT_ADMIN_IDS=1001 python -m news_hub.bot              # бот у режимі polling
 curl -X POST localhost:8081/_twin/say -d '{"text": "/news", "chat_id": 1001}'   # «користувач» пише боту
@@ -133,7 +136,7 @@ git diff --no-index --stat steps/08_security steps/09_telegram_bot
 git diff --no-index steps/08_security/news_hub steps/09_telegram_bot/news_hub
 ```
 
-`--no-index` порівнює папки на диску, а не в git, тож якщо ти вже запускав тести, у `--stat` потраплять і файли `__pycache__/*.pyc` — їх можна пропустити. Підсумок: `1425 insertions(+), 32 deletions(-)`; найбільші зміни — `tests/telegram_twin.py` (247 рядків), `bot/handlers.py` (166), `api.py` (100), `notify.py` (97).
+`--no-index` порівнює папки на диску, а не в git, тож якщо ти вже запускав тести, у `--stat` потраплять і файли `__pycache__/*.pyc` — їх можна пропустити. Підсумок: `1497 insertions(+), 38 deletions(-)`; найбільші зміни — `tests/telegram_twin.py` (247 рядків), `bot/handlers.py` (173), `notify.py` (97), `api.py` (+93).
 
 ## Що далі { #next }
 

@@ -6,11 +6,12 @@
 
 | Розділ | Код | Стан |
 |---|---|---|
-| Middleware | `steps/04/news_hub/middleware.py` | у роботі |
+| [Middleware](middleware.md) | `steps/04/news_hub/middleware.py` | готово |
 | [CORS](cors.md) | `examples/cors/cors_app.py`, `cors_demo.py` | готово |
-| Кеш у Redis | `steps/04/news_hub/cache.py` | у роботі |
-| Rate limit | — | у роботі |
-| Фонові задачі | `steps/04/news_hub/jobs.py` | у роботі |
+| [Redis для API](redis_basics.md) | `examples/cache_jobs/redis_demo.py` | готово |
+| [Стратегії кешу](caching.md) | `steps/04/news_hub/cache.py` | готово |
+| [Rate limit](rate_limiting.md) | — | готово |
+| [Фонові задачі й черги](background_jobs.md) | `steps/04/news_hub/jobs.py` | готово |
 
 ## На практиці — Zero to Hero
 

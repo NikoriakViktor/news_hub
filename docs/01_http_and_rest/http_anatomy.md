@@ -34,8 +34,8 @@ flowchart LR
 | метод | `GET`, `POST`, `PUT`, `PATCH`, `DELETE` | декоратор `@app.post(...)`; `request.method` |
 | шлях | `/inspect`, `/api/news/42` | параметр шляху `news_id: int`; `request.url.path` |
 | рядок запиту (query) | `?debug=1&limit=5` після `?` | параметр функції `limit: int = 10` або `Query()`; `request.query_params` |
-| заголовки | пари `Ім'я: значення` | `Annotated[str \| None, Header()]`; `request.headers` |
-| cookie | заголовок `Cookie: session_id=tok-123` | `Annotated[str \| None, Cookie()]`; `request.cookies` |
+| заголовки | пари `Ім'я: значення` | <code>Annotated[str &#124; None, Header()]</code>; `request.headers` |
+| cookie | заголовок `Cookie: session_id=tok-123` | <code>Annotated[str &#124; None, Cookie()]</code>; `request.cookies` |
 | тіло | JSON, форма, файл | модель Pydantic; `await request.body()`, `await request.json()` |
 
 | Частина відповіді | Як задати у FastAPI |

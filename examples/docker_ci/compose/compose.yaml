@@ -1,0 +1,68 @@
+# Приклад Compose для Частини X: api + Redis + nginx з TLS; дві мережі, том, профіль, умови запуску.
+#   cp .env.example .env && ./make_cert.sh          # .env і самопідписаний сертифікат — лише для прикладу
+#   docker compose up -d --build --wait             # + compose.override.yaml автоматично
+#   curl -k https://localhost:18112/whoami
+#   docker compose down -v                          # -v: разом з томом redisdata
+name: part10-compose
+
+services:
+  api:
+    build: ../app
+    image: part10-api
+    environment:
+      REDIS_URL: redis://redis:6379/0               # ім'я сервісу, а не localhost
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}   # кому вірити в X-Forwarded-*
+      UVICORN_ROOT_PATH: ${ROOT_PATH:-}             # префікс, під яким nginx публікує API
+    depends_on:
+      redis:
+        condition: service_healthy
+        restart: true                               # перезапустили redis — перезапустити й api
+    networks: [backend, edge]
+
+  redis:
+    image: redis:${REDIS_TAG:-7-alpine}
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data                             # іменований том: переживає down, але не down -v
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [backend]                             # nginx до Redis не дістанеться
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "127.0.0.1:${HTTPS_PORT:?задай HTTPS_PORT у .env}:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      api:
+        condition: service_healthy                  # HEALTHCHECK з образу api
+    healthcheck:
+      test: ["CMD", "curl", "-fsk", "https://127.0.0.1/nginx-health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      edge:
+        ipv4_address: 10.231.7.10                   # фіксована адреса — її знає FORWARDED_ALLOW_IPS
+
+  # Разовий інструмент, лише з профілем: docker compose --profile tools run --rm redis-cli
+  redis-cli:
+    image: redis:${REDIS_TAG:-7-alpine}
+    profiles: [tools]
+    command: ["redis-cli", "-h", "redis", "get", "visits"]
+    networks: [backend]
+
+volumes:
+  redisdata:
+
+networks:
+  backend: {}
+  edge:
+    ipam:
+      config:
+        - subnet: 10.231.7.0/24

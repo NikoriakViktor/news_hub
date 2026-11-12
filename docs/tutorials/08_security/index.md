@@ -34,9 +34,9 @@ API живе в мережі серед інших систем. Звідси т
 
 | Що | Де | Розділ |
 |---|---|---|
-| пароль адміна (bcrypt), `POST /api/admin/token` → JWT, `require_admin` (401 / 403 / 503), ліміт спроб входу | `news_hub/security.py`, `middleware.py`, `api.py` | [Адмін і JWT](admin_jwt.md) |
+| пароль адміна (bcrypt у пулі потоків), `POST /api/admin/token` → JWT (`no-store`), `require_admin` (401 / 403 / 503); ліміт спроб з адреси й лічильник невдач на ім'я; заголовки безпеки, `DOCS_ENABLED` | `news_hub/security.py`, `middleware.py`, `api.py` | [Адмін і JWT](admin_jwt.md) |
 | RSS-джерела адміна `/api/sources`; завантаження без SSRF: схема, порт, IP після DNS, кожне перенаправлення, розмір, тип | `news_hub/safe_fetch.py`, `tables.py`, `repository.py`, міграція `0003` | [SSRF: куди ходить сервер](ssrf.md) |
-| `POST /api/webhooks/scrape`: підпис HMAC-SHA256 від часу й тіла, вікно 5 хв, захист від повтору в Redis | `news_hub/webhooks.py`, `api.py` | [Підписані webhook](webhooks.md) |
+| `POST /api/webhooks/scrape`: підпис HMAC-SHA256 від часу, id доставки й тіла, вікно 5 хв; повтор доставки → `200` з тим самим завданням | `news_hub/webhooks.py`, `jobs.py`, `api.py` | [Підписані webhook](webhooks.md) |
 | тест, що обходить усі маршрути; атаки як тести; що тести не ловлять | 6 нових файлів у `tests/` | [Тести безпеки](security_tests.md) |
 
 ## Архітектура: було → стало { #architecture }
@@ -56,8 +56,8 @@ flowchart TD
     subgraph NEW ["крок 8: три входи, один вихід"]
         direction LR
         U["будь-хто"] --> RD["GET /api/news*<br>публічно"]
-        AD["адмін<br>пароль → JWT"] --> RL["rate limit<br>login, scrape, analyze"] --> WR["запис, збір, аналіз,<br>/api/sources — AdminDep"]
-        CR["cron<br>секрет HMAC"] --> WH["/api/webhooks/scrape<br>підпис + SET NX"]
+        AD["адмін<br>пароль → JWT"] --> RL["rate limit на адресу<br>+ LoginGuard на ім'я"] --> WR["запис, збір, аналіз,<br>/api/sources — AdminDep"]
+        CR["cron<br>секрет HMAC"] --> WH["/api/webhooks/scrape<br>підпис + SET NX на id доставки"]
         WR --> SF{"safe_fetch:<br>IP публічна?"}
         SF -- "так" --> NET["публічний інтернет<br>RSS"]
         SF -- "ні" --> INT["внутрішня мережа<br>400, 0 запитів"]
@@ -73,11 +73,11 @@ flowchart TD
 
 | Модуль | Відповідає за |
 |---|---|
-| `security.py` | пароль (bcrypt), JWT, `require_admin`; налаштування з середовища з трьома станами |
+| `security.py` | пароль (bcrypt), JWT, `require_admin`, `LoginGuard` (невдачі на ім'я); налаштування з середовища з трьома станами |
 | `safe_fetch.py` | єдиний вихід у мережу для URL ззовні: `FetchPolicy`, `check_url`, `PolicyResolver`, `safe_fetch` |
-| `webhooks.py` | підпис, вікно часу, повтор; `verify_secret_token` для Telegram (крок 9) |
-| `middleware.py` | + ліміт спроб входу (`login`) |
-| `api.py` | лише підключає: `dependencies=[AdminDep]`, `Depends(get_fetch_policy)`, `Depends(get_webhook_secret)` |
+| `webhooks.py` | підпис, вікно часу, id доставки й повтор; `verify_secret_token` для Telegram (крок 9) |
+| `middleware.py` | + ліміт спроб входу (`login`), таблиця `LIMITS`, `SecurityHeadersMiddleware` |
+| `api.py` | лише підключає: `dependencies=[AdminDep]`, `Depends(get_fetch_policy)`, `Depends(get_webhook_secret)`, `LoginGuard`, `DOCS_ENABLED` |
 
 Кожна перевірка — окрема функція без HTTP, тож її тестують unit-тести. А тести API перевіряють, що кожен ендпоінт її справді викликає.
 
@@ -85,24 +85,25 @@ flowchart TD
 
 | Файл | Що в ньому | Новий? |
 |---|---|---|
-| [`news_hub/security.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/news_hub/security.py) | `AdminSettings`, `load_admin_settings`, bcrypt, `create_access_token`, `decode_token`, `require_admin`, `AdminDep`; `python -m news_hub.security` | новий |
+| [`news_hub/security.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/news_hub/security.py) | `AdminSettings`, `load_admin_settings`, bcrypt, `LoginGuard`, `create_access_token`, `decode_token`, `require_admin`, `AdminDep`; `python -m news_hub.security` | новий |
 | [`news_hub/safe_fetch.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/news_hub/safe_fetch.py) | `is_public_ip`, `FetchPolicy`, `check_url`, `PolicyResolver`, `safe_fetch`, `UnsafeURL` / `FetchError` | новий |
-| [`news_hub/webhooks.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/news_hub/webhooks.py) | `sign`, `verify_signature`, `remember_delivery`, `verify_secret_token` | новий |
-| [`news_hub/api.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/news_hub/api.py) | `AdminDep` на 10 наявних ендпоінтах; `/api/admin/token`, 4 ендпоінти `/api/sources`, `/api/webhooks/scrape` | змінено |
-| [`news_hub/middleware.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/news_hub/middleware.py) | ліміт `login`: `LOGIN_RATE_LIMIT` спроб за `LOGIN_RATE_WINDOW` с; збір з RSS-джерела скидає кеш | змінено |
+| [`news_hub/webhooks.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/news_hub/webhooks.py) | `sign`, `verify_signature`, `claim_delivery`, `verify_secret_token` | новий |
+| [`news_hub/api.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/news_hub/api.py) | `AdminDep` на 10 наявних ендпоінтах; `/api/admin/token`, 4 ендпоінти `/api/sources`, `/api/webhooks/scrape`; `docs_enabled()` | змінено |
+| [`news_hub/middleware.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/news_hub/middleware.py) | ліміт `login`: `LOGIN_RATE_LIMIT` спроб за `LOGIN_RATE_WINDOW` с; `LIMITS`; `SecurityHeadersMiddleware`; збір з RSS-джерела скидає кеш | змінено |
 | [`news_hub/tables.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/news_hub/tables.py), [`news_hub/repository.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/news_hub/repository.py) | `SourceRow` (таблиця `sources`, унікальний `url`), `SourceRepository` | змінено |
 | [`migrations/versions/0003_sources_table.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/migrations/versions/0003_sources_table.py) | таблиця `sources` | новий |
 | [`requirements.txt`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/requirements.txt) | `PyJWT>=2.4`, `bcrypt>=4.0` | змінено |
 | [`tests/integration/conftest.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/tests/integration/conftest.py) | тестові секрети; `client` з токеном адміна, `anon` без токена | змінено |
-| 6 нових файлів тестів у `tests/unit/` і `tests/integration/` | 111 тестів безпеки — [перелік](security_tests.md#files) | нові |
+| [`news_hub/jobs.py`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/news_hub/jobs.py) | `new_job_id()`, `JobStore.create(..., job_id=None)` — для webhook | змінено |
+| 6 нових файлів тестів у `tests/unit/` і `tests/integration/` | 126 тестів безпеки — [перелік](security_tests.md#files) | нові |
 | [`postman/news_hub.postman_collection.json`](https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/postman/news_hub.postman_collection.json) | + «Без токена стерти все — 401», «Вхід адміна → token»; авторизація Bearer `{{token}}`; змінна `adminPassword` | змінено |
-| `parser.py`, `rss.py`, `models.py`, `scraper.py`, `db.py`, `cache.py`, `jobs.py`, `llm.py`, `analysis.py`, `snapshot.py` | з кроку 7 | без змін |
+| `parser.py`, `rss.py`, `models.py`, `scraper.py`, `db.py`, `cache.py`, `llm.py`, `analysis.py`, `snapshot.py` | з кроку 7 | без змін |
 
 ## Порядок читання { #reading-order }
 
-1. [Адмін і JWT](admin_jwt.md) — пароль → токен → `require_admin`; три стани налаштувань.
+1. [Адмін і JWT](admin_jwt.md) — пароль → токен → `require_admin`; три стани налаштувань; два ліміти входу; заголовки безпеки й `/docs`.
 2. [SSRF: куди ходить сервер](ssrf.md) — чому перевірка рядка URL не працює і що перевіряє `safe_fetch`.
-3. [Підписані webhook](webhooks.md) — HMAC від часу й тіла, вікно, повтор.
+3. [Підписані webhook](webhooks.md) — HMAC від часу, id доставки й тіла, вікно, повтор.
 4. [Тести безпеки](security_tests.md) — атаки як тести, тест «нічого не забули», що тести не ловлять.
 5. [Контрольна точка](checkpoint.md) — чекліст, практика, самоперевірка.
 
@@ -114,7 +115,7 @@ flowchart TD
 
 ```bash
 pip install -r requirements.txt
-pytest -q                           # 279 passed, 2 deselected
+pytest -q                           # 294 passed, 2 deselected
 mypy --strict news_hub              # Success: no issues found in 18 source files
 
 python -m news_hub.security         # спитає пароль → ADMIN_PASSWORD_HASH='$2b$12$…' і JWT_SECRET='…'
@@ -132,6 +133,8 @@ uvicorn news_hub.api:app --reload   # → http://127.0.0.1:8000/docs, кнопк
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD_HASH` | `admin` / — | вхід адміна; хеш — `python -m news_hub.security` |
 | `JWT_EXPIRE_MINUTES` | `30` | скільки живе токен |
 | `LOGIN_RATE_LIMIT` / `LOGIN_RATE_WINDOW` | `5` / `300` | спроб входу з однієї адреси за вікно, с |
+| `LOGIN_FAIL_LIMIT` / `LOGIN_FAIL_WINDOW` | `20` / `900` | невдалих входів під одним ім'ям з усіх адрес за вікно, с; далі — `429` до кінця вікна |
+| `DOCS_ENABLED` | `true` | `false` / `0` / `no` / `off` — без `/docs`, `/redoc` і `/openapi.json` (на сервері) |
 | `WEBHOOK_SECRET` | — | спільний секрет для `POST /api/webhooks/scrape`, ≥ 32 символи; без нього — `503` |
 
 ## Порівняння з кроком 7 { #diff }
@@ -141,7 +144,7 @@ git diff --no-index --stat steps/07_llm_api steps/08_security
 git diff --no-index steps/07_llm_api/news_hub steps/08_security/news_hub
 ```
 
-Без файлів `__pycache__` — 21 змінений файл: три нові модулі (`security.py` — 156 рядків, `safe_fetch.py` — 174, `webhooks.py` — 78), `api.py` (+213 рядків), міграція `0003`, 6 нових файлів тестів. Тестів було 168, стало 279.
+Без файлів `__pycache__` — 22 змінені файли: три нові модулі (`security.py` — 199 рядків, `safe_fetch.py` — 174, `webhooks.py` — 94), `api.py` (+237 рядків), `middleware.py` (+61), `jobs.py` (+7), міграція `0003`, 6 нових файлів тестів. Тестів було 168, стало 294.
 
 ## Що далі { #next }
 

@@ -153,7 +153,7 @@ def load_admin_settings(env: Mapping[str, str] = os.environ) -> AdminSettings | 
 |---|---|---|
 | типи | вручну: `int(os.getenv("RATE_LIMIT_REQUESTS", "5"))` | з анотацій |
 | помилка при старті | для секретів і адмінки — `RuntimeError` без значення секрету | для всіх полів — `ValidationError`, **з** `input_value` |
-| «не налаштовано» | `None` → ендпоінти відповідають `503` | `str \| None = None` |
+| «не налаштовано» | `None` → ендпоінти відповідають `503` | <code>str &#124; None = None</code> |
 | тести | функції приймають `env: Mapping`, тест передає словник | `Settings(...)` або `dependency_overrides` |
 | `.env` | читає лише Compose (`env_file: .env`) | читає сам застосунок |
 

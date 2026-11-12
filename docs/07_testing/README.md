@@ -6,12 +6,12 @@
 
 | Розділ | Код | Стан |
 |---|---|---|
-| Шари тестів: unit і integration | — | у роботі |
-| Збережені сторінки й фікстури | `steps/05/tests/fixtures/` | у роботі |
-| Мок і фейк мережі | — | у роботі |
-| API асинхронно: `httpx.AsyncClient` | — | у роботі |
-| Покриття | `.coveragerc` | у роботі |
-| Мінімальні версії залежностей | — | у роботі |
+| [Основи pytest](pytest_basics.md) | — | готово |
+| [Фікстури](fixtures.md) | `steps/05/tests/fixtures/` | готово |
+| [Підміни: mock і fake](test_doubles.md) | — | готово |
+| [Тестування FastAPI](testing_fastapi.md) | — | готово |
+| [Тести з базою даних](test_databases.md) | — | готово |
+| [Якість тестів](quality.md) | — | готово |
 
 ## На практиці — Zero to Hero
 

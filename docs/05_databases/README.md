@@ -6,12 +6,12 @@ SQLAlchemy 2 в асинхронному режимі, сесія і транз�
 
 | Розділ | Код | Стан |
 |---|---|---|
-| SQLAlchemy 2 async: engine, сесії, таблиці | `steps/03/news_hub/db.py`, `tables.py` | у роботі |
-| Патерн Repository | — | у роботі |
-| Сесія на запит і Unit of Work | — | у роботі |
-| Повний CRUD | — | у роботі |
-| Міграції Alembic | `steps/03/migrations/` | у роботі |
-| Пул з'єднань | — | у роботі |
+| [SQL для API](sql_for_api.md) | — | готово |
+| [SQLAlchemy async](sqlalchemy_async.md) | `steps/03/news_hub/db.py`, `tables.py` | готово |
+| [Транзакції й Unit of Work](transactions_and_uow.md) | — | готово |
+| [Патерн Repository](repository_pattern.md) | — | готово |
+| [Пул з'єднань](connection_pool.md) | — | готово |
+| [Міграції Alembic](migrations.md) | `steps/03/migrations/` | готово |
 
 ## На практиці — Zero to Hero
 

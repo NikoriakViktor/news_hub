@@ -50,7 +50,7 @@ print("шляхи:", Counter("/".join(urlsplit(n["url"]).path.split("/")[1:3]) f
 | `list[str]` | список рядків | `ITEM_SELECTORS: list[tuple[str, str]]` |
 | `dict[str, str]` | словник: ключ → значення | `CATEGORIES: dict[str, str]` |
 | `set[str]` | множина | `seen_urls: set[str]` |
-| `X \| None` | або `X`, або `None` | `published_time: time \| None`, `_find_tag(...) -> Tag \| None` |
+| <code>X &#124; None</code> | або `X`, або `None` | <code>published_time: time &#124; None</code>, <code>_find_tag(...) -&gt; Tag &#124; None</code> |
 | `Literal["uk", "ru"]` | лише ці значення | `lang` |
 | `TypedDict` | словник з **відомими** ключами й типами | `RawNews` |
 | `Callable[[Tag], bool]` | функція: аргументи → результат | фільтр тегів у `_find_tag` |
@@ -86,7 +86,7 @@ print("шляхи:", Counter("/".join(urlsplit(n["url"]).path.split("/")[1:3]) f
 |---|---|
 | анотації всіх функцій і констант (`ITEM_SELECTORS: list[tuple[str, str]]`, `seen_urls: set[str]`) | `mypy --strict` перевіряє весь модуль |
 | дві стратегії — окремі функції `_parse_containers` і `_parse_links` | кожну легше читати й тестувати; `parse_rbc_news` лише вибирає |
-| пошук тегів — у `_find_tag(item, match) -> Tag \| None` | `find()` у BeautifulSoup може повернути не `Tag`; `isinstance` один раз, а не в кожному місці |
+| пошук тегів — у <code>_find_tag(item, match) -&gt; Tag &#124; None</code> | `find()` у BeautifulSoup може повернути не `Tag`; `isinstance` один раз, а не в кожному місці |
 | логіку розбору **не змінено** | рефакторинг підписів, а не поведінки: 168 новин знімка — ті самі |
 
 Як працює вибір стратегії — на HTML з трьома посиланнями без контейнерів новин:

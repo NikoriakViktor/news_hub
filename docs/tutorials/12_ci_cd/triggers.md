@@ -143,10 +143,12 @@ on:
     paths:
       - 'steps/12_ci_cd/**'
       - '.github/workflows/news_hub.yml'
+      - '.gitleaks.toml'
   pull_request:                      # без branches: PR у будь-яку гілку (зокрема PR поверх іншого PR)
     paths:
       - 'steps/12_ci_cd/**'
       - '.github/workflows/news_hub.yml'
+      - '.gitleaks.toml'
   workflow_dispatch:
 ```
 
@@ -160,7 +162,7 @@ on:
 
 ## Зміна 3. `paths` — і сам workflow теж { #paths }
 
-`paths` у `news_hub.yml` — дві маски: усе в папці кроку і **сам файл workflow**. Змінив перевірки — перевір, що вони працюють: інакше зламаний YAML доїде до `main` без жодного прогону.
+`paths` у `news_hub.yml` — три маски: усе в папці кроку, **сам файл workflow** і `.gitleaks.toml` у корені. Змінив перевірки — перевір, що вони працюють: інакше зламаний YAML доїде до `main` без жодного прогону. `.gitleaks.toml` — теж частина перевірок: розширений allowlist сканера секретів має пройти через job `supply-chain` ([розділ 2](what_to_check.md#supply-chain)), як і будь-яка інша зміна правил.
 
 Інші кроки й книга до цього workflow не стосуються: їх перевіряють [`steps.yml`](https://github.com/NikoriakViktor/news_hub/blob/main/.github/workflows/steps.yml) (маска `steps/**`) і [`docs.yml`](https://github.com/NikoriakViktor/news_hub/blob/main/.github/workflows/docs.yml) (`docs/**`, `mkdocs.yml`, лише на `push`).
 

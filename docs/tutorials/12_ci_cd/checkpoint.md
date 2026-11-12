@@ -6,9 +6,9 @@
 
 ```text
 $ pytest -m unit -q -p no:cacheprovider
-203 passed, 148 deselected in 12.46s
+212 passed, 159 deselected in 8.46s
 $ pytest -q -p no:cacheprovider
-343 passed, 8 deselected in 29.66s
+363 passed, 8 deselected in 23.68s
 $ mypy --strict news_hub
 Success: no issues found in 26 source files
 ```
@@ -16,15 +16,15 @@ Success: no issues found in 26 source files
 Matrix `tests` — на обох версіях Python (окремі venv через `uv`, найновіші версії пакетів):
 
 ```text
-Python 3.10.19:  203 passed, 148 deselected · 343 passed, 8 deselected
-Python 3.13.17:  203 passed, 148 deselected · 343 passed, 8 deselected
+Python 3.10.19:  212 passed, 159 deselected · 363 passed, 8 deselected
+Python 3.13.17:  212 passed, 159 deselected · 363 passed, 8 deselected
 ```
 
 Job `min-versions` (Python 3.10, `uv pip install --resolution lowest-direct`):
 
 ```text
 $ .venv/bin/pytest -q
-343 passed, 8 deselected, 30 warnings
+363 passed, 8 deselected, 30 warnings in 17.70s
 ```
 
 Job `postgres` (PostgreSQL 16 і Redis 7 у контейнерах, змінні `TEST_DATABASE_URL`, `TEST_REDIS_URL`, `DATABASE_URL`):
@@ -34,14 +34,28 @@ $ alembic upgrade head && alembic check
 ...
 No new upgrade operations detected.
 $ pytest -q
-343 passed, 8 deselected
+363 passed, 8 deselected in 35.17s
+```
+
+Job `supply-chain` (lock — з папки кроку, gitleaks — з кореня репозиторію):
+
+```text
+$ uv pip compile requirements.txt --universal --python-version 3.10 --generate-hashes -o requirements.lock
+$ git diff --exit-code -- requirements.lock && echo "lock відповідає requirements.txt"
+lock відповідає requirements.txt
+$ uvx pip-audit==2.10.1 -r requirements.lock --require-hashes --disable-pip --progress-spinner off
+No known vulnerabilities found
+$ docker run --rm -v "$PWD:/repo:ro" ghcr.io/gitleaks/gitleaks:v8.30.1 git /repo --config /repo/.gitleaks.toml --redact --no-banner
+5:27AM INF 25 commits scanned.
+5:27AM INF scanned ~5916657 bytes (5.92 MB) in 10.6s
+5:27AM INF no leaks found
 ```
 
 Job `docker` (потрібен Docker):
 
 ```text
 $ pytest -m docker -q
-6 passed, 345 deselected in 45.39s
+6 passed, 365 deselected in 26.50s
 $ ADMIN_PASSWORD=… HTTP_PORT=18082 python scripts/make_env.py
 створено …/.env
 $ ADMIN_PASSWORD=… ./scripts/smoke.sh
@@ -52,20 +66,25 @@ $ ADMIN_PASSWORD=… ./scripts/smoke.sh
 ✓ запис без токена
 ✓ збір зі знімка
 ✓ новини в PostgreSQL
+✓ /docs на сервері закрито (DOCS_ENABLED=false)
+✓ заголовки безпеки через nginx
+✓ nginx без версії
 ✓ база й Redis без портів назовні
 smoke: усе гаразд
 ```
 
-Усе — запуск 2026-11-11. Job `publish` локально не відтворюється: він пушить у `ghcr.io` з токеном прогону. Сам workflow на GitHub на момент написання ще не завершив жодного прогону — перший стояв у черзі.
+Тести, mypy, `supply-chain` і `pytest -m docker` — запуск 2026-11-12 (`pytest -m docker` — з копії з нормальними правами файлів, див. [типові помилки](#mistakes)); smoke — запуск після виправлень безпеки кроків 8–12, з трьома новими перевірками. Job `publish` локально не відтворюється: він пушить у `ghcr.io` з токеном прогону. Сам workflow на GitHub на момент написання ще не завершив жодного прогону — перший стояв у черзі.
 
 ## Чекліст { #checklist }
 
 - [ ] Можеш пояснити, чому в `pull_request` немає `branches`, а в `push` — є.
 - [ ] Знаєш, які з трьох workflows запустяться на PR, що змінює лише `docs/`, і на PR, що змінює `steps/12_ci_cd/news_hub/api.py`.
-- [ ] `pytest -q` → 343 passed, `mypy --strict news_hub` → `Success`, `pytest -m docker -q` → 6 passed.
-- [ ] Мінімальні версії через `uv` → 343 passed; знаєш, яку помилку дасть межа `fastapi>=0.115`.
+- [ ] `pytest -q` → 363 passed, `mypy --strict news_hub` → `Success`, `pytest -m docker -q` → 6 passed.
+- [ ] Мінімальні версії через `uv` → 363 passed; знаєш, яку помилку дасть межа `fastapi>=0.115`.
 - [ ] `alembic check` на чистій базі → `No new upgrade operations detected.`
-- [ ] `./scripts/smoke.sh` закінчується `smoke: усе гаразд`, після нього `docker ps -a` не показує контейнерів стеку.
+- [ ] `./scripts/smoke.sh` закінчується `smoke: усе гаразд` (зокрема `/docs` → 404, `nosniff` і `Server: nginx` без версії), після нього `docker ps -a` не показує контейнерів стеку.
+- [ ] `uv pip compile …` не змінює `requirements.lock`; `pip-audit` по lock → `No known vulnerabilities found`; gitleaks по всій історії → `no leaks found`.
+- [ ] Можеш пояснити, навіщо і `requirements.txt` з `>=`, і `requirements.lock` з точними версіями, і чому lock — `--universal --python-version 3.10`.
 - [ ] Можеш намалювати три хвилі jobs і сказати, що станеться з `docker` і `publish`, якщо впаде `pytest · Python 3.10`.
 - [ ] Знаєш, які права має токен у `tests` і в `publish`, і чому `contents: read` у `publish` повторено.
 
@@ -84,6 +103,11 @@ smoke: усе гаразд
 | `TypeError: Depends() got an unexpected keyword argument 'scope'` лише в `min-versions` | нижня межа FastAPI нижча за 0.121 | підніми межу в `requirements.txt` до версії, де з'явилось API |
 | `FAILED: New upgrade operations detected: [('add_column', …)]` у job `postgres`, а тести зелені | змінено `tables.py` без міграції | `alembic revision --autogenerate -m "…"`, перечитати міграцію |
 | `✗ база й Redis без портів назовні: … отримали 127.0.0.1:…->5432/tcp` | у `docker-compose.yml` для `postgres` / `redis` додано `ports` | порти бази — лише в `docker-compose.dev.yml` (крок 11), не в основному файлі |
+| `✗ /docs на сервері закрито (DOCS_ENABLED=false): очікували 404, отримали 200` | у `.env` стоїть `DOCS_ENABLED=true` або з `docker-compose.yml` прибрано `DOCS_ENABLED: ${DOCS_ENABLED:-false}` | на сервері документацію не публікуємо; для локального стеку — окремий `.env` |
+| job `supply-chain`: `git diff --exit-code` показує зміни в `requirements.lock` | `requirements.txt` змінено, а lock не перегенеровано | `uv pip compile requirements.txt --universal --python-version 3.10 --generate-hashes -o requirements.lock` і закомітити обидва |
+| `ERROR: Hashes are required in --require-hashes mode, but they are missing from some requirements` у збірці образу | рядок у lock дописано руками, без хешу | lock лише генерувати, не редагувати |
+| `pip-audit`: `Found N known vulnerabilities in M packages` | для версії з lock опубліковано вразливість | `uv pip compile … --upgrade-package <пакет>`, тести, новий lock |
+| gitleaks: `leaks found: N` | у коміті — схожий на секрет рядок | справжній секрет — **замінити** (ротація) і лише потім прибрати з історії; навчальне значення — точним рядком в allowlist `.gitleaks.toml` |
 
 ## Практика { #practice }
 
@@ -110,8 +134,8 @@ smoke: усе гаразд
 ??? success "Що покаже запуск"
 
     1. Workflow не запуститься зовсім (скрипт з [розділу 1](triggers.md#result): `pull_request  feature-a  …  ні`). У PR не буде ні галочки, ні хрестика — і його можна злити без перевірки.
-    2. `pytest · мінімальні версії (Python 3.10)`: `uv` ставить `fastapi==0.115.0`, і збір тестів падає на `news_hub/api.py:185` з `TypeError: Depends() got an unexpected keyword argument 'scope'`. Решта jobs зелені: вони ставлять найновішу FastAPI.
-    3. Шість перевірок зелені, сьома — `✗ база й Redis без портів назовні: очікували , отримали 127.0.0.1:55452->5432/tcp`; далі `docker compose ps -a` і журнали, потім `down -v`. Код виходу 1 — job `docker` червоний, `publish` не запуститься.
+    2. `pytest · мінімальні версії (Python 3.10)`: `uv` ставить `fastapi==0.115.0`, і збір тестів падає на `news_hub/api.py:201` з `TypeError: Depends() got an unexpected keyword argument 'scope'`. Решта jobs зелені: вони ставлять найновішу FastAPI.
+    3. Дев'ять перевірок зелені, десята — `✗ база й Redis без портів назовні: очікували , отримали 127.0.0.1:55452->5432/tcp`; далі `docker compose ps -a` і журнали, потім `down -v`. Код виходу 1 — job `docker` червоний, `publish` не запуститься.
 
 ### Спробуй самостійно: покриття як артефакт { #coverage-artifact }
 
@@ -169,7 +193,8 @@ jobs:
 | тести | без ручного списку — pytest знаходить сам; один повний прогін; без `|| true` |
 | середовища | matrix версій Python; мінімальні версії (`uv --resolution lowest-direct`); PostgreSQL і Redis у `services` з healthcheck |
 | схема бази | `alembic upgrade head` + `alembic check` — модель без міграції не пройде |
-| система | тести образу + smoke стеку через nginx — те, чого не бачать тести коду |
+| система | тести образу + smoke стеку через nginx — те, чого не бачать тести коду (зокрема `/docs` закрито, заголовки безпеки, nginx без версії) |
+| залежності й секрети | `requirements.txt` — діапазони, `requirements.lock` — точні версії з sha256 для образу (`--require-hashes`); CI: lock відповідає, `pip-audit`, gitleaks по всій історії; `publish` чекає й на це |
 | порядок | jobs паралельно; `needs` — лише де справді треба чекати; `fail-fast: false`; `timeout-minutes` |
 | права | `permissions: contents: read`; `packages: write` — лише `publish`; job-рівень замінює workflow-рівень |
 | секрети | у Secrets, не у файлі; згенеровані в прогоні — `::add-mask::`, між кроками — `$GITHUB_ENV` |
@@ -185,6 +210,8 @@ jobs:
 6. Звідки `publish` бере право писати в ghcr.io і чому це право не в усього workflow?
 7. Що зробить `echo "::add-mask::$password"` і навіщо після нього `>> "$GITHUB_ENV"`?
 8. Чи публікує `publish` той самий образ, що пройшов smoke?
+9. Навіщо `requirements.lock`, якщо є `requirements.txt`? Чому не закріпити точні версії просто в `requirements.txt`?
+10. Навіщо gitleaks уся історія (`fetch-depth: 0`), якщо секрет уже видалено з файлу?
 
 ??? success "Відповіді"
 
@@ -195,7 +222,9 @@ jobs:
     5. Щоб не витрачати найдовший job на образ і smoke, якщо код уже не пройшов тести, — і щоб у PR була одна червона причина, а не лавина наслідків (`docker` стає `skipped`).
     6. З `GITHUB_TOKEN` цього прогону з `permissions: packages: write` лише в job `publish`, який іде лише на push у `main`. Решта jobs запускають код з PR — їм досить читати. Писати токен може лише в пакети свого репозиторію — тому в імені образу є `${{ github.repository }}`.
     7. Далі в журналі job це значення замінюється на `***`, навіть якщо якась команда його надрукує. `$GITHUB_ENV` передає змінну наступним крокам job: кожен `run:` — окрема оболонка, а `smoke.sh` потрібен `ADMIN_PASSWORD`.
-    8. Ні: з того самого коміту, але зібраний заново на іншій машині. `Dockerfile` той самий, версії пакетів визначаються в момент збірки.
+    8. Ні: з того самого коміту, але зібраний заново на іншій машині. Пакети ті самі — образ ставить `requirements.lock` з `--require-hashes`, — але базовий `python:3.12-slim` — тег, що з часом указує на нові збірки, тож байт-у-байт це інший образ.
+    9. `requirements.txt` обіцяє діапазон, з яким `news_hub` працює, і CI перевіряє обидва його краї: `min-versions` — нижній, `tests` — найновіші версії. Lock — одна точка з цього діапазону, яка їде в образ: усі 70 пакетів (і залежності залежностей) з точними версіями й sha256, однакові для `docker` і `publish`, і `pip-audit` перевіряє саме їх. Точні версії в `requirements.txt` прибрали б перевірку діапазону. `--universal --python-version 3.10` — бо проєкт обіцяє Python 3.10+, а для 10 пакетів версії на 3.10 і на 3.11+ різні.
+    10. Видалений з файлу секрет лишається в старому коміті, і його бачить кожен, хто склонує репозиторій. Перевірка лише останнього коміту такого не побачить. Знайдений справжній секрет — замінити (ротація), бо «вже видалили» не означає «ніхто не бачив».
 
 ## Що далі { #next }
 
