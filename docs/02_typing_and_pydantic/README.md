@@ -14,7 +14,7 @@
 | [`ValidationError`: структура і як показати людині](validation_error.md) | `examples/pydantic_v2/validation_error_demo.py` | готово |
 | [Налаштування: `pydantic-settings`, `.env`, `SecretStr`](settings.md) | `examples/settings/settings_demo.py` | готово |
 | [`ConfigDict`: `extra`, `frozen`, `from_attributes`](config_dict.md) | `examples/pydantic_v2/config_demo.py` | готово |
-| Межа довіри | — | у роботі |
+| [Межа довіри](trust_boundary.md) | — | готово |
 
 ## На практиці — Zero to Hero
 

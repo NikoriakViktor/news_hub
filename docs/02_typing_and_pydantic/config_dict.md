@@ -211,6 +211,6 @@ Mass assignment (OWASP API3:2023, «Broken Object Property Level Authorization»
 
 ## Що далі { #next }
 
-[Частина II. Типи і Pydantic](README.md) — решта розділів частини.
+[Межа довіри](trust_boundary.md) — усі двері, якими дані заходять у News Hub, і що перевіряється на кожних.
 
 **Джерела:** Pydantic — [Configuration](https://docs.pydantic.dev/latest/api/config/) (`extra`, `frozen`, `from_attributes`, `validate_assignment`), [Models — Extra data](https://docs.pydantic.dev/latest/concepts/models/#extra-data), [Models — Faux immutability](https://docs.pydantic.dev/latest/concepts/models/#faux-immutability), [Models — Arbitrary class instances](https://docs.pydantic.dev/latest/concepts/models/#arbitrary-class-instances); SQLAlchemy — [Asyncio: preventing implicit IO](https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html#preventing-implicit-io-when-using-asyncsession), [Relationship loading techniques](https://docs.sqlalchemy.org/en/20/orm/queryguide/relationships.html); [OWASP API3:2023 Broken Object Property Level Authorization](https://owasp.org/API-Security/editions/2023/en/0xa3-broken-object-property-level-authorization/).
