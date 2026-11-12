@@ -1,0 +1,4872 @@
+
+<!doctype html>
+<html lang="uk" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="FastAPI від типів і Pydantic до Docker, Compose і CI/CD — на прикладі новинного агрегатора">
+      
+      
+      
+        <link rel="canonical" href="https://nikoriakviktor.github.io/news_hub/10_docker_and_ci/compose/">
+      
+      
+        <link rel="prev" href="../docker_image/">
+      
+      
+        <link rel="next" href="../production_server/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Docker Compose - News Hub — книга FastAPI</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#docker-compose-сервіси-мережі-томи" class="md-skip">
+          Перейти до змісту
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Хедер">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-header__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            News Hub — книга FastAPI
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Docker Compose
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Пошук" placeholder="Пошук" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Шукати">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистити" aria-label="Очистити" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Пошук розпочато
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Головна
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../00_getting_started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Як користуватися
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../01_http_and_rest/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Книга FastAPI
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorials/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Zero to Hero
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../deep_dive/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  News Hub Deep Dive
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../labs/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Практика
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Довідник
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../TEACHING_GUIDE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Викладачу
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Навігація" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-nav__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    News Hub — книга FastAPI
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Головна
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../00_getting_started/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Як користуватися
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Книга FastAPI
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Книга FastAPI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../01_http_and_rest/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина I. HTTP і дизайн REST API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1" id="__nav_3_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина I. HTTP і дизайн REST API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/http_anatomy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP-запит і відповідь
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/http_methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Методи HTTP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/status_codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Коди відповідей
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/rest_principles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Принципи REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/collections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Колекції і пагінація
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/versioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Версіонування API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Формат помилок
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/api_styles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Які бувають API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/http_clients/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP-клієнти
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/legacy_case/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Кейс: API v1 → v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/meteo_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архітектура meteo_api
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../02_typing_and_pydantic/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина II. Типи і Pydantic
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_2" id="__nav_3_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина II. Типи і Pydantic
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/type_hints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Анотації типів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/pydantic_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Моделі Pydantic 2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/strict_mode/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Режими lax і strict
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/validators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Валідатори і computed_field
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/special_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    URL, email і дати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/validation_error/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ValidationError
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pydantic-settings і .env
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/config_dict/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ConfigDict
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/trust_boundary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Межа довіри
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../03_fastapi_core/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина III. Ядро FastAPI
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_3" id="__nav_3_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина III. Ядро FastAPI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/what_is_fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Що таке FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/routes_and_validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Маршрути і валідація
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Залежності і lifespan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/openapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/fastapi_flask_django/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FastAPI, Flask і Django
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/fastapi_vs_drf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FastAPI і DRF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../04_async/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина IV. Async і конкурентність
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_4" id="__nav_3_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина IV. Async і конкурентність
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/concurrency_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Чекати чи рахувати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/asgi_vs_wsgi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ASGI і WSGI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/endpoint_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Три типи ендпоінтів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/blocking_code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Блокуючий код
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/concurrency_patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Паралельні запити
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../05_databases/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_5" id="__nav_3_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/sql_for_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQL для API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/sqlalchemy_async/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLAlchemy async
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/transactions_and_uow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Транзакції й Unit of Work
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/repository_pattern/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Патерн Repository
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/connection_pool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Пул з'єднань
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/migrations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Міграції Alembic
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../06_middleware_cache_jobs/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VI. Middleware, кеш і фонові задачі
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_6" id="__nav_3_6_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VI. Middleware, кеш і фонові задачі
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/middleware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Middleware
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/cors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CORS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/redis_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Redis для API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/caching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Стратегії кешу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/rate_limiting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rate limit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/background_jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фонові задачі й черги
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../07_testing/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VII. Тестування API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_7" id="__nav_3_7_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VII. Тестування API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/pytest_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Основи pytest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/fixtures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фікстури
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/test_doubles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Підміни: mock і fake
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/testing_fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Тестування FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/test_databases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Тести з базою даних
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Якість тестів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../08_security/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VIII. Безпека API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_8" id="__nav_3_8_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VIII. Безпека API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/passwords/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Паролі: хеш, сіль, вартість
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Автентифікація: сесії і JWT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/authorization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Авторизація: ролі, scopes, об'єкти
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/ssrf_and_outbound/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSRF і вихідні запити
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/webhooks_and_signatures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Webhook і підписи
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/secrets_and_headers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Секрети, заголовки, проксі
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/owasp_api_top10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OWASP API Top 10
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_9" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../09_integrations/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина IX. Інтеграції: AI, LLM, Telegram
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_9" id="__nav_3_9_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина IX. Інтеграції: AI, LLM, Telegram
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/ai_dev_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI-агент у проєкті
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/llm_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/llm_reliability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Надійність LLM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/telegram_bots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telegram-бот
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/websockets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WebSocket у FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_10" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина X. Docker, Compose і CI/CD
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_10" id="__nav_3_10_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_10_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина X. Docker, Compose і CI/CD
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docker_image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker-образ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker Compose
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker Compose
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проблема
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ментальна модель
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проєкт і імена
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#networks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Мережі: ім'я сервісу — це адреса
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Мережі: ім&#39;я сервісу — це адреса">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ports і доступ ззовні
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Змінні: три різні механізми
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Змінні: три різні механізми">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#interpolation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Інтерполяція
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#depends-on" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Порядок старту: depends_on
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#volumes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Томи: що переживає down
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Профілі: сервіси «на вимогу»
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#override" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Кілька файлів: override і prod
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#news-hub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        У News Hub
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Типові помилки
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Налагодження
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Безпека
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Питання
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../production_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сервер у production
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci_cd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD на GitHub Actions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../microservices/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Мікросервіси: коли варто
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../tutorials/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zero to Hero
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../deep_dive/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    News Hub Deep Dive
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../labs/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Практика
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../reference/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Довідник
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TEACHING_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Викладачу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проблема
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ментальна модель
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проєкт і імена
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#networks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Мережі: ім'я сервісу — це адреса
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Мережі: ім&#39;я сервісу — це адреса">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ports і доступ ззовні
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Змінні: три різні механізми
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Змінні: три різні механізми">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#interpolation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Інтерполяція
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#depends-on" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Порядок старту: depends_on
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#volumes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Томи: що переживає down
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Профілі: сервіси «на вимогу»
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#override" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Кілька файлів: override і prod
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#news-hub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        У News Hub
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Типові помилки
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Налагодження
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Безпека
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Питання
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Навігація" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Головна
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../../01_http_and_rest/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Книга FastAPI
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Частина X. Docker, Compose і CI/CD
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="docker-compose-сервіси-мережі-томи">Docker Compose: сервіси, мережі, томи<a class="headerlink" href="#docker-compose-сервіси-мережі-томи" title="Permanent link">&para;</a></h1>
+<h2 id="problem">Проблема<a class="headerlink" href="#problem" title="Permanent link">&para;</a></h2>
+<p>Застосунку потрібні Redis і nginx. Три <code>docker run</code> з десятком прапорців кожен, мережа, том, правильний порядок старту, і все це однаково на ноутбуці, у CI й на сервері. Compose описує цю систему одним файлом. Але в ньому легко помилитися так, що помилка не буде видна: <code>.env</code>, який «не доходить» до контейнера, порт бази, відкритий у світ, <code>down -v</code>, що стирає дані, файл розробки, який непомітно підключився на сервері. На <a href="../../tutorials/11_compose_deploy/">кроці 11</a> розібрано стек News Hub: порядок запуску з <code>condition</code>, <code>migrate</code>, YAML-якорі, <code>$</code> у <code>.env</code>, nginx, деплой. Ця сторінка про те, як Compose влаштований загалом: імена й мережі, три способи передати змінні, життя томів, профілі й злиття кількох файлів.</p>
+<h2 id="mental-model">Ментальна модель<a class="headerlink" href="#mental-model" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart LR
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    F["compose.yaml&lt;br&gt;+ override-файли"] --&gt; M["злиття файлів"]
+    E[".env, змінні оболонки"] --&gt; I["інтерполяція&lt;br&gt;${...}"]
+    M --&gt; I --&gt; C["модель проєкту&lt;br&gt;docker compose config"]
+    C --&gt; N["мережі&lt;br&gt;проєкт_ім'я"]
+    C --&gt; V["томи&lt;br&gt;проєкт_ім'я"]
+    C --&gt; S["контейнери&lt;br&gt;проєкт-сервіс-N"]
+    S -.-&gt;|"DNS за ім'ям&lt;br&gt;сервісу"| N
+
+    class F,E,M,I step
+    class C success
+    class N,V,S step</code></pre>
+<p>Compose спершу <strong>зливає</strong> файли, потім <strong>підставляє</strong> змінні, і лише після цього створює ресурси. Результат двох перших кроків показує <code>docker compose config</code>. Це перше, що варто подивитися при будь-якій незрозумілій поведінці.</p>
+<p>Приклад сторінки — <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/docker_ci/compose/compose.yaml"><code>examples/docker_ci/compose/</code></a>: <code>api</code> (образ зі <a href="../docker_image/">сторінки про образ</a>), Redis з томом, nginx з TLS, дві мережі, профіль <code>tools</code>. Docker Compose 2.40.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$ docker compose up -d --build --wait
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a> Container part10-compose-redis-1  Healthy
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a> Container part10-compose-api-1  Healthy
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a> Container part10-compose-nginx-1  Healthy
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>real    0m26.440s
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>$ docker compose ps --format 'table {{.Service}}\t{{.Status}}\t{{.Ports}}'
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>SERVICE   STATUS                    PORTS
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>api       Up 22 seconds (healthy)   127.0.0.1:18111-&gt;8000/tcp
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>nginx     Up 16 seconds (healthy)   127.0.0.1:18112-&gt;443/tcp
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>redis     Up 28 seconds (healthy)   127.0.0.1:18113-&gt;6379/tcp
+</code></pre></div>
+<h2 id="project">Проєкт і імена<a class="headerlink" href="#project" title="Permanent link">&para;</a></h2>
+<p><code>name: part10-compose</code> у файлі — <strong>ім'я проєкту</strong>. Від нього походять імена всього, що створює Compose: контейнери <code>part10-compose-api-1</code>, мережі <code>part10-compose_edge</code>, томи <code>part10-compose_redisdata</code>. Без <code>name:</code> ім'ям стає назва папки. Тоді два різні проєкти в папках з однаковою назвою (<code>app/</code>, <code>deploy/</code>) ділять томи й заважають один одному, а <code>docker compose down</code> в одному зупиняє контейнери іншого. Ім'я перевизначають <code>-p</code> або змінна <code>COMPOSE_PROJECT_NAME</code>. Саме так CI піднімає кілька копій стеку на одній машині.</p>
+<h2 id="networks">Мережі: ім'я сервісу — це адреса<a class="headerlink" href="#networks" title="Permanent link">&para;</a></h2>
+<p>У кожній мережі проєкту Compose запускає DNS: ім'я сервісу розв'язується в адресу його контейнера (або в кілька адрес, якщо копій кілька). Контейнер бачить лише ті сервіси, з якими має спільну мережу:</p>
+<div class="highlight"><span class="filename">examples/docker_ci/compose/compose.yaml (фрагмент)</span><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">services</span><span class="p">:</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">api</span><span class="p">:</span><span class="w">   </span><span class="p p-Indicator">{</span><span class="nt"> networks</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">backend</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">edge</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">redis</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> networks</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">backend</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w">          </span><span class="c1"># nginx до Redis не дістанеться</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">nginx</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> networks</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> edge</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> ipv4_address</span><span class="p">:</span><span class="w"> </span><span class="nv">10.231.7.10</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>$ docker compose exec nginx getent hosts api
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>10.231.7.2        api  api
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>nginx→api exit=0
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>$ docker compose exec nginx getent hosts redis
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>nginx→redis exit=2                         ← імені redis у мережі edge немає
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>$ docker compose exec api python -c "import socket; print('api→redis', socket.gethostbyname('redis'))"
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>api→redis 192.168.48.2
+</code></pre></div>
+<ul>
+<li><strong><code>localhost</code> у контейнері — це сам контейнер.</strong> До Redis звертаються <code>redis://redis:6379</code>, а не <code>localhost</code> (<a href="../../tutorials/10_docker/user_data_env/#localhost">крок 10</a>).</li>
+<li><strong>Дві мережі — межа доступу.</strong> nginx, який дивиться в інтернет, не має маршруту до Redis і бази. Якщо його зламають, звідти до даних не дістатись.</li>
+<li><strong>Фіксована адреса (<code>ipv4_address</code>) потрібна рідко.</strong> Тут вона потрібна, щоб uvicorn знав, кому вірити в <code>X-Forwarded-For</code> (<a href="../production_server/#proxy-headers">сервер у production</a>). Для неї мережі потрібна власна <code>subnet</code>, і вона не повинна перетинатися з іншими мережами машини.</li>
+</ul>
+<h3 id="ports"><code>ports</code> і доступ ззовні<a class="headerlink" href="#ports" title="Permanent link">&para;</a></h3>
+<p>Сервісам в одній мережі <code>ports</code> не потрібен: вони з'єднуються напряму, на будь-який порт. <code>ports</code> публікує порт <strong>на машині</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Запис</th>
+<th>Хто може під'єднатися</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>немає <code>ports</code></td>
+<td>лише контейнери тих самих мереж</td>
+</tr>
+<tr>
+<td><code>"127.0.0.1:18113:6379"</code></td>
+<td>лише процеси на самій машині</td>
+</tr>
+<tr>
+<td><code>"6379:6379"</code></td>
+<td><strong>будь-хто</strong>, хто бачить машину, і в обхід <code>ufw</code> (<a href="../../tutorials/11_compose_deploy/deploy/#server">крок 11</a>)</td>
+</tr>
+</tbody>
+</table>
+<p><code>expose:</code> нічого не публікує. Це лише документація того, який порт слухає сервіс.</p>
+<h2 id="variables">Змінні: три різні механізми<a class="headerlink" href="#variables" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Механізм</th>
+<th>Хто читає</th>
+<th>Куди потрапляє</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.env</code> поруч з <code>compose.yaml</code></td>
+<td>сам Compose</td>
+<td>лише в <strong>підстановку</strong> <code>${...}</code> у файлі; у контейнер — ні</td>
+</tr>
+<tr>
+<td><code>env_file: app.env</code></td>
+<td>Compose</td>
+<td>у середовище процесу в контейнері</td>
+</tr>
+<tr>
+<td><code>environment:</code></td>
+<td>Compose</td>
+<td>у середовище процесу; перемагає <code>env_file</code></td>
+</tr>
+</tbody>
+</table>
+<p>Перевірка: у <code>.env</code> — <code>GREETING=from-dotenv</code>, у <code>app.env</code> — <code>GREETING=from-env-file</code>, у <code>environment</code> — <code>FROM_INTERPOLATION: ${GREETING}</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>$ docker compose run --rm show                     # env у контейнері
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>FROM_INTERPOLATION=from-dotenv                     ← ${GREETING} підставив Compose з .env
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>GREETING=from-env-file                             ← у контейнер прийшло з env_file
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>LITERAL_DOLLAR=$HOME                               ← $$HOME у файлі: $ лишився як є
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>ONLY_IN_ENV_FILE=yes
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>--- + environment: {GREETING: from-environment}
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>GREETING=from-environment                          ← environment перемагає env_file
+</code></pre></div>
+<p><code>.env</code> не передає змінних у контейнер. Вони потрапляють туди, лише якщо файл явно вказано в <code>env_file:</code>, як у News Hub (<code>env_file: .env</code>), або змінну згадано в <code>environment:</code>.</p>
+<h3 id="interpolation">Інтерполяція<a class="headerlink" href="#interpolation" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>.env: TAG=1.27-alpine, EMPTY=
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>image: nginx:${TAG}                         nginx:1.27-alpine
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>${EMPTY:-fallback}                          fallback         ← :- порожнє = не задане
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>${EMPTY-fallback}                           ''               ← -  порожнє — це значення
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>${NOT_DEFINED:-fallback}                    fallback
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>TAG=1.29-alpine docker compose config       nginx:1.29-alpine  ← змінна оболонки перемагає .env
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>${HTTPS_PORT:?задай HTTPS_PORT у .env}      error while interpolating services.nginx.ports.[]:
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>                                            required variable HTTPS_PORT is missing a value: задай HTTPS_PORT у .env
+</code></pre></div>
+<ul>
+<li><strong><code>${VAR:?повідомлення}</code></strong> — обов'язкова змінна. Compose відмовиться запускатися з поясненням, а не підставить порожній пароль бази.</li>
+<li><strong>Змінна оболонки перемагає <code>.env</code>.</strong> Забута <code>export TAG=…</code> у терміналі тихо змінює образ. При дивній поведінці дивись <code>docker compose config</code>.</li>
+<li><strong><code>$</code> у значеннях.</strong> Compose підставляє і <code>${VAR}</code>, і <code>$VAR</code>, тому хеш bcrypt <code>$2b$12$…</code> у <code>.env</code> без одинарних лапок обрізається. Pydantic-settings читає той самий файл за іншими правилами (<a href="../../02_typing_and_pydantic/settings/#dollar"><code>$</code> у <code>.env</code></a>, <a href="../../tutorials/11_compose_deploy/env_secrets/#dollar">крок 11</a>). У самому <code>compose.yaml</code> буквальний <code>$</code> пишуть як <code>$$</code>.</li>
+</ul>
+<h2 id="depends-on">Порядок старту: <code>depends_on</code><a class="headerlink" href="#depends-on" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Умова</th>
+<th>Чекає, доки залежність…</th>
+<th>Для чого</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>service_started</code> (список <code>depends_on: [redis]</code>)</td>
+<td>створено й запущено</td>
+<td>майже ні для чого: «запущено» ≠ «готово»</td>
+</tr>
+<tr>
+<td><code>service_healthy</code></td>
+<td>пройшла healthcheck</td>
+<td>база, Redis, API перед nginx</td>
+</tr>
+<tr>
+<td><code>service_completed_successfully</code></td>
+<td>завершилась з кодом 0</td>
+<td>міграції, разове завантаження даних</td>
+</tr>
+</tbody>
+</table>
+<p>Чому список недостатній і як це видно в хронології старту News Hub, показано на <a href="../../tutorials/11_compose_deploy/startup_order/#problem">кроці 11: порядок запуску</a>. Ще два ключі:</p>
+<ul>
+<li>
+<p><strong><code>restart: true</code></strong> — перезапустити сервіс, коли Compose перезапускає залежність:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>$ docker compose restart redis
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a> Container part10-compose-redis-1  Restarting
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a> Container part10-compose-redis-1  Healthy
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a> Container part10-compose-api-1  Restarting      ← бо в api: depends_on: redis: restart: true
+</code></pre></div>
+<p>Це спрацьовує лише для дій самого Compose (<code>restart</code>, <code>up</code> з новою версією). Якщо Redis упав сам, <code>api</code> ніхто не перезапустить. Застосунок має сам переживати розрив з'єднання.</p>
+</li>
+<li>
+<p><strong><code>required: false</code></strong> — залежність необов'язкова: якщо вона не стартувала чи недоступна, Compose лише попереджає, а не зупиняє запуск.</p>
+</li>
+</ul>
+<p><code>depends_on</code> діє <strong>лише під час старту</strong>. Якщо база перезапуститься посеред роботи, Compose цього не помітить. Обробляти помилки з'єднання і відповідати <code>503</code> на <code>/health/ready</code> має сам застосунок.</p>
+<h2 id="volumes">Томи: що переживає <code>down</code><a class="headerlink" href="#volumes" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>$ curl -sk https://localhost:18112/visits      # тричі
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>{"visits":1}{"visits":2}{"visits":3}
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>$ docker compose down                           # контейнери й мережі видалено
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>$ docker volume ls | grep part10
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>part10-compose_redisdata                        ← том лишився
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>$ docker compose up -d --wait &amp;&amp; curl …/visits
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>{"visits":4}
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>$ docker compose down -v
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a> Volume part10-compose_redisdata  Removed
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>$ docker compose up -d --wait &amp;&amp; curl …/visits
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>{"visits":1}                                    ← дані зникли
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Запис у <code>volumes:</code></th>
+<th>Що це</th>
+<th>Коли</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>redisdata:/data</code></td>
+<td><strong>іменований том</strong>, ним керує Docker</td>
+<td>дані сервісів: база, Redis</td>
+</tr>
+<tr>
+<td><code>./nginx.conf:/etc/nginx/conf.d/default.conf:ro</code></td>
+<td><strong>bind mount</strong>, файл з машини</td>
+<td>конфіги, код у розробці; <code>:ro</code> — лише читання</td>
+</tr>
+<tr>
+<td>без <code>volumes:</code></td>
+<td>шар запису контейнера</td>
+<td>зникає з <code>docker compose rm</code> і при кожному перестворенні</td>
+</tr>
+</tbody>
+</table>
+<p><code>down -v</code> — найнебезпечніша команда Compose: вона видаляє бази даних разом з контейнерами. На сервері її не пишуть «за звичкою». Бекап — до будь-яких дій з томами (<a href="../../tutorials/11_compose_deploy/backup_restore/">крок 11: бекап і відновлення</a>).</p>
+<h2 id="profiles">Профілі: сервіси «на вимогу»<a class="headerlink" href="#profiles" title="Permanent link">&para;</a></h2>
+<p>Сервіс з <code>profiles:</code> не стартує з <code>docker compose up</code>. Він запускається, лише коли профіль увімкнено:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>$ docker compose config --services
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>redis
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>api
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>nginx
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>$ docker compose --profile tools config --services
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>redis
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>api
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>nginx
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>redis-cli
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>$ docker compose --profile tools run --rm redis-cli      # command: redis-cli -h redis get visits
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>3
+</code></pre></div>
+<p>Профілі підходять для інструментів (консоль бази, разові скрипти), режимів роботи (бот у режимі polling замість webhook) і двійників зовнішніх сервісів для розробки.</p>
+<h2 id="override">Кілька файлів: override і prod<a class="headerlink" href="#override" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart TD
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    Q{"вказано -f?"}
+    A["compose.yaml&lt;br&gt;+ compose.override.yaml"]
+    B["лише перелічені файли,&lt;br&gt;по черзі"]
+    D["розробка: порти&lt;br&gt;на 127.0.0.1, debug"]
+    P["-f compose.yaml&lt;br&gt;-f compose.prod.yaml"]
+    S["сервер: restart,&lt;br&gt;журнали, grace period"]
+    Q -- "ні" --&gt; A --&gt; D
+    Q -- "так" --&gt; B --&gt; P --&gt; S
+
+    class Q decision
+    class A,B,P step
+    class D warning
+    class S success</code></pre>
+<p><code>compose.override.yaml</code> поруч з <code>compose.yaml</code> Compose <strong>підхоплює сам</strong>, якщо <code>-f</code> не вказано. Туди кладуть зручності розробки (<a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/docker_ci/compose/compose.override.yaml"><code>compose.override.yaml</code></a>): порти API й Redis на <code>127.0.0.1</code>, <code>UVICORN_LOG_LEVEL: debug</code>. На сервері файли перелічують явно, і override не підключається:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>$ docker compose -f compose.yaml -f compose.prod.yaml ps --format 'table {{.Service}}\t{{.Ports}}'
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>SERVICE   PORTS
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>api       8000/tcp                       ← порту 18111 з override немає
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>nginx     127.0.0.1:18112-&gt;443/tcp
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>redis     6379/tcp
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>$ docker inspect -f 'log={{.HostConfig.LogConfig.Type}} {{.HostConfig.LogConfig.Config}} restart={{.HostConfig.RestartPolicy.Name}} stop_timeout={{.Config.StopTimeout}}' part10-compose-api-1
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>log=json-file map[max-file:3 max-size:10m] restart=unless-stopped stop_timeout=30
+</code></pre></div>
+<p>Як зливаються значення (перевірено <code>docker compose config</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>compose.yaml                 command [nginx …]       ports [18120]          env {A: base, B: base}
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>+ add.yaml                   command [nginx-debug …] ports [18120, 18121]   env {A: base, B: override, C: override}
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>+ reset.yaml (!reset, !override)                     ports []               env {Z: only}
+</code></pre></div>
+<ul>
+<li><strong>Скаляри й <code>command</code> замінюються</strong>, словники (<code>environment</code>, <code>labels</code>) зливаються за ключем, а списки портів <strong>додаються</strong>. Порт з базового файлу з override не прибрати простим повтором ключа.</li>
+<li><strong><code>!reset []</code></strong> очищає значення, <strong><code>!override</code></strong> замінює його повністю, без злиття.</li>
+<li>Помилка, яку часто не помічають: на сервері запустили просто <code>docker compose up</code>, і <code>compose.override.yaml</code> розробки відкрив порти. Тому в News Hub файл розробки названо <code>docker-compose.dev.yml</code>: він підключається лише явним <code>-f</code>.</li>
+</ul>
+<h2 id="news-hub">У News Hub<a class="headerlink" href="#news-hub" title="Permanent link">&para;</a></h2>
+<p><a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/docker-compose.yml"><code>steps/12_ci_cd/docker-compose.yml</code></a>:</p>
+<table>
+<thead>
+<tr>
+<th>Механізм</th>
+<th>Як у News Hub</th>
+<th>Де розібрано</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ім'я проєкту</td>
+<td><code>name: news_hub</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td>мережі</td>
+<td><code>backend</code> (api, база, Redis, міграції, бот), <code>edge</code> (nginx ↔ api) з <code>subnet: ${EDGE_SUBNET:-172.28.0.0/24}</code> і фіксованою адресою nginx <code>${NGINX_IP:-172.28.0.10}</code></td>
+<td><a href="../../tutorials/11_compose_deploy/nginx_real_ip/#change">крок 11: nginx</a></td>
+</tr>
+<tr>
+<td>порти</td>
+<td>лише nginx (<code>${HTTP_PORT:-80}:80</code>); база й Redis — без <code>ports</code></td>
+<td><a href="../../tutorials/11_compose_deploy/deploy/#server">крок 11: деплой</a></td>
+</tr>
+<tr>
+<td>змінні</td>
+<td><code>env_file: .env</code> для api/bot/migrate + <code>environment</code> з <code>DATABASE_URL</code>, зібраним з <code>${POSTGRES_*}</code>; <code>${POSTGRES_PASSWORD:?…}</code></td>
+<td><a href="../../tutorials/11_compose_deploy/env_secrets/">крок 11: секрети</a></td>
+</tr>
+<tr>
+<td>безпечне значення за замовчуванням</td>
+<td><code>DOCS_ENABLED: ${DOCS_ENABLED:-false}</code> в <code>api</code>: на сервері <code>/docs</code>, <code>/redoc</code> і <code>/openapi.json</code> вимкнено, якщо в <code>.env</code> явно не написано <code>true</code> (сам застосунок без змінної вмикає їх)</td>
+<td><a href="../production_server/#news-hub">сервер у production</a></td>
+</tr>
+<tr>
+<td><code>depends_on</code></td>
+<td><code>postgres</code> healthy → <code>migrate</code> completed → <code>api</code> healthy → <code>nginx</code></td>
+<td><a href="../../tutorials/11_compose_deploy/startup_order/#change">крок 11: порядок запуску</a></td>
+</tr>
+<tr>
+<td>томи</td>
+<td><code>pgdata</code> для PostgreSQL; <code>nginx.conf</code> — bind mount <code>:ro</code></td>
+<td><a href="../../tutorials/11_compose_deploy/backup_restore/">крок 11: бекап</a></td>
+</tr>
+<tr>
+<td>профілі</td>
+<td><code>polling</code> (бот окремим процесом), <code>twin</code> (двійник Telegram)</td>
+<td><a href="../../tutorials/11_compose_deploy/external_services/#twin">крок 11: зовнішні сервіси</a></td>
+</tr>
+<tr>
+<td>кілька файлів</td>
+<td><code>docker-compose.dev.yml</code> лише з <code>-f</code>: порти бази й Redis на <code>127.0.0.1</code></td>
+<td><a href="../../tutorials/11_compose_deploy/deploy/#server">крок 11: деплой</a></td>
+</tr>
+</tbody>
+</table>
+<p>Чого в News Hub немає: <code>logging:</code> з <code>max-size</code> і <code>stop_grace_period</code>. Обидва мають значення на сервері (<a href="../production_server/#logs">сервер у production</a>).</p>
+<h2 id="mistakes">Типові помилки<a class="headerlink" href="#mistakes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Помилка</th>
+<th>Наслідок</th>
+<th>Як правильно</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>чекати змінних з <code>.env</code> у контейнері</td>
+<td>змінної немає</td>
+<td><code>env_file: .env</code> або <code>environment: X: ${X}</code></td>
+</tr>
+<tr>
+<td><code>localhost:6379</code> у застосунку</td>
+<td><code>Connection refused</code></td>
+<td>ім'я сервісу: <code>redis:6379</code></td>
+</tr>
+<tr>
+<td><code>ports: ["5432:5432"]</code> у бази</td>
+<td>база відкрита в інтернет в обхід firewall</td>
+<td>без <code>ports</code>; для розробки — <code>127.0.0.1:5432:5432</code> в окремому файлі</td>
+</tr>
+<tr>
+<td><code>depends_on: [db]</code></td>
+<td>API стартує раніше за базу</td>
+<td><code>condition: service_healthy</code> + healthcheck бази</td>
+</tr>
+<tr>
+<td><code>down -v</code> «щоб почати з чистого»</td>
+<td>дані бази видалено</td>
+<td><code>down</code>; том видаляти свідомо, після бекапу</td>
+</tr>
+<tr>
+<td>немає <code>name:</code></td>
+<td>проєкти з однаковою назвою папки ділять томи</td>
+<td><code>name:</code> у файлі або <code>-p</code></td>
+</tr>
+<tr>
+<td><code>compose.override.yaml</code> з портами розробки</td>
+<td>на сервері <code>up</code> без <code>-f</code> відкриває порти</td>
+<td>на сервері завжди явні <code>-f</code>, або override з іншою назвою</td>
+</tr>
+<tr>
+<td>ключ <code>ports</code> у override, щоб «прибрати» порт</td>
+<td>порти додалися</td>
+<td><code>ports: !reset []</code></td>
+</tr>
+<tr>
+<td><code>ipv4_address</code> без власної <code>subnet</code></td>
+<td><code>invalid config for network …: no configured subnet contains IP address</code></td>
+<td><code>ipam.config.subnet</code>, що не перетинається з іншими мережами машини</td>
+</tr>
+</tbody>
+</table>
+<h2 id="debugging">Налагодження<a class="headerlink" href="#debugging" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Питання</th>
+<th>Команда</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>що Compose насправді запустить</td>
+<td><code>docker compose config</code> (після злиття й підстановки)</td>
+</tr>
+<tr>
+<td>які змінні бачить Compose для підстановки</td>
+<td><code>docker compose config --environment</code> (увага: друкує й секрети)</td>
+</tr>
+<tr>
+<td>що прийшло в контейнер</td>
+<td><code>docker compose exec api env</code></td>
+</tr>
+<tr>
+<td>чому сервіс не стартує</td>
+<td><code>docker compose ps -a</code> (код виходу), <code>docker compose logs --tail 50 сервіс</code></td>
+</tr>
+<tr>
+<td>чому <code>unhealthy</code></td>
+<td><code>docker inspect -f '{{json .State.Health}}' контейнер</code></td>
+</tr>
+<tr>
+<td>хто кого бачить у мережі</td>
+<td><code>docker compose exec сервіс getent hosts інший</code></td>
+</tr>
+<tr>
+<td>які порти відкриті назовні</td>
+<td><code>docker compose ps --format '{{.Service}} {{.Ports}}'</code> — шукай <code>0.0.0.0</code></td>
+</tr>
+<tr>
+<td>що з томами</td>
+<td><code>docker volume ls</code>, <code>docker volume inspect проєкт_том</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="security">Безпека<a class="headerlink" href="#security" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Назовні — лише проксі.</strong> Усе інше — без <code>ports</code> або на <code>127.0.0.1</code>. Docker публікує порти в обхід <code>ufw</code>.</li>
+<li><strong>Розділяй мережі.</strong> Сервіс, що дивиться в інтернет, не повинен мати маршруту до бази.</li>
+<li><strong>Секрети — не у файлі.</strong> <code>.env</code> у <code>.gitignore</code> і <code>.dockerignore</code>, у репозиторії — <code>.env.example</code>. <code>${VAR:?}</code> не дає стартувати без них.</li>
+<li><strong>Змінні середовища видно</strong> в <code>docker inspect</code> і <code>/proc/1/environ</code>. Для критичних секретів Compose має <code>secrets:</code>: файл монтується в <code>/run/secrets/ім'я</code> і в <code>inspect</code> не з'являється.</li>
+<li><strong><code>:ro</code> для bind mount конфігів.</strong> Процес у контейнері не перепише конфіг nginx на машині.</li>
+<li><strong>Bind mount сокета Docker</strong> (<code>/var/run/docker.sock</code>) дає контейнеру повний контроль над машиною. Не монтуй його в сервіси застосунку.</li>
+</ul>
+<h2 id="questions">Питання<a class="headerlink" href="#questions" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Звідки беруться імена <code>part10-compose-api-1</code> і <code>part10-compose_redisdata</code>?</li>
+<li>Чому nginx не може розв'язати ім'я <code>redis</code>, а <code>api</code> може?</li>
+<li>Чим <code>"127.0.0.1:5432:5432"</code> відрізняється від <code>"5432:5432"</code>?</li>
+<li>Змінна є в <code>.env</code>, але <code>env</code> у контейнері її не показує. Чому?</li>
+<li>Що переможе: <code>environment:</code>, <code>env_file:</code> чи змінна оболонки при <code>${VAR}</code>?</li>
+<li>Чим <code>${X:-def}</code> відрізняється від <code>${X-def}</code>?</li>
+<li>Що лишиться після <code>docker compose down</code>, а що після <code>down -v</code>?</li>
+<li>Чому <code>compose.override.yaml</code> небезпечний на сервері?</li>
+<li>Як прибрати порт, оголошений у базовому файлі, з override?</li>
+</ol>
+<details class="success">
+<summary>Відповіді</summary>
+<ol>
+<li>З імені проєкту (<code>name:</code> або назва папки) + ім'я сервісу + номер копії; для томів і мереж — проєкт + <code>_</code> + ім'я.</li>
+<li>nginx лише в мережі <code>edge</code>, а <code>redis</code> лише в <code>backend</code>. DNS Compose розв'язує імена лише в спільних мережах.</li>
+<li>Перший слухає лише на самій машині; другий — на всіх адресах, тобто доступний з мережі, і Docker відкриває його в обхід firewall.</li>
+<li><code>.env</code> поруч з <code>compose.yaml</code> — лише для підстановки <code>${...}</code> у файлі; у контейнер змінні потрапляють через <code>env_file:</code> або <code>environment:</code>.</li>
+<li>У контейнері <code>environment:</code> перемагає <code>env_file:</code>. Для підстановки <code>${VAR}</code> змінна оболонки перемагає <code>.env</code>.</li>
+<li><code>:-</code> підставляє значення за замовчуванням і для незаданої, і для порожньої змінної; <code>-</code> — лише для незаданої.</li>
+<li>Після <code>down</code> лишаються томи й образи; після <code>down -v</code> іменовані томи видаляються разом з даними.</li>
+<li>Compose підхоплює його сам, якщо <code>-f</code> не вказано: порти й налаштування розробки потраплять на сервер.</li>
+<li><code>ports: !reset []</code> в override; простий повтор ключа <code>ports</code> додає порти, а не замінює.</li>
+</ol>
+</details>
+<h2 id="next">Що далі<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>
+<p><a href="../production_server/">Сервер у production: воркери, проксі, TLS</a> — стек піднімається; тепер скільки процесів запускати, що змінюється за nginx і TLS і як зупинити сервер, не обірвавши запити.</p>
+<p><strong>Джерела:</strong> Docker Docs — <a href="https://docs.docker.com/reference/compose-file/">Compose file reference</a> (розділи «services: depends_on», «networks», «volumes», «profiles»), <a href="https://docs.docker.com/compose/how-tos/multiple-compose-files/merge/">Merge Compose files</a>, <a href="https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/">Interpolation</a>, <a href="https://docs.docker.com/compose/how-tos/environment-variables/envvars-precedence/">Environment variables precedence</a>, <a href="https://docs.docker.com/compose/how-tos/networking/">Networking in Compose</a>, <a href="https://docs.docker.com/compose/how-tos/project-name/">Specify a project name</a>, <a href="https://docs.docker.com/compose/how-tos/use-secrets/">Secrets in Compose</a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Футер" >
+        
+          
+          <a href="../docker_image/" class="md-footer__link md-footer__link--prev" aria-label="Назад: Docker-образ">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                Docker-образ
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../production_server/" class="md-footer__link md-footer__link--next" aria-label="Вперед: Сервер у production">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                Сервер у production
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.path", "navigation.prune", "navigation.footer", "toc.follow", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0456\u0439\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u0421\u043a\u043e\u043f\u0456\u044e\u0432\u0430\u0442\u0438 \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0429\u0435 1 \u0437\u0431\u0456\u0433 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.more.other": "\u0429\u0435 # \u0437\u0431\u0456\u0433\u0456\u0432 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.none": "\u0417\u0431\u0456\u0433\u0456\u0432 \u043d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0437\u0431\u0456\u0433", "search.result.other": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e # \u0437\u0431\u0456\u0433\u0456\u0432", "search.result.placeholder": "\u0420\u043e\u0437\u043f\u043e\u0447\u043d\u0456\u0442\u044c \u043f\u0438\u0441\u0430\u0442\u0438 \u0434\u043b\u044f \u043f\u043e\u0448\u0443\u043a\u0443", "search.result.term.missing": "\u041d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e \u0437\u0430\u043f\u0438\u0442\u0443", "select.version": "\u041e\u0431\u0440\u0430\u0442\u0438 \u0432\u0435\u0440\u0441\u0456\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

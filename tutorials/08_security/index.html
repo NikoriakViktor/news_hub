@@ -3869,6 +3869,18 @@
           
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -3928,6 +3940,24 @@
           
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -3985,6 +4015,24 @@
       
         
           
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
         
       
     
@@ -4305,7 +4353,7 @@
 </thead>
 <tbody>
 <tr>
-<td>пароль адміна (bcrypt), <code>POST /api/admin/token</code> → JWT, <code>require_admin</code> (401 / 403 / 503), ліміт спроб входу</td>
+<td>пароль адміна (bcrypt у пулі потоків), <code>POST /api/admin/token</code> → JWT (<code>no-store</code>), <code>require_admin</code> (401 / 403 / 503); ліміт спроб з адреси й лічильник невдач на ім'я; заголовки безпеки, <code>DOCS_ENABLED</code></td>
 <td><code>news_hub/security.py</code>, <code>middleware.py</code>, <code>api.py</code></td>
 <td><a href="admin_jwt/">Адмін і JWT</a></td>
 </tr>
@@ -4315,8 +4363,8 @@
 <td><a href="ssrf/">SSRF: куди ходить сервер</a></td>
 </tr>
 <tr>
-<td><code>POST /api/webhooks/scrape</code>: підпис HMAC-SHA256 від часу й тіла, вікно 5 хв, захист від повтору в Redis</td>
-<td><code>news_hub/webhooks.py</code>, <code>api.py</code></td>
+<td><code>POST /api/webhooks/scrape</code>: підпис HMAC-SHA256 від часу, id доставки й тіла, вікно 5 хв; повтор доставки → <code>200</code> з тим самим завданням</td>
+<td><code>news_hub/webhooks.py</code>, <code>jobs.py</code>, <code>api.py</code></td>
 <td><a href="webhooks/">Підписані webhook</a></td>
 </tr>
 <tr>
@@ -4341,8 +4389,8 @@
     subgraph NEW ["крок 8: три входи, один вихід"]
         direction LR
         U["будь-хто"] --&gt; RD["GET /api/news*&lt;br&gt;публічно"]
-        AD["адмін&lt;br&gt;пароль → JWT"] --&gt; RL["rate limit&lt;br&gt;login, scrape, analyze"] --&gt; WR["запис, збір, аналіз,&lt;br&gt;/api/sources — AdminDep"]
-        CR["cron&lt;br&gt;секрет HMAC"] --&gt; WH["/api/webhooks/scrape&lt;br&gt;підпис + SET NX"]
+        AD["адмін&lt;br&gt;пароль → JWT"] --&gt; RL["rate limit на адресу&lt;br&gt;+ LoginGuard на ім'я"] --&gt; WR["запис, збір, аналіз,&lt;br&gt;/api/sources — AdminDep"]
+        CR["cron&lt;br&gt;секрет HMAC"] --&gt; WH["/api/webhooks/scrape&lt;br&gt;підпис + SET NX на id доставки"]
         WR --&gt; SF{"safe_fetch:&lt;br&gt;IP публічна?"}
         SF -- "так" --&gt; NET["публічний інтернет&lt;br&gt;RSS"]
         SF -- "ні" --&gt; INT["внутрішня мережа&lt;br&gt;400, 0 запитів"]
@@ -4364,7 +4412,7 @@
 <tbody>
 <tr>
 <td><code>security.py</code></td>
-<td>пароль (bcrypt), JWT, <code>require_admin</code>; налаштування з середовища з трьома станами</td>
+<td>пароль (bcrypt), JWT, <code>require_admin</code>, <code>LoginGuard</code> (невдачі на ім'я); налаштування з середовища з трьома станами</td>
 </tr>
 <tr>
 <td><code>safe_fetch.py</code></td>
@@ -4372,15 +4420,15 @@
 </tr>
 <tr>
 <td><code>webhooks.py</code></td>
-<td>підпис, вікно часу, повтор; <code>verify_secret_token</code> для Telegram (крок 9)</td>
+<td>підпис, вікно часу, id доставки й повтор; <code>verify_secret_token</code> для Telegram (крок 9)</td>
 </tr>
 <tr>
 <td><code>middleware.py</code></td>
-<td>+ ліміт спроб входу (<code>login</code>)</td>
+<td>+ ліміт спроб входу (<code>login</code>), таблиця <code>LIMITS</code>, <code>SecurityHeadersMiddleware</code></td>
 </tr>
 <tr>
 <td><code>api.py</code></td>
-<td>лише підключає: <code>dependencies=[AdminDep]</code>, <code>Depends(get_fetch_policy)</code>, <code>Depends(get_webhook_secret)</code></td>
+<td>лише підключає: <code>dependencies=[AdminDep]</code>, <code>Depends(get_fetch_policy)</code>, <code>Depends(get_webhook_secret)</code>, <code>LoginGuard</code>, <code>DOCS_ENABLED</code></td>
 </tr>
 </tbody>
 </table>
@@ -4397,7 +4445,7 @@
 <tbody>
 <tr>
 <td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/news_hub/security.py"><code>news_hub/security.py</code></a></td>
-<td><code>AdminSettings</code>, <code>load_admin_settings</code>, bcrypt, <code>create_access_token</code>, <code>decode_token</code>, <code>require_admin</code>, <code>AdminDep</code>; <code>python -m news_hub.security</code></td>
+<td><code>AdminSettings</code>, <code>load_admin_settings</code>, bcrypt, <code>LoginGuard</code>, <code>create_access_token</code>, <code>decode_token</code>, <code>require_admin</code>, <code>AdminDep</code>; <code>python -m news_hub.security</code></td>
 <td>новий</td>
 </tr>
 <tr>
@@ -4407,17 +4455,17 @@
 </tr>
 <tr>
 <td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/news_hub/webhooks.py"><code>news_hub/webhooks.py</code></a></td>
-<td><code>sign</code>, <code>verify_signature</code>, <code>remember_delivery</code>, <code>verify_secret_token</code></td>
+<td><code>sign</code>, <code>verify_signature</code>, <code>claim_delivery</code>, <code>verify_secret_token</code></td>
 <td>новий</td>
 </tr>
 <tr>
 <td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/news_hub/api.py"><code>news_hub/api.py</code></a></td>
-<td><code>AdminDep</code> на 10 наявних ендпоінтах; <code>/api/admin/token</code>, 4 ендпоінти <code>/api/sources</code>, <code>/api/webhooks/scrape</code></td>
+<td><code>AdminDep</code> на 10 наявних ендпоінтах; <code>/api/admin/token</code>, 4 ендпоінти <code>/api/sources</code>, <code>/api/webhooks/scrape</code>; <code>docs_enabled()</code></td>
 <td>змінено</td>
 </tr>
 <tr>
 <td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/news_hub/middleware.py"><code>news_hub/middleware.py</code></a></td>
-<td>ліміт <code>login</code>: <code>LOGIN_RATE_LIMIT</code> спроб за <code>LOGIN_RATE_WINDOW</code> с; збір з RSS-джерела скидає кеш</td>
+<td>ліміт <code>login</code>: <code>LOGIN_RATE_LIMIT</code> спроб за <code>LOGIN_RATE_WINDOW</code> с; <code>LIMITS</code>; <code>SecurityHeadersMiddleware</code>; збір з RSS-джерела скидає кеш</td>
 <td>змінено</td>
 </tr>
 <tr>
@@ -4441,8 +4489,13 @@
 <td>змінено</td>
 </tr>
 <tr>
+<td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/08_security/news_hub/jobs.py"><code>news_hub/jobs.py</code></a></td>
+<td><code>new_job_id()</code>, <code>JobStore.create(..., job_id=None)</code> — для webhook</td>
+<td>змінено</td>
+</tr>
+<tr>
 <td>6 нових файлів тестів у <code>tests/unit/</code> і <code>tests/integration/</code></td>
-<td>111 тестів безпеки — <a href="security_tests/#files">перелік</a></td>
+<td>126 тестів безпеки — <a href="security_tests/#files">перелік</a></td>
 <td>нові</td>
 </tr>
 <tr>
@@ -4451,7 +4504,7 @@
 <td>змінено</td>
 </tr>
 <tr>
-<td><code>parser.py</code>, <code>rss.py</code>, <code>models.py</code>, <code>scraper.py</code>, <code>db.py</code>, <code>cache.py</code>, <code>jobs.py</code>, <code>llm.py</code>, <code>analysis.py</code>, <code>snapshot.py</code></td>
+<td><code>parser.py</code>, <code>rss.py</code>, <code>models.py</code>, <code>scraper.py</code>, <code>db.py</code>, <code>cache.py</code>, <code>llm.py</code>, <code>analysis.py</code>, <code>snapshot.py</code></td>
 <td>з кроку 7</td>
 <td>без змін</td>
 </tr>
@@ -4459,9 +4512,9 @@
 </table>
 <h2 id="reading-order">Порядок читання<a class="headerlink" href="#reading-order" title="Permanent link">&para;</a></h2>
 <ol>
-<li><a href="admin_jwt/">Адмін і JWT</a> — пароль → токен → <code>require_admin</code>; три стани налаштувань.</li>
+<li><a href="admin_jwt/">Адмін і JWT</a> — пароль → токен → <code>require_admin</code>; три стани налаштувань; два ліміти входу; заголовки безпеки й <code>/docs</code>.</li>
 <li><a href="ssrf/">SSRF: куди ходить сервер</a> — чому перевірка рядка URL не працює і що перевіряє <code>safe_fetch</code>.</li>
-<li><a href="webhooks/">Підписані webhook</a> — HMAC від часу й тіла, вікно, повтор.</li>
+<li><a href="webhooks/">Підписані webhook</a> — HMAC від часу, id доставки й тіла, вікно, повтор.</li>
 <li><a href="security_tests/">Тести безпеки</a> — атаки як тести, тест «нічого не забули», що тести не ловлять.</li>
 <li><a href="checkpoint/">Контрольна точка</a> — чекліст, практика, самоперевірка.</li>
 </ol>
@@ -4469,7 +4522,7 @@
 <h2 id="run">Запуск<a class="headerlink" href="#run" title="Permanent link">&para;</a></h2>
 <p>З папки кроку <code>steps/08_security</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>pytest<span class="w"> </span>-q<span class="w">                           </span><span class="c1"># 279 passed, 2 deselected</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>pytest<span class="w"> </span>-q<span class="w">                           </span><span class="c1"># 294 passed, 2 deselected</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>mypy<span class="w"> </span>--strict<span class="w"> </span>news_hub<span class="w">              </span><span class="c1"># Success: no issues found in 18 source files</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>python<span class="w"> </span>-m<span class="w"> </span>news_hub.security<span class="w">         </span><span class="c1"># спитає пароль → ADMIN_PASSWORD_HASH='$2b$12$…' і JWT_SECRET='…'</span>
@@ -4509,6 +4562,16 @@
 <td>спроб входу з однієї адреси за вікно, с</td>
 </tr>
 <tr>
+<td><code>LOGIN_FAIL_LIMIT</code> / <code>LOGIN_FAIL_WINDOW</code></td>
+<td><code>20</code> / <code>900</code></td>
+<td>невдалих входів під одним ім'ям з усіх адрес за вікно, с; далі — <code>429</code> до кінця вікна</td>
+</tr>
+<tr>
+<td><code>DOCS_ENABLED</code></td>
+<td><code>true</code></td>
+<td><code>false</code> / <code>0</code> / <code>no</code> / <code>off</code> — без <code>/docs</code>, <code>/redoc</code> і <code>/openapi.json</code> (на сервері)</td>
+</tr>
+<tr>
 <td><code>WEBHOOK_SECRET</code></td>
 <td>—</td>
 <td>спільний секрет для <code>POST /api/webhooks/scrape</code>, ≥ 32 символи; без нього — <code>503</code></td>
@@ -4519,7 +4582,7 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>git<span class="w"> </span>diff<span class="w"> </span>--no-index<span class="w"> </span>--stat<span class="w"> </span>steps/07_llm_api<span class="w"> </span>steps/08_security
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>git<span class="w"> </span>diff<span class="w"> </span>--no-index<span class="w"> </span>steps/07_llm_api/news_hub<span class="w"> </span>steps/08_security/news_hub
 </code></pre></div>
-<p>Без файлів <code>__pycache__</code> — 21 змінений файл: три нові модулі (<code>security.py</code> — 156 рядків, <code>safe_fetch.py</code> — 174, <code>webhooks.py</code> — 78), <code>api.py</code> (+213 рядків), міграція <code>0003</code>, 6 нових файлів тестів. Тестів було 168, стало 279.</p>
+<p>Без файлів <code>__pycache__</code> — 22 змінені файли: три нові модулі (<code>security.py</code> — 199 рядків, <code>safe_fetch.py</code> — 174, <code>webhooks.py</code> — 94), <code>api.py</code> (+237 рядків), <code>middleware.py</code> (+61), <code>jobs.py</code> (+7), міграція <code>0003</code>, 6 нових файлів тестів. Тестів було 168, стало 294.</p>
 <h2 id="next">Що далі<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>
 <p><a href="../09_telegram_bot/">Крок 9. Telegram-бот</a>: бот на тому самому API. Telegram не підписує тіло webhook, а надсилає секретний заголовок — для нього вже є <code>verify_secret_token</code> з цього кроку.</p>
 

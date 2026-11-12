@@ -1,0 +1,4953 @@
+
+<!doctype html>
+<html lang="uk" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="FastAPI від типів і Pydantic до Docker, Compose і CI/CD — на прикладі новинного агрегатора">
+      
+      
+      
+        <link rel="canonical" href="https://nikoriakviktor.github.io/news_hub/07_testing/test_doubles/">
+      
+      
+        <link rel="prev" href="../fixtures/">
+      
+      
+        <link rel="next" href="../testing_fastapi/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Підміни: mock і fake - News Hub — книга FastAPI</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#підміни-dummy-stub-mock-spy-fake" class="md-skip">
+          Перейти до змісту
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Хедер">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-header__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            News Hub — книга FastAPI
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Підміни: mock і fake
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Пошук" placeholder="Пошук" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Шукати">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистити" aria-label="Очистити" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Пошук розпочато
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Головна
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../00_getting_started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Як користуватися
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../01_http_and_rest/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Книга FastAPI
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorials/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Zero to Hero
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../deep_dive/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  News Hub Deep Dive
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../labs/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Практика
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Довідник
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../TEACHING_GUIDE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Викладачу
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Навігація" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-nav__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    News Hub — книга FastAPI
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Головна
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../00_getting_started/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Як користуватися
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Книга FastAPI
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Книга FastAPI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../01_http_and_rest/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина I. HTTP і дизайн REST API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1" id="__nav_3_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина I. HTTP і дизайн REST API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/http_anatomy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP-запит і відповідь
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/http_methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Методи HTTP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/status_codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Коди відповідей
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/rest_principles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Принципи REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/collections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Колекції і пагінація
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/versioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Версіонування API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Формат помилок
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/api_styles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Які бувають API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/http_clients/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP-клієнти
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/legacy_case/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Кейс: API v1 → v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/meteo_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архітектура meteo_api
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../02_typing_and_pydantic/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина II. Типи і Pydantic
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_2" id="__nav_3_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина II. Типи і Pydantic
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/type_hints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Анотації типів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/pydantic_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Моделі Pydantic 2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/strict_mode/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Режими lax і strict
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/validators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Валідатори і computed_field
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/special_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    URL, email і дати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/validation_error/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ValidationError
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pydantic-settings і .env
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/config_dict/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ConfigDict
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/trust_boundary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Межа довіри
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../03_fastapi_core/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина III. Ядро FastAPI
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_3" id="__nav_3_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина III. Ядро FastAPI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/what_is_fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Що таке FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/routes_and_validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Маршрути і валідація
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Залежності і lifespan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/openapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/fastapi_flask_django/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FastAPI, Flask і Django
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/fastapi_vs_drf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FastAPI і DRF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../04_async/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина IV. Async і конкурентність
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_4" id="__nav_3_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина IV. Async і конкурентність
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/concurrency_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Чекати чи рахувати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/asgi_vs_wsgi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ASGI і WSGI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/endpoint_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Три типи ендпоінтів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/blocking_code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Блокуючий код
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/concurrency_patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Паралельні запити
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../05_databases/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_5" id="__nav_3_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/sql_for_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQL для API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/sqlalchemy_async/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLAlchemy async
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/transactions_and_uow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Транзакції й Unit of Work
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/repository_pattern/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Патерн Repository
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/connection_pool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Пул з'єднань
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/migrations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Міграції Alembic
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../06_middleware_cache_jobs/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VI. Middleware, кеш і фонові задачі
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_6" id="__nav_3_6_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VI. Middleware, кеш і фонові задачі
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/middleware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Middleware
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/cors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CORS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/redis_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Redis для API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/caching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Стратегії кешу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/rate_limiting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rate limit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/background_jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фонові задачі й черги
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VII. Тестування API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_7" id="__nav_3_7_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VII. Тестування API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pytest_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Основи pytest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fixtures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фікстури
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Підміни: mock і fake
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Підміни: mock і fake
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проблема
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ментальна модель
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Код, який підміняємо
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dummy-stub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dummy і stub
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mock: запис викликів
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spy-fake" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spy і fake
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-mock-hurts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Коли мок шкодить, а фейк кращий
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#patch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        patch: підміна імені в модулі
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="patch: підміна імені в модулі">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-to-patch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Patch where used
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#patch-forms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Форми patch
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#autospec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        autospec: мок, що знає справжній інтерфейс
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Час і випадковість
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#news-hub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        У News Hub
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Типові помилки
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Налагодження
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Питання
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing_fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Тестування FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../test_databases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Тести з базою даних
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Якість тестів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../08_security/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VIII. Безпека API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_8" id="__nav_3_8_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VIII. Безпека API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/passwords/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Паролі: хеш, сіль, вартість
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Автентифікація: сесії і JWT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/authorization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Авторизація: ролі, scopes, об'єкти
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/ssrf_and_outbound/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSRF і вихідні запити
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/webhooks_and_signatures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Webhook і підписи
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/secrets_and_headers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Секрети, заголовки, проксі
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/owasp_api_top10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OWASP API Top 10
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_9" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../09_integrations/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина IX. Інтеграції: AI, LLM, Telegram
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_9" id="__nav_3_9_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина IX. Інтеграції: AI, LLM, Telegram
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/ai_dev_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI-агент у проєкті
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/llm_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/llm_reliability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Надійність LLM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/telegram_bots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telegram-бот
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/websockets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WebSocket у FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_10" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../10_docker_and_ci/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина X. Docker, Compose і CI/CD
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_10" id="__nav_3_10_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина X. Docker, Compose і CI/CD
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/docker_image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker-образ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/compose/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker Compose
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/production_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сервер у production
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/ci_cd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD на GitHub Actions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/microservices/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Мікросервіси: коли варто
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../tutorials/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zero to Hero
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../deep_dive/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    News Hub Deep Dive
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../labs/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Практика
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../reference/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Довідник
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TEACHING_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Викладачу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проблема
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ментальна модель
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Код, який підміняємо
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dummy-stub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dummy і stub
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mock: запис викликів
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spy-fake" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spy і fake
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-mock-hurts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Коли мок шкодить, а фейк кращий
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#patch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        patch: підміна імені в модулі
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="patch: підміна імені в модулі">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-to-patch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Patch where used
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#patch-forms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Форми patch
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#autospec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        autospec: мок, що знає справжній інтерфейс
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Час і випадковість
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#news-hub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        У News Hub
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Типові помилки
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Налагодження
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Питання
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Навігація" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Головна
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../../01_http_and_rest/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Книга FastAPI
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Частина VII. Тестування API
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="підміни-dummy-stub-mock-spy-fake">Підміни: dummy, stub, mock, spy, fake<a class="headerlink" href="#підміни-dummy-stub-mock-spy-fake" title="Permanent link">&para;</a></h1>
+<h2 id="problem">Проблема<a class="headerlink" href="#problem" title="Permanent link">&para;</a></h2>
+<p>Коли редактор публікує новину, підписники отримують лист. Справжня відправка ходить по мережі до SMTP-сервера: тест з нею повільний, залежить від мережі й чужого сервера, а в гіршому разі розсилає листи справжнім людям. Те саме з HTTP-запитами до чужих сайтів, LLM API (кожен виклик коштує грошей), Telegram, поточним часом і випадковістю. Такі залежності — <strong>межі системи</strong> — у тестах замінюють.</p>
+<p>Але підміну легко перестаратися. Тест, у якому замінено все, перевіряє не поведінку, а те, <strong>як</strong> код написано: він зелений, навіть коли справжні частини одна з одною не стикуються, і червоніє від кожного рефакторингу. Ця сторінка — про види підмін (test doubles), інструменти <code>unittest.mock</code> і вибір між моком і фейком.</p>
+<h2 id="mental-model">Ментальна модель<a class="headerlink" href="#mental-model" title="Permanent link">&para;</a></h2>
+<p>Залежність потрапляє в код одним із двох шляхів, і від цього залежить, як її підмінити:</p>
+<pre class="mermaid"><code>flowchart LR
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    D["send_digest(subscribers,&lt;br&gt;titles, mailer)"] --&gt; M{"mailer —&lt;br&gt;параметр"}
+    M -- "у продакшені" --&gt; R1["SmtpMailer&lt;br&gt;мережа"]
+    M -- "у тесті" --&gt; F1["FakeMailer, Mock&lt;br&gt;передати аргументом"]
+    A["alert_editor(title)"] --&gt; I{"send_email —&lt;br&gt;ім'я в модулі alerts"}
+    I -- "у продакшені" --&gt; R2["newsapp.mail.send_email&lt;br&gt;мережа"]
+    I -- "у тесті" --&gt; P["mock.patch(&lt;br&gt;'newsapp.alerts.send_email')"]
+
+    class D,A step
+    class M,I decision
+    class R1,R2 warning
+    class F1,P success</code></pre>
+<ul>
+<li><strong>Залежність параметром</strong> (<code>mailer</code>) — підміну просто передають аргументом. Це <strong>впровадження залежностей</strong> (dependency injection): функція не вирішує сама, куди слати, — їй це дають. У FastAPI ту саму роль грає <code>Depends</code> і <code>app.dependency_overrides</code> (<a href="../testing_fastapi/#overrides">Тестування FastAPI</a>).</li>
+<li><strong>Залежність імпортом</strong> (<code>from .mail import send_email</code>) — підміняють ім'я в модулі, де його <strong>шукає</strong> код: <code>mock.patch("newsapp.alerts.send_email")</code>.</li>
+</ul>
+<p>Код, який легко тестувати, майже завжди має й кращу архітектуру: чіткі межі, малі частини, явні залежності.</p>
+<p>Види підмін (терміни Джерарда Месароша, «xUnit Test Patterns»):</p>
+<table>
+<thead>
+<tr>
+<th>Вид</th>
+<th>Що робить</th>
+<th>Що перевіряє тест</th>
+<th>У прикладі</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>dummy</strong></td>
+<td>лише заповнює параметр; не має використовуватися</td>
+<td>нічого</td>
+<td><code>mock.Mock(spec=[])</code></td>
+</tr>
+<tr>
+<td><strong>stub</strong></td>
+<td>дає готову відповідь</td>
+<td>результат коду, що тестується</td>
+<td>клас <code>AlwaysOk</code></td>
+</tr>
+<tr>
+<td><strong>mock</strong></td>
+<td>записує виклики</td>
+<td><strong>як</strong> код скористався залежністю</td>
+<td><code>mock.Mock()</code> + <code>assert_called_once_with</code></td>
+</tr>
+<tr>
+<td><strong>spy</strong></td>
+<td>справжня поведінка + запис викликів</td>
+<td>і результат, і виклики</td>
+<td><code>mock.Mock(wraps=fake)</code></td>
+</tr>
+<tr>
+<td><strong>fake</strong></td>
+<td>робоча спрощена реалізація зі станом</td>
+<td>результат і стан фейку</td>
+<td><code>FakeMailer</code>, SQLite, fakeredis</td>
+</tr>
+</tbody>
+</table>
+<p>У <code>unittest.mock</code> усі вони будуються з одного класу <code>Mock</code>; назва описує <strong>роль</strong> у тесті, а не клас.</p>
+<p>Код — <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/testing/tests/test_doubles.py"><code>tests/test_doubles.py</code></a>, <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/testing/tests/fakes.py"><code>tests/fakes.py</code></a>, <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/testing/newsapp/digest.py"><code>newsapp/digest.py</code></a>, <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/testing/newsapp/alerts.py"><code>newsapp/alerts.py</code></a> у <a href="https://github.com/NikoriakViktor/news_hub/tree/main/examples/testing"><code>examples/testing</code></a>.</p>
+<h2 id="code">Код, який підміняємо<a class="headerlink" href="#code" title="Permanent link">&para;</a></h2>
+<div class="highlight"><span class="filename">newsapp/digest.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">send_digest</span><span class="p">(</span><span class="n">subscribers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">titles</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">mailer</span><span class="p">:</span> <span class="n">Mailer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="sd">"""Лист кожному підписнику; збій одного не зупиняє інших. Немає новин — листів немає."""</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">report</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"sent"</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">"failed"</span><span class="p">:</span> <span class="p">[]}</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">titles</span><span class="p">:</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        <span class="k">return</span> <span class="n">report</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">body</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"• </span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">title</span> <span class="ow">in</span> <span class="n">titles</span><span class="p">)</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="k">for</span> <span class="n">email</span> <span class="ow">in</span> <span class="n">subscribers</span><span class="p">:</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>            <span class="n">mailer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> <span class="n">subject</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Дайджест новин: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">titles</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        <span class="k">except</span> <span class="ne">ConnectionError</span><span class="p">:</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>            <span class="n">report</span><span class="p">[</span><span class="s2">"failed"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">email</span><span class="p">)</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>        <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>            <span class="n">report</span><span class="p">[</span><span class="s2">"sent"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">email</span><span class="p">)</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="k">return</span> <span class="n">report</span>
+</code></pre></div>
+<p><code>Mailer</code> — <code>Protocol</code> з одним методом <code>send(to, subject, body) -&gt; str</code>; справжня реалізація — <code>SmtpMailer</code> у <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/testing/newsapp/mail.py"><code>newsapp/mail.py</code></a>. Що треба перевірити: лист кожному, текст листа, збій одного не зупиняє інших, без новин листів немає.</p>
+<h2 id="dummy-stub">Dummy і stub<a class="headerlink" href="#dummy-stub" title="Permanent link">&para;</a></h2>
+<div class="highlight"><span class="filename">tests/test_doubles.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_dummy_is_never_touched</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="sd">"""Dummy — лише щоб заповнити параметр. spec=[]: будь-яке звернення до атрибута — AttributeError."""</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="k">assert</span> <span class="n">send_digest</span><span class="p">(</span><span class="n">READERS</span><span class="p">,</span> <span class="p">[],</span> <span class="n">mailer</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">Mock</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="p">[]))</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"sent"</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">"failed"</span><span class="p">:</span> <span class="p">[]}</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_stub_gives_canned_answer</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="sd">"""Stub — готова відповідь; що з ним робили, тест не питає."""</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="k">class</span><span class="w"> </span><span class="nc">AlwaysOk</span><span class="p">:</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>        <span class="k">def</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">subject</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">body</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>            <span class="k">return</span> <span class="s2">"id-1"</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    <span class="k">assert</span> <span class="n">send_digest</span><span class="p">(</span><span class="n">READERS</span><span class="p">,</span> <span class="p">[</span><span class="s2">"Новина"</span><span class="p">],</span> <span class="n">AlwaysOk</span><span class="p">())[</span><span class="s2">"sent"</span><span class="p">]</span> <span class="o">==</span> <span class="n">READERS</span>
+</code></pre></div>
+<p><code>mock.Mock(spec=[])</code> — суворий dummy: у нього немає жодного атрибута, тож якби <code>send_digest</code> без новин усе-таки звернувся до <code>mailer.send</code>, тест упав би з <code>AttributeError</code>. Звичайний <code>None</code> замість dummy впаде так само, але тип-чекер його не пропустить.</p>
+<h2 id="mock">Mock: запис викликів<a class="headerlink" href="#mock" title="Permanent link">&para;</a></h2>
+<p><code>mock.Mock()</code> — об'єкт, у якого є <strong>будь-який</strong> атрибут і метод. Він приймає будь-які аргументи й запам'ятовує кожен виклик:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">mailer</span> <span class="o">=</span> <span class="n">mock</span><span class="o">.</span><span class="n">Mock</span><span class="p">()</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">send_digest</span><span class="p">([</span><span class="s2">"olena@example.com"</span><span class="p">,</span> <span class="s2">"taras@example.com"</span><span class="p">],</span> <span class="p">[</span><span class="s2">"Новина"</span><span class="p">],</span> <span class="n">mailer</span><span class="p">))</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">mailer</span><span class="o">.</span><span class="n">send</span><span class="o">.</span><span class="n">call_count</span><span class="p">,</span> <span class="n">mailer</span><span class="o">.</span><span class="n">send</span><span class="o">.</span><span class="n">call_args</span><span class="p">)</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">mailer</span><span class="o">.</span><span class="n">send</span><span class="o">.</span><span class="n">return_value</span><span class="p">)</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">mailer</span><span class="o">.</span><span class="n">send</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">=</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">"таймаут"</span><span class="p">)</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="nb">print</span><span class="p">(</span><span class="n">send_digest</span><span class="p">([</span><span class="s2">"olena@example.com"</span><span class="p">],</span> <span class="p">[</span><span class="s2">"Новина"</span><span class="p">],</span> <span class="n">mailer</span><span class="p">))</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>{'sent': ['olena@example.com', 'taras@example.com'], 'failed': []}
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>2 call('taras@example.com', subject='Дайджест новин: 1', body='• Новина')
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>&lt;Mock name='mock.send()' id='133226963414832'&gt;
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>{'sent': [], 'failed': ['olena@example.com']}
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Атрибут / метод</th>
+<th>Що означає</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>return_value</code></td>
+<td>що повертає виклик; за замовчуванням — новий <code>Mock</code></td>
+</tr>
+<tr>
+<td><code>side_effect = виняток</code></td>
+<td>виклик кидає виняток</td>
+</tr>
+<tr>
+<td><code>side_effect = [a, b, …]</code></td>
+<td>кожен виклик бере наступний елемент; виняток у списку — кидається</td>
+</tr>
+<tr>
+<td><code>side_effect = функція</code></td>
+<td>виклик передається у функцію, її результат — відповідь</td>
+</tr>
+<tr>
+<td><code>called</code>, <code>call_count</code>, <code>call_args</code>, <code>call_args_list</code></td>
+<td>що з моком робили</td>
+</tr>
+<tr>
+<td><code>assert_called_once_with(...)</code>, <code>assert_any_call(...)</code>, <code>assert_not_called()</code></td>
+<td>перевірка викликів з повідомленням про різницю</td>
+</tr>
+<tr>
+<td><code>mock.ANY</code></td>
+<td>дорівнює будь-чому: <code>assert_called_once_with(URL, timeout=mock.ANY)</code></td>
+</tr>
+<tr>
+<td><code>MagicMock</code></td>
+<td><code>Mock</code> + «магічні» методи: <code>__len__</code>, <code>__iter__</code>, <code>__enter__</code>/<code>__exit__</code>, <code>__aenter__</code>/<code>__aexit__</code></td>
+</tr>
+<tr>
+<td><code>AsyncMock</code></td>
+<td>метод, який треба <code>await</code>; <code>MagicMock</code> дає його для <code>__aenter__</code> сам</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><span class="filename">tests/test_doubles.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_mock_records_calls</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">mailer</span> <span class="o">=</span> <span class="n">mock</span><span class="o">.</span><span class="n">Mock</span><span class="p">()</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">send_digest</span><span class="p">([</span><span class="s2">"olena@example.com"</span><span class="p">],</span> <span class="p">[</span><span class="s2">"Перша"</span><span class="p">,</span> <span class="s2">"Друга"</span><span class="p">],</span> <span class="n">mailer</span><span class="p">)</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">mailer</span><span class="o">.</span><span class="n">send</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="s2">"olena@example.com"</span><span class="p">,</span> <span class="n">subject</span><span class="o">=</span><span class="s2">"Дайджест новин: 2"</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="s2">"• Перша</span><span class="se">\n</span><span class="s2">• Друга"</span><span class="p">)</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_side_effect_sequence</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="sd">"""side_effect — список: перший виклик кидає виняток, другий повертає значення."""</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="n">mailer</span> <span class="o">=</span> <span class="n">mock</span><span class="o">.</span><span class="n">Mock</span><span class="p">()</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    <span class="n">mailer</span><span class="o">.</span><span class="n">send</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">=</span> <span class="p">[</span><span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">"таймаут"</span><span class="p">),</span> <span class="s2">"id-2"</span><span class="p">]</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    <span class="k">assert</span> <span class="n">send_digest</span><span class="p">(</span><span class="n">READERS</span><span class="p">,</span> <span class="p">[</span><span class="s2">"Новина"</span><span class="p">],</span> <span class="n">mailer</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"sent"</span><span class="p">:</span> <span class="n">READERS</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="s2">"failed"</span><span class="p">:</span> <span class="n">READERS</span><span class="p">[:</span><span class="mi">1</span><span class="p">]}</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    <span class="k">assert</span> <span class="n">mailer</span><span class="o">.</span><span class="n">send</span><span class="o">.</span><span class="n">call_count</span> <span class="o">==</span> <span class="mi">2</span>
+</code></pre></div>
+<p><code>side_effect</code> — головний інструмент мока: він відтворює те, чого справжня залежність на замовлення не зробить (тайм-аут, обрив, 403 на другому запиті). Мок мережі з <code>MagicMock</code>, <code>AsyncMock</code> і <code>async with</code> — у <a href="../../tutorials/05_api_testing/mock_network/#mock-session">кроці 5, «Мок мережі»</a>.</p>
+<p><code>assert_called_once_with</code> перевіряє аргументи <strong>так, як їх передали</strong>: виклик <code>send(email, subject=..., body=...)</code> не дорівнює <code>send(email, ..., ...)</code> позиційно. Тест на мок прив'язаний до форми виклику — це ціна, про яку <a href="#when-mock-hurts">нижче</a>.</p>
+<h2 id="spy-fake">Spy і fake<a class="headerlink" href="#spy-fake" title="Permanent link">&para;</a></h2>
+<div class="highlight"><span class="filename">tests/fakes.py</span><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">FakeMailer</span><span class="p">:</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="sd">"""Пошта в пам'яті: листи — у outbox; адреси з `down` «не відповідають» (ConnectionError)."""</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">down</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">outbox</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">down</span> <span class="o">=</span> <span class="n">down</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">()</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">subject</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">body</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>        <span class="k">if</span> <span class="n">to</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">down</span><span class="p">:</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">to</span><span class="si">}</span><span class="s2">: сервер не відповідає"</span><span class="p">)</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">outbox</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">to</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">body</span><span class="p">))</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">"fake-</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outbox</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+</code></pre></div>
+<div class="highlight"><span class="filename">tests/test_doubles.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_spy_wraps_real_object</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="sd">"""Spy — справжня поведінка (тут — фейку) плюс запис викликів."""</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="n">fake</span> <span class="o">=</span> <span class="n">FakeMailer</span><span class="p">()</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">spy</span> <span class="o">=</span> <span class="n">mock</span><span class="o">.</span><span class="n">Mock</span><span class="p">(</span><span class="n">wraps</span><span class="o">=</span><span class="n">fake</span><span class="p">)</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">send_digest</span><span class="p">(</span><span class="n">READERS</span><span class="p">,</span> <span class="p">[</span><span class="s2">"Новина"</span><span class="p">],</span> <span class="n">spy</span><span class="p">)</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="k">assert</span> <span class="n">fake</span><span class="o">.</span><span class="n">sent_to</span><span class="p">()</span> <span class="o">==</span> <span class="n">READERS</span>                          <span class="c1"># листи справді «пішли»</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="k">assert</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">spy</span><span class="o">.</span><span class="n">send</span><span class="o">.</span><span class="n">call_args_list</span><span class="p">]</span> <span class="o">==</span> <span class="n">READERS</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_fake_has_state_and_rules</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">    </span><span class="sd">"""Fake — робоча спрощена реалізація: пам'ятає листи, уміє «падати» для окремих адрес."""</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>    <span class="n">fake</span> <span class="o">=</span> <span class="n">FakeMailer</span><span class="p">(</span><span class="n">down</span><span class="o">=</span><span class="p">{</span><span class="s2">"taras@example.com"</span><span class="p">})</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>    <span class="n">report</span> <span class="o">=</span> <span class="n">send_digest</span><span class="p">(</span><span class="n">READERS</span><span class="p">,</span> <span class="p">[</span><span class="s2">"Новина"</span><span class="p">],</span> <span class="n">fake</span><span class="p">)</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>    <span class="k">assert</span> <span class="n">report</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"sent"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"olena@example.com"</span><span class="p">],</span> <span class="s2">"failed"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"taras@example.com"</span><span class="p">]}</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>    <span class="k">assert</span> <span class="n">fake</span><span class="o">.</span><span class="n">outbox</span> <span class="o">==</span> <span class="p">[(</span><span class="s2">"olena@example.com"</span><span class="p">,</span> <span class="s2">"Дайджест новин: 1"</span><span class="p">,</span> <span class="s2">"• Новина"</span><span class="p">)]</span>
+</code></pre></div>
+<p>Фейк перевіряє <strong>результат</strong> — що опинилося в «скриньці», — а не форму виклику. Перепишеш <code>send_digest</code> так, що він передає <code>subject</code> позиційно, — тест на мок з <code>assert_called_once_with(..., subject=...)</code> почервоніє, тест на фейк лишиться зеленим, бо листи ті самі.</p>
+<h2 id="when-mock-hurts">Коли мок шкодить, а фейк кращий<a class="headerlink" href="#when-mock-hurts" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Mock</th>
+<th>Fake</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>що перевіряє</td>
+<td>взаємодію: який метод, з якими аргументами</td>
+<td>стан і результат</td>
+</tr>
+<tr>
+<td>рефакторинг без зміни поведінки</td>
+<td>часто ламає тест</td>
+<td>тест лишається зеленим</td>
+</tr>
+<tr>
+<td>залежність зі станом (сховище, черга, пошта)</td>
+<td>сценарій розписується викликами</td>
+<td>стан — у фейку</td>
+</tr>
+<tr>
+<td>рідкісні збої (тайм-аут, 403 на другому запиті)</td>
+<td><code>side_effect</code> — одним рядком</td>
+<td>треба вбудувати правило у фейк</td>
+</tr>
+<tr>
+<td>написати</td>
+<td>нуль коду</td>
+<td>клас, який теж треба підтримувати</td>
+</tr>
+<tr>
+<td>брехня</td>
+<td>мок прийме будь-який виклик (<a href="#autospec">нижче</a>)</td>
+<td>фейк може розійтися зі справжнім</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Мокай межі, не власний код</p>
+<p>Мокати варто <strong>межі системи</strong>: мережу, пошту, платежі, LLM, час, випадковість. Якщо мокати власні функції (парсер, модель, репозиторій), тест перевіряє не поведінку, а те, як код розкладено по функціях: будь-який рефакторинг ламає тести, хоча програма працює. А тест, у якому замокано все, проходить, навіть коли справжні частини одна з одною не стикуються.</p>
+</div>
+<p>Фейк, у свою чергу, теж спрощує: SQLite пропускає те, що PostgreSQL відхиляє (<a href="../test_databases/#sqlite-vs-postgres">Тести з базою даних</a>), fakeredis не показує гонок (<a href="../../tutorials/05_api_testing/fake_server/#fakeredis-limit">крок 5, «Межа фейку»</a>). Тому поруч зі швидким фейком потрібен хоча б один прогін на справжній залежності. Схема вибору «справжнє — фейк — мок — справжній сервер» — у <a href="../../tutorials/05_api_testing/fake_server/#choose">кроці 5, «Як обрати підміну»</a>.</p>
+<h2 id="patch"><code>patch</code>: підміна імені в модулі<a class="headerlink" href="#patch" title="Permanent link">&para;</a></h2>
+<p>Не весь код приймає залежності параметром:</p>
+<div class="highlight"><span class="filename">newsapp/alerts.py</span><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">.mail</span><span class="w"> </span><span class="kn">import</span> <span class="n">send_email</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">EDITOR</span> <span class="o">=</span> <span class="s2">"editor@example.com"</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">alert_editor</span><span class="p">(</span><span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span><span class="sd">"""Термінова новина → лист редактору. Повертає id листа."""</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    <span class="k">return</span> <span class="n">send_email</span><span class="p">(</span><span class="n">EDITOR</span><span class="p">,</span> <span class="n">subject</span><span class="o">=</span><span class="s2">"Терміново"</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">title</span><span class="p">)</span>
+</code></pre></div>
+<p><code>mock.patch("модуль.ім'я")</code> тимчасово кладе мок на місце імені і повертає оригінал після <code>with</code> (чи після тесту, якщо це декоратор):</p>
+<div class="highlight"><span class="filename">tests/test_doubles.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_patch_where_used</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="sd">"""alerts.py робить `from .mail import send_email` — патчимо ім'я в alerts, а не в mail."""</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="k">with</span> <span class="n">mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s2">"newsapp.alerts.send_email"</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="s2">"id-7"</span><span class="p">)</span> <span class="k">as</span> <span class="n">fake_send</span><span class="p">:</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>        <span class="k">assert</span> <span class="n">alerts</span><span class="o">.</span><span class="n">alert_editor</span><span class="p">(</span><span class="s2">"Уряд ухвалив бюджет"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"id-7"</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="n">fake_send</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="s2">"editor@example.com"</span><span class="p">,</span> <span class="n">subject</span><span class="o">=</span><span class="s2">"Терміново"</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="s2">"Уряд ухвалив бюджет"</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="where-to-patch">Patch where used<a class="headerlink" href="#where-to-patch" title="Permanent link">&para;</a></h3>
+<p>Головне правило: підміняти ім'я там, де його <strong>шукає</strong> код, а не там, де функцію визначено. Рядок <code>from .mail import send_email</code> створив у модулі <code>newsapp.alerts</code> <strong>власне</strong> ім'я <code>send_email</code>, що вказує на ту саму функцію. Патч <code>newsapp.mail.send_email</code> міняє лише ім'я в <code>mail</code>:</p>
+<div class="highlight"><span class="filename">demos/test_wrong_patch.py</span><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_patch_where_defined</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="k">with</span> <span class="n">mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s2">"newsapp.mail.send_email"</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="s2">"id-7"</span><span class="p">):</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>        <span class="k">assert</span> <span class="n">alerts</span><span class="o">.</span><span class="n">alert_editor</span><span class="p">(</span><span class="s2">"Уряд ухвалив бюджет"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"id-7"</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>$ pytest -q demos/test_wrong_patch.py
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>newsapp/alerts.py:9: in alert_editor
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>newsapp/mail.py:33: in send_email
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>newsapp/mail.py:26: in send
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>E               ConnectionRefusedError: [Errno 111] Connection refused
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>1 failed in 0.12s
+</code></pre></div>
+<p>Тест викликав справжню <code>send_email</code> і спробував з'єднатися з SMTP-сервером. Тут його немає, і тест упав. Гірше, коли сервер є: тест зелений і надсилає справжній лист.</p>
+<table>
+<thead>
+<tr>
+<th>Як імпортовано в <code>alerts.py</code></th>
+<th>Що патчити</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>from .mail import send_email</code></td>
+<td><code>newsapp.alerts.send_email</code></td>
+</tr>
+<tr>
+<td><code>from . import mail</code> → <code>mail.send_email(...)</code></td>
+<td><code>newsapp.mail.send_email</code> (шукається в <code>mail</code> під час виклику)</td>
+</tr>
+<tr>
+<td><code>import smtplib</code> → <code>smtplib.SMTP(...)</code></td>
+<td><code>smtplib.SMTP</code> або <code>newsapp.mail.smtplib.SMTP</code> — той самий об'єкт модуля</td>
+</tr>
+</tbody>
+</table>
+<p>Розбір того самого правила на мережі News Hub, з діаграмою імен, — <a href="../../tutorials/05_api_testing/mock_network/#patch-where-used">крок 5, «patch where used»</a>.</p>
+<h3 id="patch-forms">Форми <code>patch</code><a class="headerlink" href="#patch-forms" title="Permanent link">&para;</a></h3>
+<div class="highlight"><span class="filename">tests/test_doubles.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="o">.</span><span class="n">object</span><span class="p">(</span><span class="n">alerts</span><span class="p">,</span> <span class="s2">"EDITOR"</span><span class="p">,</span> <span class="s2">"night-editor@example.com"</span><span class="p">)</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s2">"newsapp.alerts.send_email"</span><span class="p">)</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_patch_as_decorator</span><span class="p">(</span><span class="n">fake_send</span><span class="p">:</span> <span class="n">mock</span><span class="o">.</span><span class="n">Mock</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span><span class="sd">"""Декоратори застосовуються знизу вгору; patch.object з новим значенням аргумент не додає."""</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>    <span class="n">alerts</span><span class="o">.</span><span class="n">alert_editor</span><span class="p">(</span><span class="s2">"Вночі"</span><span class="p">)</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>    <span class="k">assert</span> <span class="n">fake_send</span><span class="o">.</span><span class="n">call_args</span><span class="o">.</span><span class="n">args</span> <span class="o">==</span> <span class="p">(</span><span class="s2">"night-editor@example.com"</span><span class="p">,)</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Форма</th>
+<th>Коли</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>with mock.patch("a.b") as m:</code></td>
+<td>підміна на кілька рядків тесту</td>
+</tr>
+<tr>
+<td><code>@mock.patch("a.b")</code></td>
+<td>на весь тест; мок приходить аргументом, <strong>нижній декоратор — перший аргумент</strong></td>
+</tr>
+<tr>
+<td><code>mock.patch.object(модуль_або_клас, "ім'я")</code></td>
+<td>коли об'єкт уже імпортовано: без рядка з шляхом, одруківку видно одразу</td>
+</tr>
+<tr>
+<td><code>mock.patch("a.b", новe_значення)</code></td>
+<td>підставити не мок, а значення (константу); аргумент у тест не додається</td>
+</tr>
+<tr>
+<td><code>mock.patch.dict(os.environ, {"K": "v"})</code></td>
+<td>тимчасово змінити словник</td>
+</tr>
+<tr>
+<td><code>monkeypatch.setattr(...)</code></td>
+<td>те саме без мока — <a href="../fixtures/#monkeypatch">Фікстури</a></td>
+</tr>
+</tbody>
+</table>
+<p>Порядок аргументів при кількох декораторах — часте джерело плутанини: декоратор найближчий до функції застосовується першим і дає перший аргумент.</p>
+<h2 id="autospec"><code>autospec</code>: мок, що знає справжній інтерфейс<a class="headerlink" href="#autospec" title="Permanent link">&para;</a></h2>
+<p>Звичайний <code>Mock</code> не знає, що підміняє. Одруківка в імені аргументу чи методу — і жодної помилки:</p>
+<div class="highlight"><span class="filename">tests/test_doubles.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_plain_mock_accepts_any_call</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">    </span><span class="sd">"""Звичайний Mock не знає справжнього інтерфейсу: одруківка в аргументі — і жодної помилки."""</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="n">mailer</span> <span class="o">=</span> <span class="n">mock</span><span class="o">.</span><span class="n">Mock</span><span class="p">()</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>    <span class="n">mailer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">"olena@example.com"</span><span class="p">,</span> <span class="n">subjekt</span><span class="o">=</span><span class="s2">"Дайджест"</span><span class="p">)</span>       <span class="c1"># у SmtpMailer.send немає subjekt</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>    <span class="n">mailer</span><span class="o">.</span><span class="n">sned</span><span class="p">(</span><span class="s2">"olena@example.com"</span><span class="p">)</span>                          <span class="c1"># і методу sned теж немає</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>    <span class="k">assert</span> <span class="n">mailer</span><span class="o">.</span><span class="n">send</span><span class="o">.</span><span class="n">called</span> <span class="ow">and</span> <span class="n">mailer</span><span class="o">.</span><span class="n">sned</span><span class="o">.</span><span class="n">called</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_autospec_checks_the_real_signature</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>    <span class="n">mailer</span> <span class="o">=</span> <span class="n">mock</span><span class="o">.</span><span class="n">create_autospec</span><span class="p">(</span><span class="n">SmtpMailer</span><span class="p">,</span> <span class="n">instance</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>    <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="n">match</span><span class="o">=</span><span class="s2">"missing a required argument: 'subject'"</span><span class="p">):</span>
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>        <span class="n">mailer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">"olena@example.com"</span><span class="p">,</span> <span class="n">subjekt</span><span class="o">=</span><span class="s2">"Дайджест"</span><span class="p">)</span>
+<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>    <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="n">match</span><span class="o">=</span><span class="s2">"sned"</span><span class="p">):</span>
+<a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>        <span class="n">mailer</span><span class="o">.</span><span class="n">sned</span><span class="p">(</span><span class="s2">"olena@example.com"</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>autospec: missing a required argument: 'subject'
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>autospec: Mock object has no attribute 'sned'
+</code></pre></div>
+<p>Це не теоретична проблема. Змінився підпис справжнього <code>send</code> (перейменували <code>subject</code> на <code>title</code>), а код і тести на звичайних моках не оновили — усі тести зелені, у продакшені <code>TypeError</code>. <code>autospec</code> перевіряє кожен виклик за підписом справжнього класу.</p>
+<table>
+<thead>
+<tr>
+<th>Спосіб</th>
+<th>Що перевіряє</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Mock(spec=SmtpMailer)</code></td>
+<td>лише імена атрибутів; читання неіснуючого — <code>AttributeError</code></td>
+</tr>
+<tr>
+<td><code>Mock(spec_set=SmtpMailer)</code></td>
+<td>ще й забороняє <strong>присвоювати</strong> неіснуючі атрибути</td>
+</tr>
+<tr>
+<td><code>mock.create_autospec(SmtpMailer, instance=True)</code></td>
+<td>імена і підписи методів, рекурсивно</td>
+</tr>
+<tr>
+<td><code>mock.patch("a.b", autospec=True)</code></td>
+<td>те саме для <code>patch</code></td>
+</tr>
+</tbody>
+</table>
+<p>Окремо <code>Mock</code> захищає від одруківок у самих перевірках. <code>mailer.send.assert_called_onse()</code> у старих версіях Python створив би новий атрибут і мовчки нічого не перевірив; тепер це помилка:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>AttributeError: 'assert_called_onse' is not a valid assertion. Use a spec for the mock if 'assert_called_onse' is meant to be an attribute.
+</code></pre></div>
+<p>Захист спрацьовує на атрибутах, що починаються з <code>assert</code>, <code>assret</code>, <code>asert</code>, <code>aseert</code>, <code>assrt</code>, а з Python 3.12 — ще й на назвах assert-методів без <code>assert_</code>: <code>called_once</code>, <code>called_once_with</code>, <code>not_called</code> тощо. Вимикає його <code>Mock(unsafe=True)</code>.</p>
+<h2 id="time">Час і випадковість<a class="headerlink" href="#time" title="Permanent link">&para;</a></h2>
+<p><code>datetime.now()</code>, <code>time.monotonic()</code>, <code>random</code>, <code>uuid4</code> — теж зовнішні межі: тест з ними не відтворюється. Три способи, від найкращого:</p>
+<ol>
+<li><strong>параметр</strong>: <code>def is_fresh(published: datetime, now: datetime | None = None)</code>, у тесті передати фіксований <code>now</code>;</li>
+<li><strong>залежність</strong>: <code>clock: Callable[[], datetime]</code> як аргумент класу чи <code>Depends</code>, у тесті — <code>lambda: FIXED</code>;</li>
+<li><strong>патч</strong>: <code>mock.patch("newsapp.x.datetime")</code> — останній варіант, крихкий (і <code>datetime.datetime</code> вбудований тип, його атрибути не патчаться напряму).</li>
+</ol>
+<p>Для тайм-аутів не чекають справжні секунди: зменшують значення в тесті (<code>monkeypatch</code> тайм-ауту в <a href="../../tutorials/05_api_testing/fake_server/#more-tests">кроці 5</a>) або підміняють затримку повторів (<code>TELEGRAM_RETRY_DELAYS</code> у тестах webhook News Hub).</p>
+<h2 id="news-hub">У News Hub<a class="headerlink" href="#news-hub" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Межа</th>
+<th>Підміна</th>
+<th>Вид</th>
+<th>Де</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HTTP до rbc.ua в unit-тестах</td>
+<td><code>MagicMock</code> замість <code>aiohttp.ClientSession</code></td>
+<td>mock + stub</td>
+<td><a href="../../tutorials/05_api_testing/mock_network/">крок 5, «Мок мережі»</a></td>
+</tr>
+<tr>
+<td>HTTP до rbc.ua в integration</td>
+<td><code>aiohttp.test_utils.TestServer</code> з <code>tests/fixtures/*.html</code></td>
+<td>fake</td>
+<td><a href="../../tutorials/05_api_testing/fake_server/">крок 5, «Фейк замість моку»</a></td>
+</tr>
+<tr>
+<td>скрапер для API-тестів</td>
+<td><code>fake_scraper</code> через <code>dependency_overrides[get_scrapers]</code></td>
+<td>stub</td>
+<td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/tests/integration/conftest.py"><code>tests/integration/conftest.py</code></a></td>
+</tr>
+<tr>
+<td>LLM</td>
+<td><code>FakeLLM(replies)</code>: черга відповідей і винятків, <code>calls</code> — усі промпти</td>
+<td>fake + spy</td>
+<td><a href="../../tutorials/07_llm_api/llm_client/#fake-llm">крок 7, «<code>FakeLLM</code>»</a></td>
+</tr>
+<tr>
+<td>SDK Gemini всередині справжнього <code>GeminiClient</code></td>
+<td><code>FakeGeminiModels</code>: відповіді по черзі, <code>calls</code></td>
+<td>fake</td>
+<td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/tests/unit/test_llm.py"><code>tests/unit/test_llm.py</code></a></td>
+</tr>
+<tr>
+<td>Telegram Bot API</td>
+<td><code>TelegramTwin</code> — локальний сервер з правилами Telegram (401, 403, 429, HTML, 4096 символів)</td>
+<td>fake</td>
+<td><a href="../../tutorials/09_telegram_bot/bot_structure/#twin">крок 9, «двійник Bot API»</a></td>
+</tr>
+<tr>
+<td>Redis</td>
+<td>fakeredis; для гонок — <code>TEST_REDIS_URL</code></td>
+<td>fake</td>
+<td><a href="../../tutorials/05_api_testing/fake_server/#fakeredis-limit">крок 5, «Межа фейку»</a></td>
+</tr>
+<tr>
+<td>мережа взагалі</td>
+<td><code>monkeypatch.setattr(socket, "create_connection", no_network)</code> — доказ, що парсер RSS не ходить у мережу</td>
+<td>stub, що падає</td>
+<td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/tests/unit/test_pravda.py"><code>tests/unit/test_pravda.py</code></a></td>
+</tr>
+</tbody>
+</table>
+<p>Зверни увагу на <code>test_llm.py</code>: тест створює <strong>справжній</strong> <code>GeminiClient</code> і підміняє лише внутрішній <code>client._client</code> — найнижчий шар, що ходить у мережу. Так перевіряється власний код навколо SDK (порядок моделей, що вважається збоєм, що йде в запит), а не сам SDK. Справжні виклики LLM — окремо, з маркером <code>llm</code>.</p>
+<h2 id="mistakes">Типові помилки<a class="headerlink" href="#mistakes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Помилка</th>
+<th>Наслідок</th>
+<th>Як правильно</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>патч там, де функцію визначено</td>
+<td>код викликає справжню функцію (мережа, листи)</td>
+<td>патч там, де ім'я <strong>шукають</strong></td>
+</tr>
+<tr>
+<td>звичайний <code>Mock</code> замість реального класу</td>
+<td>одруківки й зміни підпису не помітні</td>
+<td><code>create_autospec</code> або <code>autospec=True</code></td>
+</tr>
+<tr>
+<td>мок власного коду (парсер, репозиторій)</td>
+<td>тест ламається від рефакторингу, не ловить нестиковок</td>
+<td>справжній код; мок — лише межа системи</td>
+</tr>
+<tr>
+<td>перевірка лише <code>called</code></td>
+<td>не видно, з якими аргументами й скільки разів</td>
+<td><code>assert_called_once_with(...)</code></td>
+</tr>
+<tr>
+<td><code>assert mock.called_once_with(...)</code></td>
+<td>раніше — завжди істина; тепер <code>AttributeError</code></td>
+<td><code>mock.assert_called_once_with(...)</code></td>
+</tr>
+<tr>
+<td><code>return_value</code> для <code>async</code>-методу</td>
+<td><code>await</code> на <code>Mock</code> — <code>TypeError</code></td>
+<td><code>AsyncMock(return_value=...)</code></td>
+</tr>
+<tr>
+<td>порядок аргументів при кількох <code>@patch</code></td>
+<td>моки переплутано</td>
+<td>нижній декоратор — перший аргумент</td>
+</tr>
+<tr>
+<td>фейк ніколи не звіряють зі справжнім</td>
+<td>фейк «бреше», тести зелені</td>
+<td>хоча б один прогін на справжній залежності</td>
+</tr>
+</tbody>
+</table>
+<h2 id="debugging">Налагодження<a class="headerlink" href="#debugging" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Мок не спрацював</strong> (тест викликав справжню функцію): надрукуй <code>модуль.ім'я is fake</code> усередині <code>with mock.patch(...) as fake</code> — <code>False</code> означає, що патч не там (<a href="../../tutorials/05_api_testing/mock_network/#patch-where-used">приклад у кроці 5</a>).</li>
+<li><strong>Що з моком робили:</strong> <code>print(m.mock_calls)</code> — усі виклики, разом із вкладеними (<code>call.send(...)</code>); <code>m.call_args_list</code> — лише прямі.</li>
+<li><strong><code>AssertionError: expected call not found</code></strong> показує очікуваний і фактичний виклик поруч. Найчастіше різниця — позиційний аргумент проти іменованого.</li>
+<li><strong>Тест на мок зелений, а в продакшені <code>TypeError</code></strong> — підпис справжнього методу змінився. Увімкни <code>autospec</code>.</li>
+</ul>
+<h2 id="questions">Питання<a class="headerlink" href="#questions" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Чим stub відрізняється від mock?</li>
+<li>Чому тест на фейк переживає рефакторинг, а тест на мок — не завжди?</li>
+<li><code>alerts.py</code> робить <code>from .mail import send_email</code>. Що патчити й чому?</li>
+<li>Що станеться, якщо патчити не те ім'я, а SMTP-сервер існує?</li>
+<li>Як <code>create_autospec</code> ловить помилку, якої не бачить <code>Mock()</code>?</li>
+<li>Що треба мокати, а що — ні?</li>
+<li>Як підмінити поточний час, щоб тест не залежав від дня запуску?</li>
+<li>Чому для <code>FakeLLM</code> у News Hub є ще й тести з маркером <code>llm</code>?</li>
+</ol>
+<details class="success">
+<summary>Відповіді</summary>
+<ol>
+<li>Stub лише дає готову відповідь, тест перевіряє результат коду; mock записує виклики, і тест перевіряє, як код ним скористався.</li>
+<li>Фейк перевіряють за станом (що опинилося в <code>outbox</code>), а мок — за формою виклику, яка при рефакторингу змінюється.</li>
+<li><code>newsapp.alerts.send_email</code>: імпорт створив у <code>alerts</code> власне ім'я, і <code>alert_editor</code> шукає саме його.</li>
+<li>Тест надішле справжній лист і, можливо, пройде.</li>
+<li>Перевіряє виклики за підписом справжнього класу: неіснуючий аргумент чи метод — <code>TypeError</code>/<code>AttributeError</code>.</li>
+<li>Межі системи: мережу, пошту, платежі, LLM, час, випадковість. Власні функції — ні.</li>
+<li>Передати <code>now</code> параметром або годинник залежністю; патч <code>datetime</code> — останній варіант.</li>
+<li>Фейк може розійтися зі справжнім провайдером; рідкісний прогін на справжньому API звіряє контракт.</li>
+</ol>
+</details>
+<h2 id="next">Що далі<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>
+<p><a href="../testing_fastapi/">Тестування FastAPI: <code>TestClient</code>, <code>AsyncClient</code>, <code>dependency_overrides</code></a> — та сама ідея підміни, але для залежностей ендпоінтів.</p>
+<p><strong>Джерела:</strong> Python — <a href="https://docs.python.org/3/library/unittest.mock.html"><code>unittest.mock</code></a> (розділи «Where to patch», «Autospeccing», «side_effect»), <a href="https://docs.python.org/3/library/unittest.mock-examples.html"><code>unittest.mock</code> — getting started</a>; pytest — <a href="https://docs.pytest.org/en/stable/how-to/monkeypatch.html">How to monkeypatch/mock modules and environments</a>; Martin Fowler — <a href="https://martinfowler.com/articles/mocksArentStubs.html">Mocks Aren't Stubs</a>, <a href="https://martinfowler.com/bliki/TestDouble.html">Test Double</a>; Django-книга — <a href="https://nikoriakviktor.github.io/notes_chat_app/08_testing_and_quality/mocking_and_patching_full/">Mock і patch</a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Футер" >
+        
+          
+          <a href="../fixtures/" class="md-footer__link md-footer__link--prev" aria-label="Назад: Фікстури">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                Фікстури
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../testing_fastapi/" class="md-footer__link md-footer__link--next" aria-label="Вперед: Тестування FastAPI">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                Тестування FastAPI
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.path", "navigation.prune", "navigation.footer", "toc.follow", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0456\u0439\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u0421\u043a\u043e\u043f\u0456\u044e\u0432\u0430\u0442\u0438 \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0429\u0435 1 \u0437\u0431\u0456\u0433 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.more.other": "\u0429\u0435 # \u0437\u0431\u0456\u0433\u0456\u0432 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.none": "\u0417\u0431\u0456\u0433\u0456\u0432 \u043d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0437\u0431\u0456\u0433", "search.result.other": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e # \u0437\u0431\u0456\u0433\u0456\u0432", "search.result.placeholder": "\u0420\u043e\u0437\u043f\u043e\u0447\u043d\u0456\u0442\u044c \u043f\u0438\u0441\u0430\u0442\u0438 \u0434\u043b\u044f \u043f\u043e\u0448\u0443\u043a\u0443", "search.result.term.missing": "\u041d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e \u0437\u0430\u043f\u0438\u0442\u0443", "select.version": "\u041e\u0431\u0440\u0430\u0442\u0438 \u0432\u0435\u0440\u0441\u0456\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

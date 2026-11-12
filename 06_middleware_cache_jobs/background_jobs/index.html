@@ -1,0 +1,4924 @@
+
+<!doctype html>
+<html lang="uk" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="FastAPI від типів і Pydantic до Docker, Compose і CI/CD — на прикладі новинного агрегатора">
+      
+      
+      
+        <link rel="canonical" href="https://nikoriakviktor.github.io/news_hub/06_middleware_cache_jobs/background_jobs/">
+      
+      
+        <link rel="prev" href="../rate_limiting/">
+      
+      
+        <link rel="next" href="../../07_testing/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Фонові задачі й черги - News Hub — книга FastAPI</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#фонові-задачі-й-черги" class="md-skip">
+          Перейти до змісту
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Хедер">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-header__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            News Hub — книга FastAPI
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Фонові задачі й черги
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Пошук" placeholder="Пошук" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Шукати">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистити" aria-label="Очистити" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Пошук розпочато
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Головна
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../00_getting_started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Як користуватися
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../01_http_and_rest/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Книга FastAPI
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorials/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Zero to Hero
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../deep_dive/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  News Hub Deep Dive
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../labs/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Практика
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Довідник
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../TEACHING_GUIDE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Викладачу
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Навігація" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-nav__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    News Hub — книга FastAPI
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Головна
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../00_getting_started/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Як користуватися
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Книга FastAPI
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Книга FastAPI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../01_http_and_rest/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина I. HTTP і дизайн REST API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1" id="__nav_3_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина I. HTTP і дизайн REST API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/http_anatomy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP-запит і відповідь
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/http_methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Методи HTTP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/status_codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Коди відповідей
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/rest_principles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Принципи REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/collections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Колекції і пагінація
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/versioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Версіонування API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Формат помилок
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/api_styles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Які бувають API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/http_clients/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP-клієнти
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/legacy_case/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Кейс: API v1 → v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/meteo_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архітектура meteo_api
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../02_typing_and_pydantic/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина II. Типи і Pydantic
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_2" id="__nav_3_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина II. Типи і Pydantic
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/type_hints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Анотації типів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/pydantic_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Моделі Pydantic 2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/strict_mode/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Режими lax і strict
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/validators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Валідатори і computed_field
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/special_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    URL, email і дати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/validation_error/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ValidationError
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pydantic-settings і .env
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/config_dict/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ConfigDict
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/trust_boundary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Межа довіри
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../03_fastapi_core/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина III. Ядро FastAPI
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_3" id="__nav_3_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина III. Ядро FastAPI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/what_is_fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Що таке FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/routes_and_validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Маршрути і валідація
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Залежності і lifespan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/openapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/fastapi_flask_django/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FastAPI, Flask і Django
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/fastapi_vs_drf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FastAPI і DRF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../04_async/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина IV. Async і конкурентність
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_4" id="__nav_3_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина IV. Async і конкурентність
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/concurrency_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Чекати чи рахувати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/asgi_vs_wsgi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ASGI і WSGI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/endpoint_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Три типи ендпоінтів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/blocking_code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Блокуючий код
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/concurrency_patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Паралельні запити
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../05_databases/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_5" id="__nav_3_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/sql_for_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQL для API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/sqlalchemy_async/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLAlchemy async
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/transactions_and_uow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Транзакції й Unit of Work
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/repository_pattern/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Патерн Repository
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/connection_pool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Пул з'єднань
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/migrations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Міграції Alembic
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VI. Middleware, кеш і фонові задачі
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_6" id="__nav_3_6_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VI. Middleware, кеш і фонові задачі
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../middleware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Middleware
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CORS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../redis_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Redis для API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../caching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Стратегії кешу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rate_limiting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rate limit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фонові задачі й черги
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фонові задачі й черги
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проблема
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ментальна модель
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inside" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Як працює BackgroundTasks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Як працює BackgroundTasks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sync-async" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        def чи async def
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#restart" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що буде при перезапуску
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Черга задач
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Черга задач">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#reliable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Задача не має зникати разом з воркером
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Повтори і «мертві» задачі
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#idempotency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ідемпотентність
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arq" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        arq: черга на asyncio
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#which-queue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Яку чергу обрати
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Статус задачі
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#news-hub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        У News Hub
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Типові помилки
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Налагодження
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Безпека
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Питання
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../07_testing/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VII. Тестування API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_7" id="__nav_3_7_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VII. Тестування API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/pytest_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Основи pytest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/fixtures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фікстури
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/test_doubles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Підміни: mock і fake
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/testing_fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Тестування FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/test_databases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Тести з базою даних
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Якість тестів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../08_security/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VIII. Безпека API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_8" id="__nav_3_8_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VIII. Безпека API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/passwords/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Паролі: хеш, сіль, вартість
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Автентифікація: сесії і JWT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/authorization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Авторизація: ролі, scopes, об'єкти
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/ssrf_and_outbound/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSRF і вихідні запити
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/webhooks_and_signatures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Webhook і підписи
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/secrets_and_headers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Секрети, заголовки, проксі
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/owasp_api_top10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OWASP API Top 10
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_9" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../09_integrations/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина IX. Інтеграції: AI, LLM, Telegram
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_9" id="__nav_3_9_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина IX. Інтеграції: AI, LLM, Telegram
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/ai_dev_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI-агент у проєкті
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/llm_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/llm_reliability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Надійність LLM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/telegram_bots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telegram-бот
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/websockets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WebSocket у FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_10" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../10_docker_and_ci/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина X. Docker, Compose і CI/CD
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_10" id="__nav_3_10_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина X. Docker, Compose і CI/CD
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/docker_image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker-образ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/compose/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker Compose
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/production_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сервер у production
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/ci_cd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD на GitHub Actions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/microservices/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Мікросервіси: коли варто
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../tutorials/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zero to Hero
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../deep_dive/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    News Hub Deep Dive
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../labs/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Практика
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../reference/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Довідник
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TEACHING_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Викладачу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проблема
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ментальна модель
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inside" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Як працює BackgroundTasks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Як працює BackgroundTasks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sync-async" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        def чи async def
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#restart" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що буде при перезапуску
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Черга задач
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Черга задач">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#reliable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Задача не має зникати разом з воркером
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Повтори і «мертві» задачі
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#idempotency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ідемпотентність
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arq" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        arq: черга на asyncio
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#which-queue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Яку чергу обрати
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Статус задачі
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#news-hub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        У News Hub
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Типові помилки
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Налагодження
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Безпека
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Питання
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Навігація" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Головна
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../../01_http_and_rest/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Книга FastAPI
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Частина VI. Middleware, кеш і фонові задачі
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="фонові-задачі-й-черги">Фонові задачі й черги<a class="headerlink" href="#фонові-задачі-й-черги" title="Permanent link">&para;</a></h1>
+<h2 id="problem">Проблема<a class="headerlink" href="#problem" title="Permanent link">&para;</a></h2>
+<p>Збір новин триває секунди, аналіз сотні новин через LLM — хвилини, розсилка сповіщень залежить від чужого сервера. Тримати HTTP-запит відкритим увесь цей час не можна: клієнт, проксі й балансувальник обірвуть його за таймаутом. Тому відповідають одразу, а працюють потім, «у фоні». FastAPI має для цього <code>BackgroundTasks</code>, і для більшості задач цього досить.</p>
+<p>Але «у фоні» ставить нові питання. Що буде із задачею, якщо сервер перезапустили? Хто дізнається, що вона впала? Як повторити її, якщо сайт тимчасово не відповідав? І як не надіслати сповіщення двічі, коли задачу повторили? Відповіді на них і відрізняють <code>BackgroundTasks</code> від черги задач (arq, Celery, RQ, Dramatiq).</p>
+<p>Як News Hub відповідає <code>202</code> і зберігає статус задачі, показано на <a href="../../tutorials/04_middleware_redis/background_jobs/">кроці 4</a>. Тут розберемо, що відбувається всередині, і коли потрібна справжня черга.</p>
+<h2 id="mental-model">Ментальна модель<a class="headerlink" href="#mental-model" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart TD
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    subgraph BT ["BackgroundTasks: той самий процес"]
+        direction LR
+        a1["запит"] --&gt; a2["відповідь 202"] --&gt; a3["задача в процесі&lt;br&gt;сервера"]
+    end
+    subgraph Q ["черга: окремий процес"]
+        direction LR
+        b1["запит"] --&gt; b2["задача → Redis&lt;br&gt;відповідь 202"] --&gt; b3["воркер бере&lt;br&gt;з черги"]
+    end
+    subgraph R ["перезапуск посеред роботи"]
+        direction LR
+        c1["BackgroundTasks:&lt;br&gt;задача зникла"]
+        c2["черга: задача лишилась&lt;br&gt;у Redis, виконається знову"]
+    end
+    BT --&gt; R
+    Q --&gt; R
+
+    class a1,a2,b1,b2 step
+    class a3,b3 warning
+    class c1 error
+    class c2 success</code></pre>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>BackgroundTasks</code></th>
+<th>черга (arq, Celery, RQ, Dramatiq)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>де виконується</td>
+<td>у процесі сервера, після відповіді</td>
+<td>в окремому процесі-воркері, можна на іншій машині</td>
+</tr>
+<tr>
+<td>де живе задача</td>
+<td>у пам'яті процесу</td>
+<td>у брокері (Redis, RabbitMQ)</td>
+</tr>
+<tr>
+<td>перезапуск посеред роботи</td>
+<td>задача пропала</td>
+<td>лишилась у брокері, її виконає воркер</td>
+</tr>
+<tr>
+<td>повтори, відкладений запуск, розклад</td>
+<td>немає</td>
+<td>є</td>
+</tr>
+<tr>
+<td>статус і результат</td>
+<td>пишеш сам (як <code>JobStore</code> у News Hub)</td>
+<td>вбудовані</td>
+</tr>
+<tr>
+<td>масштабування</td>
+<td>разом із сервером</td>
+<td>воркерів окремо від API</td>
+</tr>
+<tr>
+<td>інфраструктура</td>
+<td>нічого</td>
+<td>брокер + процес воркера + моніторинг</td>
+</tr>
+</tbody>
+</table>
+<h2 id="inside">Як працює <code>BackgroundTasks</code><a class="headerlink" href="#inside" title="Permanent link">&para;</a></h2>
+<p><a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/cache_jobs/background_jobs_demo.py"><code>examples/cache_jobs/background_jobs_demo.py</code></a> викликає застосунок напряму через ASGI і позначає час кожної події:</p>
+<div class="highlight"><span class="filename">background_jobs_demo.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/jobs"</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_202_ACCEPTED</span><span class="p">)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_job</span><span class="p">(</span><span class="n">background</span><span class="p">:</span> <span class="n">BackgroundTasks</span><span class="p">,</span> <span class="n">scenario</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"ok"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="k">if</span> <span class="n">scenario</span> <span class="o">==</span> <span class="s2">"ok"</span><span class="p">:</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        <span class="n">background</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">slow_task</span><span class="p">,</span> <span class="s2">"A"</span><span class="p">)</span>              <span class="c1"># кожна по 300 мс</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        <span class="n">background</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">slow_task</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">)</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="k">elif</span> <span class="n">scenario</span> <span class="o">==</span> <span class="s2">"fail-first"</span><span class="p">:</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        <span class="n">background</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">failing_task</span><span class="p">)</span>                <span class="c1"># кидає RuntimeError</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        <span class="n">background</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">slow_task</span><span class="p">,</span> <span class="s2">"after-fail"</span><span class="p">)</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="o">...</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="k">return</span> <span class="p">{</span><span class="s2">"job_id"</span><span class="p">:</span> <span class="s2">"demo"</span><span class="p">}</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>--- 1. BackgroundTasks: відповідь іде одразу, задачі — після неї, по черзі
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    6 ms  ендпоінт повернув 202
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    6 ms  клієнт отримав статус 202
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    6 ms  задача A: старт
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>  307 ms  задача A: кінець
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  307 ms  задача B: старт
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>  607 ms  задача B: кінець
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>  607 ms  виклик ASGI завершився
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>--- 2. виняток у першій задачі: клієнт уже отримав 202, друга задача не запускається
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    0 ms  ендпоінт повернув 202
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    0 ms  клієнт отримав статус 202
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    0 ms  задача fail: старт
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    0 ms  виклик ASGI завершився винятком RuntimeError: джерело недоступне
+</code></pre></div>
+<ul>
+<li><strong>Задачі виконуються після того, як відповідь відправлено</strong>, і в тому самому виклику ASGI. Для сервера запит не завершився, доки не завершилися задачі.</li>
+<li><strong>Задачі йдуть послідовно</strong>, у порядку <code>add_task</code>, а не паралельно.</li>
+<li><strong>Виняток у задачі зупиняє решту.</strong> Задача <code>after-fail</code> не запустилась узагалі. Клієнт отримав <code>202</code> і ніколи не дізнається, що щось пішло не так: виняток бачить лише сервер у журналі (<code>Exception in ASGI application</code>). Тому <code>run_scrape_job</code> у News Hub ловить усі винятки й пише <code>failed</code> у статус.</li>
+</ul>
+<h3 id="sync-async"><code>def</code> чи <code>async def</code><a class="headerlink" href="#sync-async" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>--- 3. блокуючий код у задачі: def проти async def — скільки чекає інший запит
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>block-sync   GET /ping чекав відповіді: 11 ms
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>block-async  GET /ping чекав відповіді: 304 ms
+</code></pre></div>
+<p>Задачу, оголошену через звичайну <code>def</code>, FastAPI виконує в пулі потоків, і цикл подій лишається вільним. <code>async def</code> виконується в циклі подій, тож <code>time.sleep(0.3)</code> або синхронний HTTP-клієнт усередині неї зупиняють <strong>увесь сервер</strong>: інший запит чекав 304 мс. Правило те саме, що для ендпоінтів (<a href="../../04_async/">Частина IV</a>). У <code>async def</code> — лише неблокуючі виклики (<code>await</code>), а блокуючий код — у <code>def</code> або <code>asyncio.to_thread</code>. Важкі обчислення на CPU не підходять ні для того, ні для іншого: у потоці їх тримає GIL, і вони гальмують сервер. Їх виносять в окремий процес або воркер.</p>
+<h3 id="restart">Що буде при перезапуску<a class="headerlink" href="#restart" title="Permanent link">&para;</a></h3>
+<p>Розділ 4 демо запускає справжній uvicorn, ставить 2-секундну задачу й зупиняє сервер через 0.3 с:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>--- 4. сервер зупиняють посеред 2-секундної задачі
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>SIGTERM (за замовчуванням)                 відповідь 202; процес завершився за 1.8 с; вивід: ['задача: старт', 'задача: кінець']
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>SIGTERM --timeout-graceful-shutdown 1      відповідь 202; процес завершився за 1.2 с; вивід: ['задача: старт', 'ERROR:    Cancel 1 running task(s), timeout graceful shutdown exceeded', '… CancelledError у задачі']
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>SIGKILL (за замовчуванням)                 відповідь 202; процес завершився за 0.0 с; вивід: ['задача: старт']
+</code></pre></div>
+<ul>
+<li><strong><code>SIGTERM</code></strong> (так зупиняють <code>docker stop</code>, Compose, systemd) запускає коректну зупинку. uvicorn перестає приймати нові запити й <strong>чекає</strong> незавершені, а з ними й фонові задачі. Задача встигла.</li>
+<li><strong>З <code>--timeout-graceful-shutdown 1</code></strong> uvicorn чекав секунду й скасував задачу (<code>CancelledError</code>).</li>
+<li><strong><code>SIGKILL</code></strong> — задача просто зникла, без жодного сліду в журналі.</li>
+</ul>
+<p>У Docker між <code>SIGTERM</code> і <code>SIGKILL</code> за замовчуванням 10 секунд (<code>docker stop -t</code>, <code>stop_grace_period</code> у Compose). Задача, яка триває хвилину, при кожному оновленні контейнера обривається. Окрім того, падіння процесу, нестача пам'яті (OOM killer) чи перезавантаження сервера вбивають її без попередження. Статус такої задачі в News Hub назавжди лишиться <code>running</code>, доки його не прибере TTL (<a href="../../tutorials/04_middleware_redis/background_jobs/#limits">межі <code>BackgroundTasks</code></a>).</p>
+<h2 id="queue">Черга задач<a class="headerlink" href="#queue" title="Permanent link">&para;</a></h2>
+<p>Черга розділяє «прийняти задачу» і «виконати задачу» між різними процесами. API (producer) кладе задачу в брокер і відповідає, а воркер (consumer) забирає й виконує. Найпростіша черга — список у Redis: <code>RPUSH</code> додає, <code>BLPOP</code> забирає, чекаючи, якщо черга порожня. Кожну задачу отримає <strong>рівно один</strong> воркер, бо <code>BLPOP</code> атомарно знімає елемент. Тож більше воркерів означає більше задач за секунду.</p>
+<pre class="mermaid"><code>flowchart LR
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    A["API&lt;br&gt;producer"] -- "LPUSH" --&gt; Q[("ready&lt;br&gt;список у Redis")]
+    Q -- "LMOVE" --&gt; P[("processing")]
+    P --&gt; W1["воркер 1"]
+    P --&gt; W2["воркер 2"]
+    W1 -- "успіх: LREM" --&gt; D["готово"]
+    W2 -- "3 невдачі" --&gt; DL[("dead")]
+
+    class A,W1,W2 step
+    class Q,P warning
+    class D success
+    class DL error</code></pre>
+<p>Головне питання черги: <strong>що буде, коли воркер помре з задачею в руках?</strong> Демо, розділи 5–7, реалізує надійну чергу власноруч, щоб було видно, що саме роблять бібліотеки.</p>
+<h3 id="reliable">Задача не має зникати разом з воркером<a class="headerlink" href="#reliable" title="Permanent link">&para;</a></h3>
+<div class="highlight"><span class="filename">background_jobs_demo.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">take</span><span class="p">(</span><span class="n">r</span><span class="p">:</span> <span class="n">Redis</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="sd">"""LMOVE ready → processing (атомарно): задача не зникне, якщо воркер помре."""</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">raw</span> <span class="o">=</span> <span class="k">await</span> <span class="n">r</span><span class="o">.</span><span class="n">lmove</span><span class="p">(</span><span class="n">QUEUE</span><span class="p">,</span> <span class="n">PROCESSING</span><span class="p">,</span> <span class="s2">"RIGHT"</span><span class="p">,</span> <span class="s2">"LEFT"</span><span class="p">)</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="k">return</span> <span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">raw</span><span class="p">))</span> <span class="k">if</span> <span class="n">raw</span> <span class="k">else</span> <span class="kc">None</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">ack</span><span class="p">(</span><span class="n">r</span><span class="p">:</span> <span class="n">Redis</span><span class="p">,</span> <span class="n">raw</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>            <span class="c1"># лише після успішного виконання</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="k">await</span> <span class="n">r</span><span class="o">.</span><span class="n">lrem</span><span class="p">(</span><span class="n">PROCESSING</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">raw</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>--- 5. воркер помер з задачею в руках: BLPOP-стиль проти LMOVE + processing
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>проста черга (RPOP): у черзі 0 — задача пропала
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>надійна черга: ready = 0 processing = 1
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>прибиральник повернув у чергу: 1 | ready = 1
+</code></pre></div>
+<p>З <code>RPOP</code>/<code>BLPOP</code> задача зникає з Redis у момент, коли воркер її взяв. Якщо воркер помре, вона втрачена. <code>LMOVE</code> атомарно переносить задачу в список <code>processing</code>, і видаляють її звідти лише після успіху. «Прибиральник» повертає в чергу задачі, які зависли в <code>processing</code>. У справжній черзі він повертає лише ті, що висять довше за таймаут задачі, бо інакше відбирав би задачі в живих воркерів. Так влаштовані черги, які гарантують доставку <strong>щонайменше один раз</strong> (at-least-once).</p>
+<h3 id="retries">Повтори і «мертві» задачі<a class="headerlink" href="#retries" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>--- 6. повтори з паузою й «мертві» задачі
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>   flaky: спроба 1 — сайт не відповів; повтор через 50 ms
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>   broken: спроба 1 — сторінка змінила розмітку; повтор через 50 ms
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>   flaky: спроба 2 — сайт не відповів; повтор через 100 ms
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>   broken: спроба 2 — сторінка змінила розмітку; повтор через 100 ms
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>   flaky: спроба 3 — успіх
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>   broken: спроба 3 — сторінка змінила розмітку; у dead-чергу
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>dead-черга: ['broken']
+</code></pre></div>
+<ul>
+<li><strong>Повтор із паузою, що росте</strong> (50, 100, 200 мс… — exponential backoff), рятує від тимчасових збоїв: мережа, <code>503</code>, <code>429</code> від чужого API. Повтори без паузи лише добивають сервер, який і так не відповідає. До паузи часто додають випадковий розкид, щоб тисяча задач не повторилася в ту саму мить.</li>
+<li><strong>Обмеження спроб</strong> обов'язкове. Помилка в коді чи даних (<code>ValueError</code> — сторінка змінила розмітку) повтором не виправиться.</li>
+<li><strong>Dead-черга</strong> зберігає задачі, які вичерпали спроби, разом із помилкою. Їх переглядають і перезапускають вручну, коли виправили причину.</li>
+<li>Що повторювати, вирішує код. Мережеві помилки й <code>5xx</code> — так, <code>4xx</code> і помилки валідації — ні.</li>
+</ul>
+<h3 id="idempotency">Ідемпотентність<a class="headerlink" href="#idempotency" title="Permanent link">&para;</a></h3>
+<p>At-least-once означає, що задача <strong>може виконатися двічі</strong>: воркер зробив роботу, але помер до <code>ack</code>; клієнт не дочекався <code>202</code> і надіслав запит ще раз; користувач двічі натиснув кнопку. Тому задача має бути <strong>ідемпотентною</strong>: повторне виконання не повинно змінювати результат.</p>
+<div class="highlight"><span class="filename">background_jobs_demo.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">notify_idempotent</span><span class="p">(</span><span class="n">news_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="k">await</span> <span class="n">r</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="sa">f</span><span class="s2">"demo:done:</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ex</span><span class="o">=</span><span class="mi">24</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">):</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>        <span class="k">return</span> <span class="kc">False</span>                                    <span class="c1"># уже робили — нічого не повторюємо</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="k">await</span> <span class="n">r</span><span class="o">.</span><span class="n">rpush</span><span class="p">(</span><span class="s2">"demo:sent"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"сповіщення про новину </span><span class="si">{</span><span class="n">news_id</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="k">return</span> <span class="kc">True</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>--- 7. ідемпотентність: та сама задача прийшла двічі (повтор після таймауту, подвійний клік)
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>без ключа: надіслано 2 сповіщення
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>з ключем news-42: [True, False] | надіслано 1
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Спосіб</th>
+<th>Приклад</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ключ «вже зроблено» <code>SET … NX EX</code></td>
+<td>сповіщення, оплата, webhook: ключ з id події</td>
+</tr>
+<tr>
+<td>унікальне обмеження в базі</td>
+<td><code>INSERT … ON CONFLICT DO NOTHING</code> — повтор не створить дубліката</td>
+</tr>
+<tr>
+<td>операція, ідемпотентна за природою</td>
+<td>«встановити статус <code>done</code>», а не «додати 1»</td>
+</tr>
+<tr>
+<td>той самий <code>job_id</code> у черзі</td>
+<td>arq не поставить задачу з <code>_job_id</code>, яка вже є</td>
+</tr>
+<tr>
+<td>ключ ідемпотентності від клієнта</td>
+<td>заголовок <code>Idempotency-Key</code> у <code>POST</code>: повторний запит із тим самим ключем повертає перший результат</td>
+</tr>
+</tbody>
+</table>
+<p>Ключ «вже зроблено» має сенс ставити <strong>після</strong> успіху або разом із результатом в одній транзакції. Інакше задача, що впала після <code>SET NX</code>, вже ніколи не повториться. У демо порядок спрощено: побічний ефект — один <code>RPUSH</code> у тому самому Redis.</p>
+<h2 id="arq">arq: черга на asyncio<a class="headerlink" href="#arq" title="Permanent link">&para;</a></h2>
+<p><a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/cache_jobs/arq_demo.py"><code>examples/cache_jobs/arq_demo.py</code></a> потребує справжнього Redis (<code>REDIS_URL=redis://localhost:6390/0</code>). Воркер для демо запущено в тому самому процесі в режимі <code>burst</code>, а в розділі 4 — окремим процесом:</p>
+<div class="highlight"><span class="filename">arq_demo.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">scrape</span><span class="p">(</span><span class="n">ctx</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="k">if</span> <span class="n">ctx</span><span class="p">[</span><span class="s2">"job_try"</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>        <span class="k">raise</span> <span class="n">Retry</span><span class="p">(</span><span class="n">defer</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>                 <span class="c1"># повторити пізніше, не займаючи воркер</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="k">return</span> <span class="p">{</span><span class="s2">"source"</span><span class="p">:</span> <span class="n">source</span><span class="p">,</span> <span class="s2">"news_saved"</span><span class="p">:</span> <span class="mi">168</span><span class="p">,</span> <span class="s2">"tries"</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s2">"job_try"</span><span class="p">]}</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">pool</span> <span class="o">=</span> <span class="k">await</span> <span class="n">create_pool</span><span class="p">(</span><span class="n">RedisSettings</span><span class="o">.</span><span class="n">from_dsn</span><span class="p">(</span><span class="n">REDIS_URL</span><span class="p">))</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="n">job</span> <span class="o">=</span> <span class="k">await</span> <span class="n">pool</span><span class="o">.</span><span class="n">enqueue_job</span><span class="p">(</span><span class="s2">"scrape"</span><span class="p">,</span> <span class="s2">"rbc"</span><span class="p">,</span> <span class="n">_job_id</span><span class="o">=</span><span class="s2">"scrape:rbc"</span><span class="p">)</span>     <span class="c1"># у API: поставити й відповісти 202</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>--- 1. постановка в чергу: відповідь API не чекає виконання
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>job_id: scrape:rbc | статус: queued
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>той самий _job_id ще раз → None (дубль не поставлено)
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>--- 2. воркер (окремий процес у житті; тут — burst у тому самому процесі)
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>спроб scrape: 3 | статус: complete
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>результат: {'source': 'rbc', 'news_saved': 168, 'tries': 3}
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>broken: success = False | result = ValueError('сторінка змінила розмітку') | job_try = 1
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>воркер: виконано 1 | з помилкою 1 | повторів 2
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>--- 3. після виконання результат живе keep_result секунд — той самий _job_id знову не ставиться
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>enqueue scrape:rbc → None
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>--- 4. воркер убили (SIGKILL) посеред задачі
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>після SIGKILL: статус in_progress | старти: ['спроба 1']
+<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>новий воркер: статус complete через 14 с | старти: ['спроба 1', 'спроба 2'] | результат: зібрано
+</code></pre></div>
+<p>Що з цього видно:</p>
+<ul>
+<li><strong>Статус і результат вбудовані</strong>: <code>queued</code> → <code>in_progress</code> → <code>complete</code>, результат зберігається <code>keep_result</code> секунд. Власний <code>JobStore</code> не потрібен.</li>
+<li><strong><code>_job_id</code> — ідемпотентність постановки</strong>: поки задача в черзі або її результат живий, дубль не ставиться (<code>None</code>).</li>
+<li><strong>Повторює лише <code>Retry</code>.</strong> Звичайний виняток (<code>ValueError</code>) — одразу <code>failed</code> після першої спроби, хоча <code>max_tries=5</code>. Повтори для тимчасових помилок задача вмикає сама.</li>
+<li><strong>Задача пережила <code>SIGKILL</code> воркера.</strong> Вона лишилась у Redis зі статусом <code>in_progress</code>, і новий воркер виконав її знову (<code>спроба 2</code>). Чекати довелося 14 с: arq вважає задачу завислою, лише коли зникне її позначка «в роботі», а та живе <code>job_timeout + 10</code> секунд (тут <code>job_timeout=2</code>). Задачу виконано двічі, тож вона мусить бути ідемпотентною.</li>
+</ul>
+<h2 id="which-queue">Яку чергу обрати<a class="headerlink" href="#which-queue" title="Permanent link">&para;</a></h2>
+<p>Демо запускало лише arq. Решту в книзі не встановлено й не запускалось, таблиця спирається на їхню документацію.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>arq</th>
+<th>Celery</th>
+<th>RQ</th>
+<th>Dramatiq</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>задачі</td>
+<td><code>async def</code></td>
+<td>звичайні функції</td>
+<td>звичайні функції</td>
+<td>звичайні функції</td>
+</tr>
+<tr>
+<td>брокер</td>
+<td>Redis</td>
+<td>RabbitMQ, Redis, SQS…</td>
+<td>Redis</td>
+<td>RabbitMQ, Redis</td>
+</tr>
+<tr>
+<td>повтори</td>
+<td><code>Retry</code> з коду; задачі, обірвані зупинкою воркера, виконуються знову</td>
+<td><code>autoretry_for</code>, <code>self.retry()</code></td>
+<td><code>Retry(max=...)</code> при постановці</td>
+<td>за замовчуванням, з паузою, що росте</td>
+</tr>
+<tr>
+<td>підтвердження</td>
+<td>після виконання</td>
+<td><strong>за замовчуванням до виконання</strong>; <code>acks_late=True</code> — після</td>
+<td>—</td>
+<td>після виконання</td>
+</tr>
+<tr>
+<td>розклад (cron)</td>
+<td>вбудований <code>cron</code></td>
+<td><code>celery beat</code> (окремий процес)</td>
+<td>вбудований планувальник</td>
+<td><code>periodiq</code> / APScheduler</td>
+</tr>
+<tr>
+<td>моніторинг</td>
+<td>мінімальний</td>
+<td>Flower</td>
+<td><code>rq-dashboard</code></td>
+<td><code>dramatiq-dashboard</code></td>
+</tr>
+<tr>
+<td>коли брати</td>
+<td>async-застосунок на FastAPI, Redis уже є</td>
+<td>великі системи, складні сценарії (ланцюжки, групи), RabbitMQ</td>
+<td>прості синхронні задачі, мінімум налаштувань</td>
+<td>надійні повтори з коробки, простіше за Celery</td>
+</tr>
+</tbody>
+</table>
+<p>Як обирати:</p>
+<ol>
+<li><strong>Задача коротка, втрата некритична, зовнішній ефект ідемпотентний</strong> — <code>BackgroundTasks</code>. Приклади: лист-сповіщення, запис аудиту, прогрів кешу.</li>
+<li><strong>Задача довга або її не можна загубити, потрібні повтори, розклад чи окремі воркери</strong> — черга. Для async-коду на FastAPI з Redis природно взяти arq. Celery — коли потрібні його можливості або він уже є в системі.</li>
+<li><strong>Кожна задача в черзі — at-least-once</strong>, тож проєктуй її ідемпотентною з першого дня.</li>
+</ol>
+<h2 id="status">Статус задачі<a class="headerlink" href="#status" title="Permanent link">&para;</a></h2>
+<p>Незалежно від інструмента API відповідає однаково: <code>202 Accepted</code> з id задачі (і бажано <code>Location</code> на ресурс статусу), а клієнт опитує <code>GET /jobs/{id}</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Стан</th>
+<th>Що означає</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>queued</code></td>
+<td>прийнято, ще не почато</td>
+</tr>
+<tr>
+<td><code>running</code></td>
+<td>виконується; <code>started_at</code>, прогрес, якщо є</td>
+</tr>
+<tr>
+<td><code>done</code></td>
+<td>готово; результат або посилання на нього</td>
+</tr>
+<tr>
+<td><code>failed</code></td>
+<td>помилка; текст <strong>без</strong> секретів і внутрішніх деталей</td>
+</tr>
+</tbody>
+</table>
+<p>Статус живе обмежений час (TTL). Якщо задача може зависнути, зберігай час останнього оновлення, щоб <code>running</code> без оновлень годину можна було визнати завислим. Альтернативи опитуванню — webhook на адресу клієнта або сповіщення через WebSocket/SSE (<a href="../../01_http_and_rest/api_styles/#webhook">Які бувають API</a>).</p>
+<h2 id="news-hub">У News Hub<a class="headerlink" href="#news-hub" title="Permanent link">&para;</a></h2>
+<p>News Hub використовує <code>BackgroundTasks</code>: <code>POST /api/scrape/jobs</code> → <code>202</code> + <code>job_id</code>, статус — hash <code>job:&lt;id&gt;</code> у Redis з TTL доба (<a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/news_hub/jobs.py"><code>jobs.py</code></a>). Що з цієї сторінки там застосовано:</p>
+<table>
+<thead>
+<tr>
+<th>Принцип</th>
+<th>У News Hub</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>задача не бере ресурсів запиту</td>
+<td>своя сесія бази через <code>session_factory()</code>, свій COMMIT (<a href="../../tutorials/04_middleware_redis/background_jobs/#run-job">крок 4</a>)</td>
+</tr>
+<tr>
+<td>виняток не губиться</td>
+<td><code>except Exception</code> → статус <code>failed</code> з текстом помилки</td>
+</tr>
+<tr>
+<td>часткова робота не пропадає</td>
+<td>аналіз LLM комітить кожну новину окремо: збій на 30-й не скасовує 29 (<a href="../../tutorials/07_llm_api/endpoints_and_tests/#job">крок 7</a>)</td>
+</tr>
+<tr>
+<td>збій побічного ефекту ≠ збій задачі</td>
+<td>розсилка сповіщень після збору в <code>try/except</code>: новини вже в базі (<a href="../../tutorials/09_telegram_bot/subscriptions_notify/">крок 9</a>)</td>
+</tr>
+<tr>
+<td>ідемпотентність</td>
+<td>збір вставляє лише нові новини (<code>insert_new</code>), і сповіщають лише про щойно вставлені; повторний збір не дублює ні новин, ні сповіщень</td>
+</tr>
+<tr>
+<td>розклад</td>
+<td>вбудованого планувальника немає: збір запускає зовнішній cron через підписаний webhook, і повтор того самого запиту відхиляється <code>SET NX</code> (<a href="../../tutorials/08_security/webhooks/#change">крок 8</a>)</td>
+</tr>
+<tr>
+<td>перезапуск</td>
+<td>задача обривається, статус лишається <code>running</code> до TTL — свідомий компроміс</td>
+</tr>
+</tbody>
+</table>
+<p>Для агрегатора цього досить: збір можна повторити будь-коли, і він ідемпотентний. Черга з окремим воркером знадобилася б, якби задачі тривали довше за <code>stop_grace_period</code>, їх не можна було б повторити вручну або аналіз LLM треба було б масштабувати окремо від API.</p>
+<h2 id="mistakes">Типові помилки<a class="headerlink" href="#mistakes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Помилка</th>
+<th>Наслідок</th>
+<th>Як правильно</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>передати в задачу сесію бази запиту</td>
+<td>дані тихо не зберігаються</td>
+<td>своя сесія й свій COMMIT (<a href="../../tutorials/04_middleware_redis/background_jobs/#run-job">крок 4</a>)</td>
+</tr>
+<tr>
+<td>виняток у задачі без <code>try/except</code></td>
+<td>клієнт бачить <code>queued</code>/<code>running</code> назавжди; наступні задачі не запускаються</td>
+<td>ловити й писати <code>failed</code></td>
+</tr>
+<tr>
+<td><code>time.sleep</code> / синхронний клієнт в <code>async def</code> задачі</td>
+<td>зупиняє весь сервер</td>
+<td><code>def</code> (пул потоків) або <code>await</code></td>
+</tr>
+<tr>
+<td>важкі обчислення в <code>BackgroundTasks</code></td>
+<td>займають процес сервера</td>
+<td>окремий процес або воркер</td>
+</tr>
+<tr>
+<td>хвилинна задача в <code>BackgroundTasks</code> за Docker</td>
+<td>обривається на кожному оновленні</td>
+<td>черга або <code>stop_grace_period</code> більший за задачу</td>
+</tr>
+<tr>
+<td><code>BLPOP</code> як «надійна» черга</td>
+<td>задача зникає з воркером</td>
+<td><code>LMOVE</code> + <code>processing</code> або готова черга</td>
+</tr>
+<tr>
+<td>нескінченні повтори без паузи</td>
+<td>добивають чужий сервер, черга забивається</td>
+<td>обмеження спроб, пауза, що росте, dead-черга</td>
+</tr>
+<tr>
+<td>неідемпотентна задача в черзі</td>
+<td>дублікати при повторі</td>
+<td>ключ «вже зроблено», унікальні обмеження</td>
+</tr>
+<tr>
+<td>Celery з налаштуваннями за замовчуванням для задач, які не можна загубити</td>
+<td>підтвердження до виконання: задача, яку обірвало падіння воркера, не повториться</td>
+<td><code>acks_late=True</code> + ідемпотентність</td>
+</tr>
+<tr>
+<td>черга задач у Redis з <code>allkeys-lru</code></td>
+<td>Redis викидає задачі під навантаженням</td>
+<td><code>noeviction</code> для Redis черги (<a href="../redis_basics/#memory">Пам'ять і диск</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="debugging">Налагодження<a class="headerlink" href="#debugging" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>«Задача не виконалась»:</strong> шукай <code>Exception in ASGI application</code> у журналі uvicorn. Так виглядає виняток у <code>BackgroundTasks</code>, якого задача не зловила.</li>
+<li><strong>«Статус завис у <code>running</code>»:</strong> чи не перезапускався сервер (<code>docker compose ps</code>, <code>docker inspect</code> — <code>RestartCount</code>, <code>OOMKilled</code>).</li>
+<li><strong>Черга на Redis:</strong> <code>LLEN</code>, <code>LRANGE … 0 10</code> для списків; для arq — ключі <code>arq:queue</code> (sorted set), <code>arq:job:&lt;id&gt;</code>, <code>arq:in-progress:&lt;id&gt;</code>, <code>arq:result:&lt;id&gt;</code>.</li>
+<li><strong>Повтори:</strong> журнал воркера має показувати номер спроби (<code>job_try</code>) і причину. Без цього не відрізнити тимчасовий збій від помилки в коді.</li>
+<li><strong>Відтворити падіння:</strong> <code>kill -9</code> воркера посеред задачі, як розділ 4 <code>arq_demo.py</code>. Це єдиний спосіб переконатися, що задача справді переживе падіння.</li>
+</ul>
+<h2 id="security">Безпека<a class="headerlink" href="#security" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Дані задачі — це вхід від користувача.</strong> Воркер перевіряє їх так само, як ендпоінт, бо в брокер може писати не лише API.</li>
+<li><strong>Серіалізація:</strong> <code>pickle</code> у брокері означає виконання коду для будь-кого, хто може писати в Redis. arq за замовчуванням використовує <code>pickle</code>, Celery — JSON. Redis черги не має бути доступним ззовні (<a href="../redis_basics/#security">Безпека Redis</a>).</li>
+<li><strong>Текст помилки в статусі</strong> бачить клієнт. Ні трасувань, ні адрес внутрішніх сервісів, ні секретів: деталі — у журнал, клієнту — коротка причина.</li>
+<li><strong>Ліміт на постановку задач</strong>: кожна задача — це робота воркера. Без <a href="../rate_limiting/">rate limit</a> і обмеження довжини черги один клієнт заповнить її на години.</li>
+<li><strong>id задачі</strong> має бути непередбачуваним (<code>uuid4</code>), якщо статус показує чужі дані. Перебором послідовних id можна переглядати чужі задачі.</li>
+</ul>
+<h2 id="questions">Питання<a class="headerlink" href="#questions" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Коли виконуються задачі <code>BackgroundTasks</code> — до відповіді чи після? Паралельно чи по черзі?</li>
+<li>Що станеться з другою задачею, якщо перша кинула виняток? Що побачить клієнт?</li>
+<li>Чому <code>time.sleep</code> у фоновій задачі <code>async def</code> гальмує інші запити, а в <code>def</code> — ні?</li>
+<li>Що буде з фоновою задачею при <code>docker stop</code>, якщо вона триває 5 секунд? А 30?</li>
+<li>Чим <code>LMOVE</code> у список <code>processing</code> кращий за <code>BLPOP</code>?</li>
+<li>Чому задача в черзі може виконатися двічі і що з цим робити?</li>
+<li>Які винятки arq повторює автоматично?</li>
+<li>Коли News Hub варто було б перейти з <code>BackgroundTasks</code> на чергу?</li>
+</ol>
+<details class="success">
+<summary>Відповіді</summary>
+<ol>
+<li>Після відправлення відповіді, у тому самому виклику ASGI, по черзі в порядку <code>add_task</code>.</li>
+<li>Друга не запуститься. Клієнт уже отримав <code>202</code> і нічого не дізнається; виняток буде лише в журналі сервера.</li>
+<li><code>async def</code> виконується в циклі подій, і <code>time.sleep</code> його зупиняє. <code>def</code> FastAPI виконує в пулі потоків, тож цикл подій вільний.</li>
+<li>5 секунд: uvicorn на <code>SIGTERM</code> дочекається її в межах 10 секунд до <code>SIGKILL</code>. 30 секунд: Docker уб'є процес через 10 секунд, і задача пропаде.</li>
+<li>Задача лишається в Redis, доки воркер не підтвердить успіх, і якщо воркер помре, її можна повернути в чергу. <code>BLPOP</code> видаляє задачу в момент, коли її взяли.</li>
+<li>Воркер міг виконати роботу й померти до підтвердження, або задачу поставили двічі. Задачу роблять ідемпотентною: ключ «вже зроблено», унікальні обмеження, <code>_job_id</code>.</li>
+<li>Лише <code>Retry</code>, кинутий задачею. Задачі, обірвані зупинкою чи падінням воркера, виконуються знову. Звичайний виняток одразу робить задачу <code>failed</code>.</li>
+<li>Коли задачі тривають довше за вікно коректної зупинки, їх не можна просто повторити вручну, потрібні автоматичні повтори чи розклад, або аналіз треба масштабувати окремо від API.</li>
+</ol>
+</details>
+<h2 id="next">Що далі<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>
+<p><a href="../">Частина VI. Middleware, кеш і фонові задачі</a> — огляд частини. Практика — <a href="../../tutorials/04_middleware_redis/">крок 4</a>, а тести одночасних запитів до ліміту й фонового збору — <a href="../../tutorials/05_api_testing/">крок 5</a>.</p>
+<p><strong>Джерела:</strong> FastAPI — <a href="https://fastapi.tiangolo.com/tutorial/background-tasks/">Background Tasks</a>; <a href="https://starlette.dev/background/">Starlette — Background Tasks</a>; <a href="https://uvicorn.dev/settings/">Uvicorn — Settings</a> (<code>--timeout-graceful-shutdown</code>); <a href="https://docs.docker.com/reference/cli/docker/container/stop/">Docker — docker container stop</a>; Redis — <a href="https://redis.io/docs/latest/commands/lmove/">LMOVE: reliable queue pattern</a>; <a href="https://arq-docs.helpmanual.io/">arq</a>; <a href="https://docs.celeryq.dev/en/stable/userguide/tasks.html">Celery — Tasks</a>; <a href="https://python-rq.org/docs/">RQ</a>; <a href="https://dramatiq.io/">Dramatiq</a>; MDN — <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/202">202 Accepted</a>; IETF — <a href="https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/">The Idempotency-Key HTTP Header Field</a> (чернетка).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Футер" >
+        
+          
+          <a href="../rate_limiting/" class="md-footer__link md-footer__link--prev" aria-label="Назад: Rate limit">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                Rate limit
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../07_testing/" class="md-footer__link md-footer__link--next" aria-label="Вперед: Огляд">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                Огляд
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.path", "navigation.prune", "navigation.footer", "toc.follow", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0456\u0439\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u0421\u043a\u043e\u043f\u0456\u044e\u0432\u0430\u0442\u0438 \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0429\u0435 1 \u0437\u0431\u0456\u0433 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.more.other": "\u0429\u0435 # \u0437\u0431\u0456\u0433\u0456\u0432 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.none": "\u0417\u0431\u0456\u0433\u0456\u0432 \u043d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0437\u0431\u0456\u0433", "search.result.other": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e # \u0437\u0431\u0456\u0433\u0456\u0432", "search.result.placeholder": "\u0420\u043e\u0437\u043f\u043e\u0447\u043d\u0456\u0442\u044c \u043f\u0438\u0441\u0430\u0442\u0438 \u0434\u043b\u044f \u043f\u043e\u0448\u0443\u043a\u0443", "search.result.term.missing": "\u041d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e \u0437\u0430\u043f\u0438\u0442\u0443", "select.version": "\u041e\u0431\u0440\u0430\u0442\u0438 \u0432\u0435\u0440\u0441\u0456\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

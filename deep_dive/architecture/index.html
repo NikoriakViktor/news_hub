@@ -1,0 +1,2514 @@
+
+<!doctype html>
+<html lang="uk" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="FastAPI від типів і Pydantic до Docker, Compose і CI/CD — на прикладі новинного агрегатора">
+      
+      
+      
+        <link rel="canonical" href="https://nikoriakviktor.github.io/news_hub/deep_dive/architecture/">
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../request_lifecycle/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Архітектура - News Hub — книга FastAPI</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#архітектура" class="md-skip">
+          Перейти до змісту
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Хедер">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-header__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            News Hub — книга FastAPI
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Архітектура
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Пошук" placeholder="Пошук" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Шукати">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистити" aria-label="Очистити" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Пошук розпочато
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Головна
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../00_getting_started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Як користуватися
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../01_http_and_rest/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Книга FastAPI
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorials/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Zero to Hero
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  News Hub Deep Dive
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../labs/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Практика
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Довідник
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../TEACHING_GUIDE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Викладачу
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Навігація" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-nav__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    News Hub — книга FastAPI
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Головна
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../00_getting_started/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Як користуватися
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    
+  
+  
+  
+    <a href="../../01_http_and_rest/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Книга FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../tutorials/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zero to Hero
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    News Hub Deep Dive
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    News Hub Deep Dive
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архітектура
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архітектура
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#task" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Задача
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#services" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Процеси і сервіси
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Процеси і сервіси">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#inside-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що живе всередині процесу api
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Шари коду
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#imports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Хто кого імпортує
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Карта модулів
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Конфігурація
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Правила архітектури і хто їх стереже
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../request_lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Життєвий цикл запиту
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Модель даних і Redis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Каталог патернів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../test_map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Карта тестів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Як розширювати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../labs/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Практика
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../reference/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Довідник
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TEACHING_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Викладачу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#task" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Задача
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#services" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Процеси і сервіси
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Процеси і сервіси">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#inside-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що живе всередині процесу api
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Шари коду
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#imports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Хто кого імпортує
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Карта модулів
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Конфігурація
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Правила архітектури і хто їх стереже
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Навігація" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Головна
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    News Hub Deep Dive
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="архітектура">Архітектура<a class="headerlink" href="#архітектура" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>News Hub Deep Dive · сторінка 1 з 6. Код: <a href="https://github.com/NikoriakViktor/news_hub/tree/main/steps/12_ci_cd"><code>steps/12_ci_cd</code></a> —
+<a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/docker-compose.yml"><code>docker-compose.yml</code></a>,
+<a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/news_hub/api.py"><code>news_hub/api.py</code></a>,
+<a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/CLAUDE.md"><code>CLAUDE.md</code></a> кроку 12.</p>
+</blockquote>
+<h2 id="task">Задача<a class="headerlink" href="#task" title="Permanent link">&para;</a></h2>
+<p>Відповісти на три питання про фінальну версію — і кожну відповідь перевірити кодом, а не пам'яттю:</p>
+<ol>
+<li><strong>Які процеси працюють</strong> і як вони з'єднані (Compose, мережі, порти, порядок старту).</li>
+<li><strong>Як поділено код</strong>: шари, модулі, хто кого імпортує.</li>
+<li><strong>Що вмикає конфігурація</strong>: які змінні середовища є, що буде без них і з поганим значенням.</li>
+</ol>
+<h2 id="services">Процеси і сервіси<a class="headerlink" href="#services" title="Permanent link">&para;</a></h2>
+<p><code>docker compose up -d --build --wait</code> (<a href="../../tutorials/11_compose_deploy/">крок 11</a>) піднімає п'ять сервісів;
+ще два — лише з профілем:</p>
+<table>
+<thead>
+<tr>
+<th>Сервіс</th>
+<th>Образ / команда</th>
+<th>Що робить</th>
+<th>Мережі</th>
+<th>Порти назовні</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>postgres</code></td>
+<td><code>postgres:16-alpine</code></td>
+<td>база; дані — у томі <code>pgdata</code></td>
+<td><code>backend</code></td>
+<td>немає</td>
+</tr>
+<tr>
+<td><code>redis</code></td>
+<td><code>redis:7-alpine</code></td>
+<td>кеш, лічильники rate limit, статус задач, breaker</td>
+<td><code>backend</code></td>
+<td>немає</td>
+</tr>
+<tr>
+<td><code>migrate</code></td>
+<td><code>news_hub:12</code>, <code>alembic upgrade head</code></td>
+<td>один раз застосовує міграції й завершується</td>
+<td><code>backend</code></td>
+<td>немає</td>
+</tr>
+<tr>
+<td><code>api</code></td>
+<td><code>news_hub:12</code>, <code>uvicorn news_hub.api:app</code> (CMD образу)</td>
+<td>увесь HTTP API, фонові задачі, бот у режимі webhook</td>
+<td><code>backend</code>, <code>edge</code></td>
+<td>немає</td>
+</tr>
+<tr>
+<td><code>nginx</code></td>
+<td><code>nginx:1.27-alpine</code> + <code>nginx/nginx.conf</code></td>
+<td>єдиний вхід ззовні; перезаписує <code>X-Forwarded-For</code>; <code>server_tokens off</code> — без версії в <code>Server</code></td>
+<td><code>edge</code> (адреса <code>${NGINX_IP:-172.28.0.10}</code>)</td>
+<td><code>${HTTP_PORT:-80}:80</code></td>
+</tr>
+<tr>
+<td><code>bot</code> (профіль <code>polling</code>)</td>
+<td><code>news_hub:12</code>, <code>python -m news_hub.bot</code></td>
+<td>бот у режимі polling — окремим процесом</td>
+<td><code>backend</code></td>
+<td>немає</td>
+</tr>
+<tr>
+<td><code>twin</code> (профіль <code>twin</code>)</td>
+<td><code>news_hub:12</code>, <code>python -m tests.telegram_twin</code></td>
+<td>двійник Telegram Bot API для локальної перевірки</td>
+<td><code>backend</code>, <code>edge</code></td>
+<td><code>127.0.0.1:8081</code></td>
+</tr>
+</tbody>
+</table>
+<pre class="mermaid"><code>flowchart LR
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    OUT["інтернет&lt;br&gt;клієнт · Telegram"] --&gt;|":80"| NG
+    subgraph EDGE["мережа edge · типово 172.28.0.0/24"]
+        NG["nginx&lt;br&gt;типово 172.28.0.10"]
+    end
+    subgraph BACK["мережа backend"]
+        API["api&lt;br&gt;:8000"]
+        PG[("postgres&lt;br&gt;:5432")]
+        RD[("redis&lt;br&gt;:6379")]
+        MIG["migrate&lt;br&gt;один раз"]
+        BOT["bot&lt;br&gt;профіль polling"]
+    end
+    NG --&gt;|"api:8000"| API
+    API --&gt; PG
+    API --&gt; RD
+    MIG --&gt; PG
+    BOT --&gt; PG
+    BOT --&gt; RD
+
+    class OUT,BOT step
+    class NG,API decision
+    class PG,RD success
+    class MIG warning</code></pre>
+<p><code>api</code> — єдиний сервіс у двох мережах: nginx бачить лише його, а база й Redis не бачать nginx. Портів бази й Redis
+назовні немає зовсім — це перевіряє останній рядок <code>scripts/smoke.sh</code>
+(<code>check "база й Redis без портів назовні"</code>). Для розробки їх відкриває <code>docker-compose.dev.yml</code> — лише на <code>127.0.0.1</code>.</p>
+<p>Порядок старту задають <code>depends_on</code> з умовами — і це не «спершу запусти», а «спершу дочекайся стану»:</p>
+<pre class="mermaid"><code>flowchart LR
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    PG["postgres&lt;br&gt;pg_isready"] --&gt;|"service_healthy"| MIG["migrate&lt;br&gt;alembic upgrade head"]
+    MIG --&gt;|"service_completed_successfully"| API["api&lt;br&gt;GET /health/ready"]
+    RD["redis&lt;br&gt;redis-cli ping"] --&gt;|"service_healthy"| API
+    API --&gt;|"service_healthy"| NG["nginx&lt;br&gt;GET /nginx-health"]
+
+    class PG,RD,MIG step
+    class API decision
+    class NG success</code></pre>
+<table>
+<thead>
+<tr>
+<th>Перевірка здоров'я</th>
+<th>Де</th>
+<th>Що питає</th>
+<th>Чому саме так</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HEALTHCHECK</code> образу</td>
+<td><code>Dockerfile</code></td>
+<td><code>GET /health</code> — процес живий</td>
+<td>не торкається бази: падіння PostgreSQL не робить контейнер «unhealthy» (<a href="../../tutorials/10_docker/health_shutdown/">крок 10</a>)</td>
+</tr>
+<tr>
+<td><code>healthcheck</code> сервісу <code>api</code></td>
+<td><code>docker-compose.yml</code></td>
+<td><code>GET /health/ready</code> — база й Redis відповідають</td>
+<td>nginx стартує, коли API справді може відповідати (<a href="../../tutorials/11_compose_deploy/startup_order/">крок 11</a>)</td>
+</tr>
+<tr>
+<td><code>migrate</code>, <code>bot</code>, <code>twin</code></td>
+<td><code>docker-compose.yml</code></td>
+<td><code>healthcheck: disable: true</code></td>
+<td>порт 8000 вони не слухають — HEALTHCHECK образу завжди був би «unhealthy»</td>
+</tr>
+</tbody>
+</table>
+<h3 id="inside-api">Що живе всередині процесу <code>api</code><a class="headerlink" href="#inside-api" title="Permanent link">&para;</a></h3>
+<p>Окремого worker-процесу немає. Усе, що «у фоні», виконується в тому самому процесі uvicorn:</p>
+<table>
+<thead>
+<tr>
+<th>Що</th>
+<th>Де в коді</th>
+<th>Коли виконується</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ендпоінти HTTP</td>
+<td><code>news_hub/api.py</code></td>
+<td>на кожен запит</td>
+</tr>
+<tr>
+<td>фоновий збір і аналіз</td>
+<td><code>jobs.py</code> — <code>run_scrape_job</code>, <code>run_analyze_job</code> через <code>BackgroundTasks</code></td>
+<td><strong>після</strong> відповіді клієнту, у тому самому циклі подій</td>
+</tr>
+<tr>
+<td>розсилка підписникам</td>
+<td><code>notify.py</code> — <code>Notifier</code> через <code>BackgroundTasks</code></td>
+<td>після відповіді (тобто після COMMIT)</td>
+</tr>
+<tr>
+<td>бот (режим webhook)</td>
+<td><code>bot/factory.py</code> — <code>Dispatcher</code> у <code>app.state.dispatcher</code>, <code>dispatcher.feed_update</code> у фоні</td>
+<td>після відповіді <code>{"ok": true}</code> Telegram</td>
+</tr>
+<tr>
+<td>реєстрація бота в Telegram</td>
+<td><code>api.py:135</code> <code>register_bot</code> — <code>asyncio.create_task</code></td>
+<td>у фоні від старту, з повторами 1, 2, 5, 10, 30 с</td>
+</tr>
+</tbody>
+</table>
+<p>Наслідок, який варто знати: задача з <code>BackgroundTasks</code> живе лише в пам'яті процесу. Якщо контейнер <code>api</code>
+перезапуститься посеред збору, статус <code>job:&lt;id&gt;</code> у Redis так і лишиться <code>running</code> — коду, що підбирає незавершені
+задачі, немає; ключ зникне сам через добу (<code>JOB_TTL</code>, <code>jobs.py:32</code>). Для навчального агрегатора це свідомо простіше
+за чергу задач; коли задач стане багато або вони стануть довгими — це перше місце для окремого worker.</p>
+<p><code>lifespan</code> (<code>api.py:99</code>) збирає все, що потрібне на весь час роботи процесу, і кладе в <code>app.state</code>:</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant U as uvicorn
+    participant L as lifespan
+    participant S as app.state
+    participant T as Telegram
+    U-&gt;&gt;L: старт
+    L-&gt;&gt;L: setup_logging()
+    L-&gt;&gt;S: admin = load_admin_settings()
+    L-&gt;&gt;S: webhook_secret = load_webhook_secret()
+    L-&gt;&gt;S: redis = make_redis()
+    L-&gt;&gt;S: llm = make_llm()
+    L-&gt;&gt;S: telegram, bot, dispatcher (лише з BOT_TOKEN)
+    L--&gt;&gt;T: bot_setup = create_task(register_bot) — не чекаємо
+    L--&gt;&gt;U: yield — приймаємо запити
+    U-&gt;&gt;L: зупинка (SIGTERM)
+    L-&gt;&gt;L: bot_setup.cancel(), bot.session.close()
+    L-&gt;&gt;L: llm.aclose(), redis.aclose(), engine.dispose()</code></pre>
+<p>Webhook бота при зупинці <strong>не</strong> видаляється (<code>api.py:111</code>): під час перезапуску його вже міг поставити новий
+процес. Engine бази в <code>app.state</code> не лежить — це змінна модуля <code>db.py:39</code>, як і <code>SessionFactory</code> (<code>db.py:42</code>).</p>
+<h2 id="layers">Шари коду<a class="headerlink" href="#layers" title="Permanent link">&para;</a></h2>
+<p>Код поділено за тим, <strong>що він знає</strong>. Вищий шар викликає нижчий, ніколи навпаки:</p>
+<table>
+<thead>
+<tr>
+<th>Шар</th>
+<th>Модулі</th>
+<th>Знає</th>
+<th>Не знає</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Вхід</strong> — HTTP і Telegram</td>
+<td><code>api.py</code>, <code>middleware.py</code>, <code>security.py</code> (залежності), <code>bot/handlers.py</code>, <code>bot/middlewares.py</code>, <code>bot/factory.py</code>, <code>bot/__main__.py</code></td>
+<td>запит, заголовки, статуси, <code>Depends</code>, update Telegram</td>
+<td>SQL, як влаштовані провайдери LLM</td>
+</tr>
+<tr>
+<td><strong>Сценарії</strong> — що робить застосунок</td>
+<td><code>api.collect</code>, <code>analysis.analyze_news</code>, <code>jobs.run_scrape_job</code> / <code>run_analyze_job</code>, <code>notify.notify_subscribers</code> / <code>Notifier</code></td>
+<td>порядок кроків: зібрати → перевірити → зберегти → сповістити</td>
+<td>HTTP (жоден з них не імпортує FastAPI)</td>
+</tr>
+<tr>
+<td><strong>Межа довіри</strong> — перевірка даних</td>
+<td><code>models.py</code> (<code>NewsItem</code>, <code>validate_news</code>), <code>analysis.NewsAnalysis</code>, моделі запитів у <code>api.py</code>, <code>webhooks.verify_signature</code>, <code>safe_fetch.check_url</code></td>
+<td>правила: домени, довжини, схема, підпис</td>
+<td>звідки прийшли дані</td>
+</tr>
+<tr>
+<td><strong>Дані й стан</strong></td>
+<td><code>repository.py</code>, <code>cache.NewsCache</code>, <code>analysis.AnalysisCache</code>, <code>jobs.JobStore</code>, <code>llm.CircuitBreaker</code>, <code>middleware.RateLimiter</code>, <code>security.LoginGuard</code>, <code>webhooks.claim_delivery</code></td>
+<td>SQL, ключі Redis</td>
+<td>хто і навіщо їх викликав</td>
+</tr>
+<tr>
+<td><strong>Інфраструктура й джерела</strong></td>
+<td><code>db.py</code>, <code>tables.py</code>, <code>parser.py</code>, <code>rss.py</code>, <code>scraper.py</code>, <code>snapshot.py</code>, <code>safe_fetch.safe_fetch</code>, <code>llm.GeminiClient</code> / <code>AnthropicClient</code> / <code>FakeLLM</code>, <code>bot/formatting.py</code>, <code>bot/settings.py</code></td>
+<td>драйвери, SDK, HTML, RSS</td>
+<td>бізнес-правила</td>
+</tr>
+</tbody>
+</table>
+<p>Перевірити поділ можна одним <code>grep</code>: хто імпортує фреймворки.</p>
+<table>
+<thead>
+<tr>
+<th>Бібліотека</th>
+<th>Модулі, що її імпортують</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fastapi</code></td>
+<td><code>api.py</code>, <code>cache.py</code> (лише <code>Request</code> у <code>get_redis</code>), <code>middleware.py</code> (і <code>starlette.types</code> для чистого ASGI), <code>security.py</code></td>
+</tr>
+<tr>
+<td><code>aiogram</code></td>
+<td><code>api.py</code>, <code>notify.py</code>, <code>bot/factory.py</code>, <code>bot/handlers.py</code>, <code>bot/middlewares.py</code></td>
+</tr>
+<tr>
+<td><code>sqlalchemy</code></td>
+<td><code>api.py</code>, <code>db.py</code>, <code>jobs.py</code>, <code>notify.py</code>, <code>repository.py</code>, <code>tables.py</code>, <code>bot/factory.py</code>, <code>bot/middlewares.py</code></td>
+</tr>
+<tr>
+<td><code>aiohttp</code></td>
+<td><code>llm.py</code>, <code>safe_fetch.py</code>, <code>scraper.py</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>analysis.py</code>, <code>jobs.py</code>, <code>models.py</code>, <code>repository.py</code> не знають FastAPI — тому ті самі <code>analyze_news</code> і
+<code>NewsRepository</code> викликають і ендпоінт, і фонова задача, і команда бота <code>/digest</code>. Шари — домовленість: тесту,
+який забороняв би, скажімо, <code>import fastapi</code> у <code>repository.py</code>, у проєкті немає (у Django-книзі такий є —
+<code>tests_architecture.py</code>). Ідею можна перенести: див. <a href="../extending/#architecture-test">Як розширювати</a>.</p>
+<h2 id="imports">Хто кого імпортує<a class="headerlink" href="#imports" title="Permanent link">&para;</a></h2>
+<p>Граф нижче отримано з коду, а не намальовано з пам'яті: скрипт розбирає кожен файл <code>news_hub/</code> модулем <code>ast</code> і
+збирає внутрішні імпорти (<code>from .x import …</code>, <code>from news_hub.x import …</code>).</p>
+<div class="highlight"><span class="filename">imports.py — граф імпортів news_hub</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="sd">"""Граф імпортів news_hub (лише внутрішні модулі)."""</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">ast</span><span class="o">,</span><span class="w"> </span><span class="nn">sys</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>                      <span class="c1"># steps/12_ci_cd</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">def</span><span class="w"> </span><span class="nf">modname</span><span class="p">(</span><span class="n">p</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">parts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="k">return</span> <span class="s2">"."</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"__init__"</span> <span class="k">else</span> <span class="n">parts</span><span class="p">)</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">def</span><span class="w"> </span><span class="nf">internal</span><span class="p">(</span><span class="n">p</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">me</span> <span class="o">=</span> <span class="n">modname</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="n">pkg</span> <span class="o">=</span> <span class="n">me</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"__init__.py"</span> <span class="k">else</span> <span class="n">me</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"."</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    <span class="n">out</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">ast</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))):</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">ImportFrom</span><span class="p">):</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">level</span><span class="p">:</span>                                         <span class="c1"># from .x / from ..x</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>                <span class="n">base</span> <span class="o">=</span> <span class="n">pkg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">)[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">pkg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">))</span> <span class="o">-</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">level</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>                <span class="n">out</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"."</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base</span> <span class="o">+</span> <span class="p">([</span><span class="n">node</span><span class="o">.</span><span class="n">module</span><span class="p">]</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">module</span> <span class="k">else</span> <span class="p">[])))</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>            <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">module</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"news_hub"</span><span class="p">):</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>                <span class="n">out</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">module</span><span class="p">)</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">o</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">out</span> <span class="k">if</span> <span class="n">o</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"news_hub"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">o</span> <span class="o">!=</span> <span class="n">me</span><span class="p">)</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">root</span> <span class="o">/</span> <span class="s2">"news_hub"</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">"*.py"</span><span class="p">)):</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">modname</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="s2">"-&gt;"</span><span class="p">,</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">removeprefix</span><span class="p">(</span><span class="s2">"news_hub."</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">internal</span><span class="p">(</span><span class="n">p</span><span class="p">)))</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>$ python imports.py steps/12_ci_cd
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>news_hub.analysis -&gt; llm
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>news_hub.api -&gt; analysis, bot.factory, bot.settings, cache, db, jobs, llm, middleware, models, notify, repository, rss, safe_fetch, scraper, security, snapshot, tables, webhooks
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>news_hub.bot.__main__ -&gt; bot.factory, bot.settings, cache, db, llm, security
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>news_hub.bot.factory -&gt; bot.handlers, bot.middlewares, llm
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>news_hub.bot.formatting -&gt;
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>news_hub.bot.handlers -&gt; analysis, bot.formatting, llm, middleware, models, notify, repository, scraper, snapshot
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>news_hub.bot.middlewares -&gt; llm, middleware, repository
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>news_hub.bot.settings -&gt;
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>news_hub.cache -&gt;
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>news_hub.db -&gt;
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>news_hub.jobs -&gt; analysis, cache, llm, models, repository, scraper
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>news_hub.llm -&gt;
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>news_hub.middleware -&gt; cache
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>news_hub.models -&gt; parser
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>news_hub.notify -&gt; bot.formatting, repository
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>news_hub.parser -&gt;
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>news_hub.repository -&gt; analysis, db, models, tables
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>news_hub.rss -&gt; parser
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>news_hub.safe_fetch -&gt;
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>news_hub.scraper -&gt; parser
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>news_hub.security -&gt;
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>news_hub.snapshot -&gt; parser
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>news_hub.tables -&gt; db
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>news_hub.webhooks -&gt;
+</code></pre></div>
+<p><code>api.py</code> імпортує 18 модулів з 25 — він точка збирання, тому на графі його немає (інакше кожен вузол мав би стрілку
+від нього). Решта 40 стрілок — усі, що дав скрипт. Стрілка <code>A → B</code> означає «A імпортує B»:</p>
+<pre class="mermaid"><code>flowchart TD
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    BMAIN["bot.__main__&lt;br&gt;polling"] --&gt; BFAC["bot.factory"]
+    BMAIN --&gt; BSET["bot.settings"]
+    BMAIN --&gt; CACHE["cache"]
+    BMAIN --&gt; DB["db"]
+    BMAIN --&gt; LLM["llm"]
+    BMAIN --&gt; SEC["security"]
+    BFAC --&gt; BHAND["bot.handlers"]
+    BFAC --&gt; BMW["bot.middlewares"]
+    BFAC --&gt; LLM
+    BHAND --&gt; AN["analysis"]
+    BHAND --&gt; BFMT["bot.formatting"]
+    BHAND --&gt; LLM
+    BHAND --&gt; MOD["models"]
+    BHAND --&gt; NOT["notify"]
+    BHAND --&gt; REPO["repository"]
+    BHAND --&gt; SCR["scraper"]
+    BHAND --&gt; SNAP["snapshot"]
+    BHAND --&gt; MW["middleware"]
+    BMW --&gt; LLM
+    BMW --&gt; MW
+    BMW --&gt; REPO
+    JOBS["jobs"] --&gt; AN
+    JOBS --&gt; CACHE
+    JOBS --&gt; LLM
+    JOBS --&gt; MOD
+    JOBS --&gt; REPO
+    JOBS --&gt; SCR
+    NOT --&gt; BFMT
+    NOT --&gt; REPO
+    AN --&gt; LLM
+    REPO --&gt; AN
+    REPO --&gt; DB
+    REPO --&gt; MOD
+    REPO --&gt; TAB["tables"]
+    TAB --&gt; DB
+    MOD --&gt; PAR["parser"]
+    RSS["rss"] --&gt; PAR
+    SCR --&gt; PAR
+    SNAP --&gt; PAR
+    MW --&gt; CACHE
+
+    class BMAIN,BFAC,BHAND,BMW,MW decision
+    class JOBS,NOT,AN step
+    class REPO,TAB,MOD step
+    class DB,CACHE,LLM,PAR,BFMT,BSET,SEC success
+    class RSS,SCR,SNAP step</code></pre>
+<p>Що видно з графа (і що легко пропустити, читаючи файли по одному):</p>
+<table>
+<thead>
+<tr>
+<th>Спостереження</th>
+<th>Чому це важливо</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Циклів немає; <code>api.py</code> не імпортує ніхто</td>
+<td>зміна в <code>api.py</code> не може зламати імпорт інших модулів; тести імпортують <code>app</code> звідти</td>
+</tr>
+<tr>
+<td>9 модулів без внутрішніх імпортів: <code>parser</code>, <code>db</code>, <code>cache</code>, <code>llm</code>, <code>safe_fetch</code>, <code>security</code>, <code>webhooks</code>, <code>bot.formatting</code>, <code>bot.settings</code></td>
+<td>це «листки» — їх тестують ізольовано (<code>tests/unit/</code>), без бази й Redis (Redis, де він потрібен, — <code>fakeredis</code>)</td>
+</tr>
+<tr>
+<td><code>safe_fetch</code>, <code>webhooks</code>, <code>rss</code> імпортує <strong>лише</strong> <code>api.py</code>; <code>security</code> — ще й <code>bot.__main__</code></td>
+<td>SSRF-захист, підпис webhook і RSS-джерела — лише HTTP-вхід. «Хто адмін» — одне місце для обох входів: <code>BOT_ADMIN_IDS</code> читає <code>load_admin_settings</code> (<code>AdminSettings.telegram_ids</code>), і <code>bot.__main__</code> бере список звідти ж, що й <code>api.start_bot</code></td>
+</tr>
+<tr>
+<td><code>repository → analysis → llm</code></td>
+<td>репозиторій бере тип <code>NewsAnalysis</code> з <code>analysis.py</code>, а той — <code>LLMClient</code> з <code>llm.py</code>: імпорт <code>repository</code> тягне SDK google-genai і anthropic. Якщо колись знадобиться легкий імпорт репозиторію — <code>NewsAnalysis</code> переїжджає в окремий модуль моделей</td>
+</tr>
+<tr>
+<td><code>bot.middlewares → middleware</code>, <code>bot.handlers → middleware</code></td>
+<td>бот використовує той самий <code>RateLimiter</code>, що й HTTP rate limit (<code>middleware.py:105</code>) — один алгоритм, два входи; <code>/scrape</code> бере ще й той самий ліміт збору <code>LIMITS["scrape"]</code> (<code>middleware.py:50</code>)</td>
+</tr>
+<tr>
+<td><code>notify → bot.formatting</code>, хоча <code>notify.py</code> лежить поза <code>bot/</code></td>
+<td>розсилку викликає і API (після збору), і бот (<code>/scrape</code>) — тому вона не в <code>bot/</code>, але HTML для Telegram робить тими самими <code>esc</code> / <code>link</code></td>
+</tr>
+<tr>
+<td><code>jobs → scraper</code> — лише тип <code>ScrapeOutcome</code>; <code>bot.handlers → scraper</code> — сам <code>scrape_all_async</code></td>
+<td>фонова задача отримує збирача ззовні (параметр <code>collect</code>, тести підміняють його через <code>get_scrapers</code>), а <code>/scrape</code> у боті викликає <code>scrape_all_async</code> напряму — тому <code>tests/integration/test_bot.py</code> перевіряє лише <code>/scrape snapshot</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="modules">Карта модулів<a class="headerlink" href="#modules" title="Permanent link">&para;</a></h2>
+<p>Кожен файл <code>news_hub/</code>: за що відповідає і в якому кроці з'явився (крок — перша папка <code>steps/</code>, де файл є):</p>
+<table>
+<thead>
+<tr>
+<th>Файл</th>
+<th>Крок</th>
+<th>Відповідальність</th>
+<th>Головні імена</th>
+<th>Хто викликає</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>parser.py</code></td>
+<td>1</td>
+<td>HTML rbc.ua → <code>list[RawNews]</code>, лише рядки, без перевірок</td>
+<td><code>RawNews</code>, <code>parse_rbc_news</code></td>
+<td><code>scraper.py</code>, тести</td>
+</tr>
+<tr>
+<td><code>models.py</code></td>
+<td>1 (змінено в 5, 6)</td>
+<td>межа довіри: <code>RawNews</code> → <code>NewsItem</code>; домени</td>
+<td><code>NewsItem</code>, <code>validate_news</code>, <code>is_rbc_host</code>, <code>is_allowed_host</code></td>
+<td><code>api.py</code>, <code>jobs.py</code>, <code>bot/handlers.py</code>, <code>repository.py</code></td>
+</tr>
+<tr>
+<td><code>snapshot.py</code></td>
+<td>1</td>
+<td>знімок стрічки: <code>data/rbc_news_snapshot.json</code> (168 новин) → <code>list[RawNews]</code></td>
+<td><code>load_snapshot</code></td>
+<td><code>api.collect</code>, <code>/scrape snapshot</code> у боті</td>
+</tr>
+<tr>
+<td><code>scraper.py</code></td>
+<td>2</td>
+<td>сторінки rbc.ua через aiohttp, разом або по черзі</td>
+<td><code>scrape_all_async</code>, <code>scrape_sequential</code>, <code>PageResult</code>, <code>ScrapeOutcome</code></td>
+<td><code>api.get_scrapers</code>, <code>bot/handlers.py</code></td>
+</tr>
+<tr>
+<td><code>api.py</code></td>
+<td>2 (росте до 12)</td>
+<td>застосунок FastAPI: <code>lifespan</code>, middleware, залежності, 24 ендпоінти</td>
+<td><code>app</code>, <code>SessionDep</code>, <code>RepoDep</code>, <code>LLMDep</code>, …</td>
+<td>uvicorn, тести</td>
+</tr>
+<tr>
+<td><code>db.py</code></td>
+<td>3</td>
+<td>engine, <code>SessionFactory</code>, <code>Base</code>, сесія на запит</td>
+<td><code>make_engine</code>, <code>get_db</code></td>
+<td><code>api.py</code>, <code>repository.py</code>, <code>migrations/env.py</code></td>
+</tr>
+<tr>
+<td><code>tables.py</code></td>
+<td>3 (7, 8, 9)</td>
+<td>таблиці SQLAlchemy</td>
+<td><code>NewsRow</code>, <code>SourceRow</code>, <code>SubscriptionRow</code></td>
+<td><code>repository.py</code>, Alembic</td>
+</tr>
+<tr>
+<td><code>repository.py</code></td>
+<td>3 (7, 8, 9)</td>
+<td>увесь SQL</td>
+<td><code>NewsRepository</code>, <code>SourceRepository</code>, <code>SubscriptionRepository</code>, <code>NewNews</code></td>
+<td><code>api.py</code>, <code>jobs.py</code>, <code>notify.py</code>, бот</td>
+</tr>
+<tr>
+<td><code>cache.py</code></td>
+<td>4</td>
+<td>клієнт Redis, кеш стрічки з версією</td>
+<td><code>make_redis</code>, <code>get_redis</code>, <code>NewsCache</code></td>
+<td><code>api.py</code>, <code>middleware.py</code>, <code>jobs.py</code></td>
+</tr>
+<tr>
+<td><code>middleware.py</code></td>
+<td>4 (7, 8)</td>
+<td><code>X-Request-ID</code>, журнал, заголовки безпеки, rate limit, інвалідація кешу</td>
+<td><code>request_context</code>, <code>SecurityHeadersMiddleware</code>, <code>rate_limit</code>, <code>invalidate_cache</code>, <code>RateLimiter</code>, <code>LIMITS</code></td>
+<td><code>api.py</code>, <code>bot/middlewares.py</code>, <code>bot/handlers.py</code></td>
+</tr>
+<tr>
+<td><code>jobs.py</code></td>
+<td>4 (7, 9)</td>
+<td>фонові задачі й їхній статус у Redis</td>
+<td><code>JobStore</code>, <code>JobStatus</code>, <code>new_job_id</code>, <code>run_scrape_job</code>, <code>run_analyze_job</code></td>
+<td><code>api.py</code></td>
+</tr>
+<tr>
+<td><code>rss.py</code></td>
+<td>6</td>
+<td>RSS «Української правди» → <code>list[RawNews]</code> (написав AI за тестами-специфікацією)</td>
+<td><code>parse_pravda_rss</code></td>
+<td><code>api.fetch_source</code></td>
+</tr>
+<tr>
+<td><code>llm.py</code></td>
+<td>7</td>
+<td>спільний інтерфейс провайдерів, breaker</td>
+<td><code>LLMClient</code>, <code>GeminiClient</code>, <code>AnthropicClient</code>, <code>FakeLLM</code>, <code>CircuitBreaker</code>, <code>GuardedLLM</code>, <code>make_llm</code></td>
+<td><code>api.py</code>, <code>analysis.py</code>, бот</td>
+</tr>
+<tr>
+<td><code>analysis.py</code></td>
+<td>7</td>
+<td>промпт, перевірка відповіді, кеш за хешем тексту</td>
+<td><code>NewsAnalysis</code>, <code>analyze_news</code>, <code>AnalysisCache</code>, <code>PROMPT_VERSION</code></td>
+<td><code>api.analyze</code>, <code>jobs.run_analyze_job</code>, <code>/digest</code></td>
+</tr>
+<tr>
+<td><code>security.py</code></td>
+<td>8 (9)</td>
+<td>пароль адміна, JWT, <code>require_admin</code>, ліміт невдалих входів на ім'я, адміни Telegram</td>
+<td><code>AdminDep</code>, <code>load_admin_settings</code>, <code>authenticate</code>, <code>LoginGuard</code>, <code>create_access_token</code>, <code>telegram_admin_ids</code></td>
+<td><code>api.py</code>, <code>bot/__main__.py</code>; <code>python -m news_hub.security</code></td>
+</tr>
+<tr>
+<td><code>safe_fetch.py</code></td>
+<td>8</td>
+<td>завантаження чужого URL без SSRF</td>
+<td><code>safe_fetch</code>, <code>check_url</code>, <code>FetchPolicy</code>, <code>PolicyResolver</code></td>
+<td><code>api.create_source</code>, <code>api.fetch_source</code></td>
+</tr>
+<tr>
+<td><code>webhooks.py</code></td>
+<td>8 (9)</td>
+<td>підпис HMAC (час + id доставки + тіло), захист від повтору за id доставки, секрет Telegram</td>
+<td><code>verify_signature</code>, <code>claim_delivery</code>, <code>sign</code>, <code>verify_secret_token</code></td>
+<td><code>api.scrape_webhook</code>, <code>api.telegram_webhook</code></td>
+</tr>
+<tr>
+<td><code>notify.py</code></td>
+<td>9</td>
+<td>нові новини → підписникам</td>
+<td><code>notify_subscribers</code>, <code>Notifier</code>, <code>build_messages</code></td>
+<td><code>api.py</code> (у фоні), <code>jobs.py</code>, <code>/scrape</code></td>
+</tr>
+<tr>
+<td><code>bot/settings.py</code></td>
+<td>9</td>
+<td>налаштування бота з env: токен, адреса Bot API, webhook (адміни — у <code>security.py</code>)</td>
+<td><code>BotSettings</code>, <code>load_bot_settings</code></td>
+<td><code>api.start_bot</code>, <code>bot/__main__.py</code></td>
+</tr>
+<tr>
+<td><code>bot/factory.py</code></td>
+<td>9</td>
+<td><code>Bot</code>, <code>Dispatcher</code>, middleware, меню</td>
+<td><code>create_bot</code>, <code>create_dispatcher</code>, <code>set_commands</code></td>
+<td><code>api.start_bot</code>, <code>bot/__main__.py</code>, тести</td>
+</tr>
+<tr>
+<td><code>bot/handlers.py</code></td>
+<td>9</td>
+<td>команди бота</td>
+<td><code>build_router</code>, <code>cmd_news</code>, <code>cmd_digest</code>, <code>cmd_subscribe</code>, …</td>
+<td><code>bot/factory.py</code></td>
+</tr>
+<tr>
+<td><code>bot/middlewares.py</code></td>
+<td>9</td>
+<td>rate limit бота, сесія бази на update</td>
+<td><code>RateLimitMiddleware</code>, <code>InjectMiddleware</code></td>
+<td><code>bot/factory.py</code></td>
+</tr>
+<tr>
+<td><code>bot/formatting.py</code></td>
+<td>9</td>
+<td>HTML для Telegram, розбиття ≤ 4096, ключові слова</td>
+<td><code>esc</code>, <code>link</code>, <code>split_message</code>, <code>normalize_keyword</code>, <code>matches</code></td>
+<td><code>bot/handlers.py</code>, <code>notify.py</code></td>
+</tr>
+<tr>
+<td><code>bot/__main__.py</code></td>
+<td>9</td>
+<td>polling: <code>python -m news_hub.bot</code></td>
+<td><code>main</code></td>
+<td>сервіс <code>bot</code> (профіль <code>polling</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Поза <code>news_hub/</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Файл</th>
+<th>Крок</th>
+<th>Що це</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>migrations/env.py</code>, <code>migrations/versions/0001…0004</code></td>
+<td>3, 7, 8, 9</td>
+<td>Alembic; адреса бази — з <code>news_hub.db.DATABASE_URL</code> (<a href="../data_model/#migrations">Модель даних</a>)</td>
+</tr>
+<tr>
+<td><code>Dockerfile</code>, <code>.dockerignore</code></td>
+<td>10 (12)</td>
+<td>образ: залежності окремим шаром — з <code>requirements.lock</code> з <code>--require-hashes</code>, користувач <code>app</code>, <code>HEALTHCHECK</code>, CMD в exec-формі</td>
+</tr>
+<tr>
+<td><code>requirements.txt</code>, <code>requirements.lock</code>, <code>requirements-dev.txt</code></td>
+<td>1 → 12</td>
+<td>діапазони <code>&gt;=</code>, які проєкт підтримує; точні версії всіх 70 пакетів з sha256 для образу (крок 12, <code>uv pip compile … --generate-hashes</code>); інструменти тестів</td>
+</tr>
+<tr>
+<td><code>docker-compose.yml</code>, <code>docker-compose.dev.yml</code>, <code>nginx/nginx.conf</code></td>
+<td>3 → 11</td>
+<td>файл Compose з'явився в кроці 3 (лише база); уся система — з кроку 11</td>
+</tr>
+<tr>
+<td><code>scripts/backup.sh</code>, <code>scripts/restore.sh</code></td>
+<td>11</td>
+<td><code>pg_dump</code> з контейнера і відновлення</td>
+</tr>
+<tr>
+<td><code>scripts/make_env.py</code>, <code>scripts/smoke.sh</code></td>
+<td>12</td>
+<td><code>.env</code> з випадковими секретами; smoke-тест стеку через nginx (зокрема <code>/docs</code> → 404, <code>nosniff</code>, <code>Server: nginx</code> без версії)</td>
+</tr>
+<tr>
+<td><code>.gitleaks.toml</code> (корінь репозиторію)</td>
+<td>12</td>
+<td>правила gitleaks за замовчуванням + винятки для чотирьох навчальних значень</td>
+</tr>
+<tr>
+<td><code>tests/</code></td>
+<td>3 → 12</td>
+<td><a href="../test_map/">Карта тестів</a></td>
+</tr>
+<tr>
+<td><code>CLAUDE.md</code>, <code>.claude/</code></td>
+<td>6</td>
+<td>правила для AI-асистента, дозволи, hook <code>pytest -m unit</code>, skill <code>/add-news-source</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="config">Конфігурація<a class="headerlink" href="#config" title="Permanent link">&para;</a></h2>
+<p>Уся конфігурація — змінні середовища; файлів налаштувань у коді немає. Важливіше за перелік — <strong>що буде без
+змінної</strong>: деякі вмикають частину застосунку (без них — <code>503</code>), деякі з поганим значенням не дають застосунку
+стартувати.</p>
+<table>
+<thead>
+<tr>
+<th>Змінна</th>
+<th>Де читається</th>
+<th>За замовчуванням</th>
+<th>Немає</th>
+<th>Погане значення</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DATABASE_URL</code></td>
+<td><code>db.py:21</code> (під час імпорту)</td>
+<td><code>sqlite+aiosqlite:///news_hub.db</code>; в образі — <code>sqlite+aiosqlite:////data/news_hub.db</code> (<code>Dockerfile</code>)</td>
+<td>SQLite-файл</td>
+<td>помилка з'єднання → <code>/health/ready</code> = 503</td>
+</tr>
+<tr>
+<td><code>REDIS_URL</code></td>
+<td><code>cache.py:21</code></td>
+<td><code>redis://localhost:6379/0</code>; <code>fakeredis://</code> — у пам'яті</td>
+<td>—</td>
+<td><code>/health/ready</code> = 503</td>
+</tr>
+<tr>
+<td><code>JWT_SECRET</code>, <code>ADMIN_PASSWORD_HASH</code></td>
+<td><code>security.py:68</code> (<code>lifespan</code>)</td>
+<td>—</td>
+<td>обидві порожні → запис відповідає <code>503</code></td>
+<td>секрет &lt; 32 символів чи не bcrypt-хеш → <code>RuntimeError</code>, старт зупиняється</td>
+</tr>
+<tr>
+<td><code>ADMIN_USERNAME</code>, <code>JWT_EXPIRE_MINUTES</code></td>
+<td><code>security.py:86</code></td>
+<td><code>admin</code>, <code>30</code></td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>BOT_ADMIN_IDS</code></td>
+<td><code>security.py:71</code> (<code>parse_telegram_ids</code>, у <code>load_admin_settings</code>)</td>
+<td>порожньо</td>
+<td><code>/scrape</code> у боті — нікому</td>
+<td>не числа через кому → <code>RuntimeError</code>; задано без <code>JWT_SECRET</code> і хешу → <code>RuntimeError</code></td>
+</tr>
+<tr>
+<td><code>LOGIN_FAIL_LIMIT</code>, <code>LOGIN_FAIL_WINDOW</code></td>
+<td><code>security.py:47</code> (імпорт)</td>
+<td><code>20</code>, <code>900</code></td>
+<td>—</td>
+<td>не число → помилка імпорту</td>
+</tr>
+<tr>
+<td><code>WEBHOOK_SECRET</code></td>
+<td><code>webhooks.py:47</code> (<code>lifespan</code>)</td>
+<td>—</td>
+<td><code>POST /api/webhooks/scrape</code> → <code>503</code></td>
+<td>&lt; 32 символів → <code>RuntimeError</code></td>
+</tr>
+<tr>
+<td><code>LLM_PROVIDER</code></td>
+<td><code>llm.py:293</code> (<code>lifespan</code>)</td>
+<td><code>gemini</code></td>
+<td>—</td>
+<td>не <code>gemini</code>/<code>anthropic</code>/<code>fake</code> → <code>ValueError</code>, старт зупиняється</td>
+</tr>
+<tr>
+<td><code>GEMINI_API_KEY</code>, <code>GEMINI_MODELS</code></td>
+<td><code>llm.py:297</code></td>
+<td>пул <code>MODEL_POOL</code> (<code>llm.py:42</code>)</td>
+<td><code>make_llm()</code> → <code>None</code>, аналіз → <code>503</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>ANTHROPIC_API_KEY</code>, <code>ANTHROPIC_MODEL</code></td>
+<td><code>llm.py:302</code></td>
+<td>—</td>
+<td><code>None</code>, аналіз → <code>503</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>LLM_TIMEOUT</code>, <code>LLM_MAX_TOKENS</code></td>
+<td><code>llm.py:44</code> (імпорт)</td>
+<td><code>30</code>, <code>2048</code></td>
+<td>—</td>
+<td>не число → помилка імпорту</td>
+</tr>
+<tr>
+<td><code>RATE_LIMIT_REQUESTS</code>, <code>RATE_LIMIT_WINDOW</code></td>
+<td><code>middleware.py:43</code> (імпорт)</td>
+<td><code>5</code>, <code>60</code></td>
+<td>—</td>
+<td>не число → помилка імпорту</td>
+</tr>
+<tr>
+<td><code>ANALYZE_RATE_LIMIT</code></td>
+<td><code>middleware.py:45</code></td>
+<td><code>10</code></td>
+<td>—</td>
+<td>те саме</td>
+</tr>
+<tr>
+<td><code>LOGIN_RATE_LIMIT</code>, <code>LOGIN_RATE_WINDOW</code></td>
+<td><code>middleware.py:46</code></td>
+<td><code>5</code>, <code>300</code></td>
+<td>—</td>
+<td>те саме</td>
+</tr>
+<tr>
+<td><code>BOT_TOKEN</code></td>
+<td><code>bot/settings.py:20</code> (<code>lifespan</code>)</td>
+<td>—</td>
+<td>бота немає, API працює як раніше</td>
+<td>неправильний токен → у журналі <code>401</code>, API працює</td>
+</tr>
+<tr>
+<td><code>TELEGRAM_WEBHOOK_URL</code>, <code>TELEGRAM_WEBHOOK_SECRET</code></td>
+<td><code>bot/settings.py:24</code></td>
+<td>—</td>
+<td>бот лише через polling, <code>POST /api/telegram/webhook</code> → <code>503</code></td>
+<td>URL не <code>https://</code> (без <code>TELEGRAM_API_URL</code>) чи секрет не 32–256 символів <code>A-Z a-z 0-9 _ -</code> → <code>RuntimeError</code></td>
+</tr>
+<tr>
+<td><code>TELEGRAM_API_URL</code></td>
+<td><code>bot/settings.py:32</code></td>
+<td>api.telegram.org</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>DOCS_ENABLED</code></td>
+<td><code>api.py:158</code> (імпорт)</td>
+<td><code>true</code>; у Compose — <code>${DOCS_ENABLED:-false}</code></td>
+<td>—</td>
+<td><code>0</code> / <code>false</code> / <code>no</code> / <code>off</code> → <code>/docs</code>, <code>/redoc</code>, <code>/openapi.json</code> віддають <code>404</code></td>
+</tr>
+<tr>
+<td><code>POSTGRES_DB</code>, <code>POSTGRES_USER</code>, <code>POSTGRES_PASSWORD</code></td>
+<td><code>docker-compose.yml</code></td>
+<td><code>news_hub</code>, <code>news</code>, —</td>
+<td><code>POSTGRES_PASSWORD</code> — <code>:?</code>, Compose не стартує</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>HTTP_PORT</code></td>
+<td><code>docker-compose.yml</code></td>
+<td><code>80</code></td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>FORWARDED_ALLOW_IPS</code></td>
+<td>uvicorn (задано в <code>docker-compose.yml</code>)</td>
+<td><code>${NGINX_IP:-172.28.0.10}</code> — адреса nginx</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>EDGE_SUBNET</code>, <code>NGINX_IP</code></td>
+<td><code>docker-compose.yml</code> (мережа <code>edge</code>, <code>ipv4_address</code> nginx, <code>FORWARDED_ALLOW_IPS</code>)</td>
+<td><code>172.28.0.0/24</code>, <code>172.28.0.10</code></td>
+<td>—</td>
+<td>підмережа зайнята → <code>Pool overlaps with other one on this address space</code>, мережа не створюється; задавати обидві разом, <code>NGINX_IP</code> — адреса з <code>EDGE_SUBNET</code></td>
+</tr>
+</tbody>
+</table>
+<p>Дві стратегії — і обидві навмисні:</p>
+<ul>
+<li><strong>Необов'язкова частина вимкнена — решта працює.</strong> Немає ключа LLM, токена бота, секрету webhook — застосунок
+  стартує, а відповідний ендпоінт чесно каже <code>503</code> з поясненням. Так Compose не падає «по колу» через сервіс,
+  який сьогодні не потрібен (<a href="../../tutorials/11_compose_deploy/external_services/">крок 11</a>).</li>
+<li><strong>Задано, але погано — не стартуємо взагалі (fail-fast).</strong> Короткий <code>JWT_SECRET</code> чи обрізаний хеш пароля
+  (типова помилка <code>.env</code> без лапок, крок 11) — це не «вимкнено», а дірка або 500 на кожному вході. Краще
+  <code>Application startup failed</code> у журналі одразу, ніж здогадуватись потім.</li>
+</ul>
+<p>Деталі кожної перевірки — <a href="../patterns/#fail-fast">Каталог патернів → Fail-fast</a>.</p>
+<h2 id="rules">Правила архітектури і хто їх стереже<a class="headerlink" href="#rules" title="Permanent link">&para;</a></h2>
+<p><code>CLAUDE.md</code> кроку 12 перелічує правила проєкту. Частину з них перевіряє не людина, а тест або CI:</p>
+<table>
+<thead>
+<tr>
+<th>Правило</th>
+<th>Хто перевіряє</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>новий ендпоінт запису — з <code>dependencies=[AdminDep]</code>; публічні перелічено в <code>PUBLIC</code></td>
+<td><code>tests/integration/test_admin_api.py::test_every_other_endpoint_requires_admin</code> — обходить усі маршрути</td>
+</tr>
+<tr>
+<td>будь-яке джерело повертає <code>list[RawNews]</code>, перевіряє лише <code>NewsItem</code></td>
+<td><code>tests/unit/test_pipeline.py</code>, <code>tests/unit/test_pravda.py::test_pipeline_rss_to_model</code></td>
+</tr>
+<tr>
+<td>домени — точний збіг або піддомен, ніколи <code>endswith(d)</code></td>
+<td><code>tests/unit/test_models.py::test_is_rbc_host</code>, <code>tests/unit/test_pravda.py::test_allowed_hosts</code></td>
+</tr>
+<tr>
+<td>тести не ходять у мережу</td>
+<td><code>FakeLLM</code>, двійник Telegram, HTML-фікстури; <code>tests/unit/test_pravda.py::test_parser_does_not_touch_network</code></td>
+</tr>
+<tr>
+<td>чужі URL — лише через <code>safe_fetch</code></td>
+<td><code>tests/integration/test_sources_ssrf.py</code></td>
+</tr>
+<tr>
+<td>усе ззовні в HTML бота — через <code>esc</code> / <code>link</code></td>
+<td>двійник Telegram відхиляє невалідний HTML, як справжній: <code>tests/unit/test_bot_formatting.py::test_twin_follows_html_rules</code>, <code>tests/integration/test_bot.py::test_start_escapes_user_name</code></td>
+</tr>
+<tr>
+<td>нижні межі в <code>requirements.txt</code> — справжні</td>
+<td>job <code>min-versions</code> у CI (<code>uv --resolution lowest-direct</code>)</td>
+</tr>
+<tr>
+<td>образ ставить точні версії з хешами; <code>requirements.lock</code> відповідає <code>requirements.txt</code>; у залежностях немає відомих вразливостей; в історії git немає секретів</td>
+<td><code>Dockerfile</code> (<code>pip install --require-hashes -r requirements.lock</code>) і job <code>supply-chain</code> у CI: перегенерувати lock і <code>git diff --exit-code</code>, <code>pip-audit</code>, <code>gitleaks</code> (<a href="../test_map/#ci">Карта тестів → CI</a>)</td>
+</tr>
+<tr>
+<td>кожна відповідь — із заголовками безпеки</td>
+<td><code>tests/integration/test_admin_api.py::test_security_headers_on_every_answer</code>; через nginx — <code>scripts/smoke.sh</code></td>
+</tr>
+<tr>
+<td>в образі немає dev-залежностей, <code>.env</code>, тестів</td>
+<td><code>tests/docker/test_image.py</code></td>
+</tr>
+<tr>
+<td>моделі збігаються з міграціями</td>
+<td><code>alembic check</code> у job <code>postgres</code></td>
+</tr>
+</tbody>
+</table>
+<p>Решту правил (<code>PROMPT_VERSION</code> після зміни промпту, коментарі українською, <code>logging</code> замість <code>print</code>) тримає
+рев'ю. Як писати код, щоб ці перевірки лишались зеленими, — <a href="../extending/">Як розширювати</a>.</p>
+<h2 id="next">Що далі<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>
+<p><a href="../request_lifecycle/">Життєвий цикл запиту</a> — той самий застосунок, але в русі: один запит від nginx до
+відповіді, з журналом справжнього запуску.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Футер" >
+        
+          
+          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Назад: Огляд">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                Огляд
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../request_lifecycle/" class="md-footer__link md-footer__link--next" aria-label="Вперед: Життєвий цикл запиту">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                Життєвий цикл запиту
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.path", "navigation.prune", "navigation.footer", "toc.follow", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0456\u0439\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u0421\u043a\u043e\u043f\u0456\u044e\u0432\u0430\u0442\u0438 \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0429\u0435 1 \u0437\u0431\u0456\u0433 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.more.other": "\u0429\u0435 # \u0437\u0431\u0456\u0433\u0456\u0432 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.none": "\u0417\u0431\u0456\u0433\u0456\u0432 \u043d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0437\u0431\u0456\u0433", "search.result.other": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e # \u0437\u0431\u0456\u0433\u0456\u0432", "search.result.placeholder": "\u0420\u043e\u0437\u043f\u043e\u0447\u043d\u0456\u0442\u044c \u043f\u0438\u0441\u0430\u0442\u0438 \u0434\u043b\u044f \u043f\u043e\u0448\u0443\u043a\u0443", "search.result.term.missing": "\u041d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e \u0437\u0430\u043f\u0438\u0442\u0443", "select.version": "\u041e\u0431\u0440\u0430\u0442\u0438 \u0432\u0435\u0440\u0441\u0456\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

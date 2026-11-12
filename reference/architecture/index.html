@@ -1,0 +1,2172 @@
+
+<!doctype html>
+<html lang="uk" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="FastAPI від типів і Pydantic до Docker, Compose і CI/CD — на прикладі новинного агрегатора">
+      
+      
+      
+        <link rel="canonical" href="https://nikoriakviktor.github.io/news_hub/reference/architecture/">
+      
+      
+        <link rel="prev" href="../pydantic_cheatsheet/">
+      
+      
+        <link rel="next" href="../django_to_fastapi/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Архітектура й production - News Hub — книга FastAPI</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#архітектура-й-production-коротко" class="md-skip">
+          Перейти до змісту
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Хедер">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-header__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            News Hub — книга FastAPI
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Архітектура й production
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Пошук" placeholder="Пошук" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Шукати">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистити" aria-label="Очистити" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Пошук розпочато
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Головна
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../00_getting_started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Як користуватися
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../01_http_and_rest/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Книга FastAPI
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorials/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Zero to Hero
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../deep_dive/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  News Hub Deep Dive
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../labs/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Практика
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Довідник
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../TEACHING_GUIDE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Викладачу
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Навігація" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-nav__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    News Hub — книга FastAPI
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Головна
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../00_getting_started/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Як користуватися
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    
+  
+  
+  
+    <a href="../../01_http_and_rest/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Книга FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../tutorials/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zero to Hero
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../deep_dive/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    News Hub Deep Dive
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../labs/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Практика
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Довідник
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Довідник
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fastapi_cheatsheet/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Шпаргалка FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pydantic_cheatsheet/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Шпаргалка Pydantic
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архітектура й production
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архітектура й production
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#fastapi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що таке FastAPI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#asgi-wsgi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ASGI і WSGI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#endpoint-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Три типи ендпоінтів
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#blocking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Блокуючий код і заміни
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#di" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dependency Injection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Пул з'єднань
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repository
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#uow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unit of Work
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#microservices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Мікросервіси
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#production" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Production
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Чекліст перед деплоєм
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../django_to_fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Від Django до FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../http_status_codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Коди відповідей
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../env_vars/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Змінні середовища
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Команди
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Глосарій
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Типові помилки
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TEACHING_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Викладачу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#fastapi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що таке FastAPI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#asgi-wsgi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ASGI і WSGI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#endpoint-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Три типи ендпоінтів
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#blocking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Блокуючий код і заміни
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#di" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dependency Injection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Пул з'єднань
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repository
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#uow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unit of Work
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#microservices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Мікросервіси
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#production" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Production
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Чекліст перед деплоєм
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Навігація" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Головна
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Довідник
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="архітектура-й-production-коротко">Архітектура й production: коротко<a class="headerlink" href="#архітектура-й-production-коротко" title="Permanent link">&para;</a></h1>
+<p>Стисло про те, як FastAPI-сервіс поводиться під навантаженням і як його складати з шарів. Повні розділи —
+<a href="../../04_async/">Частина IV. Async</a>, <a href="../../05_databases/">Частина V. Бази даних</a>,
+<a href="../../10_docker_and_ci/">Частина X. Docker і CI</a>. Виміри нижче зроблено на FastAPI 0.162, uvicorn 0.54,
+PostgreSQL 16 (asyncpg 0.32).</p>
+<h2 id="fastapi">Що таке FastAPI<a class="headerlink" href="#fastapi" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Складова</th>
+<th>Роль</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Starlette</strong></td>
+<td>ASGI-інструментарій: маршрутизація, middleware, WebSocket, <code>TestClient</code></td>
+</tr>
+<tr>
+<td><strong>Pydantic</strong></td>
+<td>перевірка вхідних даних, серіалізація відповіді, JSON Schema для <code>/docs</code></td>
+</tr>
+<tr>
+<td><strong>uvicorn</strong></td>
+<td>ASGI-сервер: приймає з'єднання і викликає застосунок</td>
+</tr>
+</tbody>
+</table>
+<p>Анотації типів у сигнатурі — це і перевірка (<code>422</code> до входу в код), і документація (<code>/docs</code>, <code>/redoc</code>,
+<code>/openapi.json</code>). Докладно — <a href="../../03_fastapi_core/what_is_fastapi/">Що таке FastAPI</a>.</p>
+<h2 id="asgi-wsgi">ASGI і WSGI<a class="headerlink" href="#asgi-wsgi" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>WSGI (Django без async, Flask; Gunicorn)</th>
+<th>ASGI (FastAPI; uvicorn)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>одиниця обробки</td>
+<td>воркер (процес або потік) на один запит одночасно</td>
+<td>корутина в циклі подій</td>
+</tr>
+<tr>
+<td>скільки запитів одночасно</td>
+<td>воркери × потоки</td>
+<td>тисячі, поки вони <strong>чекають</strong> I/O</td>
+</tr>
+<tr>
+<td>ціна одного очікувального запиту</td>
+<td>потік зі своїм стеком (на Linux резервується 8 МБ віртуальної пам'яті)</td>
+<td>об'єкт корутини, кілобайти</td>
+</tr>
+<tr>
+<td>WebSocket, SSE</td>
+<td>потрібен окремий ASGI-сервер</td>
+<td>вбудовано</td>
+</tr>
+<tr>
+<td>CPU-важка робота</td>
+<td>паралельно в процесах</td>
+<td>блокує цикл подій → у процес (<code>ProcessPoolExecutor</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Порівняння на тому самому API — <a href="../../03_fastapi_core/fastapi_flask_django/#async">FastAPI, Flask і Django</a>, у
+Django-книзі — <a href="https://nikoriakviktor.github.io/notes_chat_app/02_django_core/wsgi_vs_asgi/">WSGI vs ASGI</a>.</p>
+<h2 id="endpoint-types">Три типи ендпоінтів<a class="headerlink" href="#endpoint-types" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/type1"</span><span class="p">)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">type1</span><span class="p">():</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">);</span> <span class="k">return</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>      <span class="c1"># цикл подій вільний</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/type2"</span><span class="p">)</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">type2</span><span class="p">():</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">);</span> <span class="k">return</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>               <span class="c1"># цикл подій стоїть</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/type3"</span><span class="p">)</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">def</span><span class="w"> </span><span class="nf">type3</span><span class="p">():</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">);</span> <span class="k">return</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span>               <span class="c1"># пул потоків</span>
+</code></pre></div>
+<p>Одночасні запити (<code>httpx.AsyncClient</code> + <code>asyncio.gather</code>) до uvicorn з одним процесом:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>limiter {'tokens': 40}
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>/type1 100 запитів по 0.5 с → 0.60 с
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>/type2 10 запитів по 0.5 с → 5.01 с
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>/type3 100 запитів по 0.5 с → 1.55 с
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Тип</th>
+<th>Що відбувається</th>
+<th>Результат</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>async def</code> + <code>await</code></td>
+<td>100 корутин чекають одночасно</td>
+<td>≈ час одного запиту</td>
+</tr>
+<tr>
+<td><code>async def</code> + блокуючий виклик</td>
+<td>запити йдуть строго по черзі, решта сервера (і <code>/health</code>) теж чекає</td>
+<td>10 × 0,5 с = 5 с</td>
+</tr>
+<tr>
+<td><code>def</code></td>
+<td>AnyIO-пул на 40 потоків: 100 запитів — три хвилі</td>
+<td>3 × 0,5 с ≈ 1,5 с</td>
+</tr>
+</tbody>
+</table>
+<p><code>def</code> — безпечно, але з межею 40 одночасних; <code>async def</code> з блокуючим кодом — ніколи. Виміри на News Hub —
+<a href="../../tutorials/02_fastapi_basics/async_measurements/">крок 2</a>.</p>
+<h2 id="blocking">Блокуючий код і заміни<a class="headerlink" href="#blocking" title="Permanent link">&para;</a></h2>
+<p>Один блокуючий виклик в <code>async def</code> зупиняє <strong>всі</strong> запити процесу, не лише свій.</p>
+<table>
+<thead>
+<tr>
+<th>Блокує в <code>async def</code></th>
+<th>Замість цього</th>
+<th>У News Hub</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>time.sleep(n)</code></td>
+<td><code>await asyncio.sleep(n)</code></td>
+<td>паузи між повторами реєстрації бота</td>
+</tr>
+<tr>
+<td><code>requests.get(url)</code></td>
+<td><code>httpx.AsyncClient</code> або <code>aiohttp.ClientSession</code></td>
+<td><code>aiohttp</code> у <code>scraper.py</code>, <code>safe_fetch.py</code>, <code>llm.py</code>; <code>httpx</code> у <code>llm.py</code></td>
+</tr>
+<tr>
+<td><code>psycopg2</code></td>
+<td><code>asyncpg</code> (через SQLAlchemy async)</td>
+<td><code>postgresql+asyncpg://…</code></td>
+</tr>
+<tr>
+<td><code>redis.Redis</code></td>
+<td><code>redis.asyncio.Redis</code></td>
+<td><code>cache.py</code></td>
+</tr>
+<tr>
+<td><code>subprocess.run(cmd)</code></td>
+<td><code>await asyncio.create_subprocess_exec(...)</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td>бібліотека без async-версії</td>
+<td><code>def</code>-ендпоінт або <code>await run_in_threadpool(fn, …)</code> (<code>starlette.concurrency</code>)</td>
+<td>bcrypt при вході: <code>await run_in_threadpool(authenticate, …)</code> в <code>admin_token</code> (раніше — прямо в event loop, ~0,2 с на спробу)</td>
+</tr>
+<tr>
+<td>CPU-важкий цикл</td>
+<td><code>await loop.run_in_executor(process_pool, fn, …)</code></td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h2 id="di">Dependency Injection<a class="headerlink" href="#di" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart TD
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    subgraph S1["1. Запит"]
+        direction LR
+        A["POST /api/news&lt;br&gt;Authorization: Bearer …"] --&gt; B["middleware: request_context →&lt;br&gt;SecurityHeaders → rate_limit"]
+    end
+    subgraph S2["2. Маршрут і тіло"]
+        direction LR
+        C["маршрут знайдено"] --&gt; D{"тіло —&lt;br&gt;JSON?"}
+        D --&gt;|ні| E["422 json_invalid"]
+    end
+    subgraph S3["3. Залежності"]
+        direction LR
+        F["require_admin&lt;br&gt;токен → sub"] --&gt; G["get_db&lt;br&gt;сесія, до yield"]
+        F --&gt;|"немає токена"| H["401"]
+    end
+    subgraph S4["4. Поля тіла й параметри"]
+        direction LR
+        N{"NewsCreate&lt;br&gt;валідна?"} --&gt;|ні| O["422"]
+    end
+    subgraph S5["5. Ендпоінт"]
+        direction LR
+        I["create_news(body, repo)"] --&gt; J["return NewsRow"]
+    end
+    subgraph S6["6. Після ендпоінта"]
+        direction LR
+        K["get_db після yield&lt;br&gt;COMMIT (scope=function)"] --&gt; L["response_model&lt;br&gt;NewsOut → JSON"]
+        L --&gt; M["201 Created"]
+    end
+    S1 --&gt; S2
+    S2 --&gt; S3
+    S3 --&gt; S4
+    S4 --&gt; S5
+    S5 --&gt; S6
+
+    class A,B,C,F,G,I,J,K,L step
+    class D,N decision
+    class M success
+    class E,H,O error</code></pre>
+<p>Залежності виконуються <strong>раніше</strong>, ніж FastAPI повідомляє про помилки полів: <code>POST /api/news</code> без токена з
+неправильним тілом дає <code>401</code>, а не <code>422</code>. Лише тіло, що взагалі не JSON, відхиляється до залежностей:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>без токена, погане тіло → 401 {"detail":"потрібен токен: Authorization: Bearer &lt;access_token&gt;"}
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>без токена, не JSON → 422 {"detail":[{"type":"json_invalid","loc":["body",0],"msg":"JSON decode error",…
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Правило</th>
+<th>Чому</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ресурс на весь процес (пул, клієнт) — у <code>lifespan</code>, з'єднання на запит — у залежності</td>
+<td>пул на кожен запит знищує сенс пулу</td>
+</tr>
+<tr>
+<td>параметри залежності — як у маршруту: <code>pool</code> без маркера стане <strong>query-параметром</strong></td>
+<td>беріть пул з <code>request.app.state</code>, а не з параметра</td>
+</tr>
+<tr>
+<td>прибирання — <code>try/finally</code> або <code>async with</code> навколо <code>yield</code></td>
+<td>інакше при винятку ресурс не закриється</td>
+</tr>
+<tr>
+<td><code>COMMIT</code> після <code>yield</code> — лише з <code>scope="function"</code></td>
+<td>за замовчуванням код після <code>yield</code> іде <strong>після</strong> відповіді</td>
+</tr>
+</tbody>
+</table>
+<p>Докладно — <a href="../../03_fastapi_core/dependencies/">Залежності</a>.</p>
+<h2 id="pool">Пул з'єднань<a class="headerlink" href="#pool" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>нове з'єднання: 21.3 мс | з пулу: 1.58 мс
+</code></pre></div>
+<p>(локальний PostgreSQL у Docker; через мережу різниця більша). У PostgreSQL за замовчуванням
+<code>max_connections = 100</code>: кожен процес застосунку зі своїм пулом забирає частину.</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant A as Запит A
+    participant B as Запит B
+    participant C as Запит C
+    participant P as Пул (max 2)
+    participant DB as PostgreSQL
+    A-&gt;&gt;P: acquire()
+    P--&gt;&gt;A: з'єднання 1
+    B-&gt;&gt;P: acquire()
+    P--&gt;&gt;B: з'єднання 2
+    C-&gt;&gt;P: acquire()
+    Note over C,P: вільних немає — C чекає (цикл подій вільний)
+    A-&gt;&gt;DB: SELECT
+    DB--&gt;&gt;A: рядки
+    A-&gt;&gt;P: release() → з'єднання 1
+    P--&gt;&gt;C: з'єднання 1
+    C-&gt;&gt;DB: SELECT</code></pre>
+<table>
+<thead>
+<tr>
+<th>Де</th>
+<th>Налаштування</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>News Hub, PostgreSQL</td>
+<td><code>create_async_engine(url, pool_size=10, max_overflow=20, pool_pre_ping=True)</code> — <code>news_hub/db.py</code></td>
+</tr>
+<tr>
+<td>міграції Alembic</td>
+<td><code>poolclass=pool.NullPool</code> — одне з'єднання на запуск (<code>migrations/env.py</code>)</td>
+</tr>
+<tr>
+<td>зупинка</td>
+<td><code>await engine.dispose()</code> у <code>lifespan</code></td>
+</tr>
+<tr>
+<td>asyncpg напряму</td>
+<td><code>await asyncpg.create_pool(dsn, min_size=…, max_size=…, command_timeout=…)</code> у <code>lifespan</code>, <code>async with pool.acquire() as conn:</code> у залежності</td>
+</tr>
+</tbody>
+</table>
+<h2 id="repository">Repository<a class="headerlink" href="#repository" title="Permanent link">&para;</a></h2>
+<p>Ендпоінт не знає SQL: він кличе <code>repo.find(...)</code>, <code>repo.create(item)</code>. Репозиторій — єдине місце з запитами до
+таблиці.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Без репозиторію</th>
+<th>З репозиторієм</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SQL</td>
+<td>розкиданий по ендпоінтах</td>
+<td>в одному класі</td>
+</tr>
+<tr>
+<td>тест бізнес-логіки</td>
+<td>потрібна база</td>
+<td>підміна репозиторію або тестова база</td>
+</tr>
+<tr>
+<td>інша база</td>
+<td>зміни в ендпоінтах</td>
+<td>інша реалізація того самого контракту</td>
+</tr>
+</tbody>
+</table>
+<p>У News Hub — <code>BaseRepository[ModelT]</code> (<code>get</code>, <code>add</code>, <code>delete</code>, <code>count</code>) і <code>NewsRepository</code>, <code>SourceRepository</code>,
+<code>SubscriptionRepository</code> у <code>news_hub/repository.py</code>; підключення — <code>RepoDep = Annotated[NewsRepository,
+Depends(get_repo)]</code>. Тести News Hub не підміняють репозиторій фейком у пам'яті, а дають справжній на SQLite у
+пам'яті (і PostgreSQL у CI): так перевіряється і SQL. Докладно — <a href="../../tutorials/03_sqlalchemy_alembic/repository/">крок 3</a>.</p>
+<h2 id="uow">Unit of Work<a class="headerlink" href="#uow" title="Permanent link">&para;</a></h2>
+<p>Кілька змін — одна транзакція: або всі (<code>COMMIT</code>), або жодної (<code>ROLLBACK</code>).</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">UnitOfWork</span><span class="p">:</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="sd">"""ROLLBACK — лише якщо не було COMMIT."""</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pool</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span> <span class="o">=</span> <span class="n">pool</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="fm">__aenter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">conn</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_tx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">transaction</span><span class="p">()</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tx</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_committed</span> <span class="o">=</span> <span class="kc">False</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>        <span class="k">return</span> <span class="bp">self</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">commit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tx</span><span class="o">.</span><span class="n">commit</span><span class="p">();</span> <span class="bp">self</span><span class="o">.</span><span class="n">_committed</span> <span class="o">=</span> <span class="kc">True</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="fm">__aexit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">tb</span><span class="p">):</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_committed</span><span class="p">:</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tx</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>        <span class="k">finally</span><span class="p">:</span>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">release</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="p">)</span>
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">transfer</span><span class="p">(</span><span class="n">uow</span><span class="p">,</span> <span class="n">amount</span><span class="p">):</span>
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>    <span class="k">async</span> <span class="k">with</span> <span class="n">uow</span><span class="p">:</span>
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>        <span class="k">await</span> <span class="n">uow</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">"UPDATE accounts SET balance = balance - $1 WHERE id = 1"</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span>
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>        <span class="k">if</span> <span class="n">amount</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
+<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"ліміт переказу"</span><span class="p">)</span>
+<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>        <span class="k">await</span> <span class="n">uow</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">"UPDATE accounts SET balance = balance + $1 WHERE id = 2"</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span>
+<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>        <span class="k">await</span> <span class="n">uow</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</code></pre></div>
+<p>Рахунки <code>(1, 500), (2, 100)</code>, перекази <code>50</code> і <code>200</code> (другий падає посередині):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>переказ 200: ліміт переказу
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>баланси: [(1, 450), (2, 150)]
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>вільних з'єднань у пулі: 2 з 2
+</code></pre></div>
+<p>Перше списання другого переказу відкочено, з'єднання повернулися в пул.</p>
+<div class="admonition warning">
+<p class="admonition-title"><code>rollback()</code> у <code>__aexit__</code> без умови</p>
+<p>Поширена схема «<code>__aexit__</code> завжди викликає <code>rollback()</code>, після <code>commit()</code> він нічого не зробить» з asyncpg
+не працює: <code>InterfaceError: cannot rollback; the transaction is already committed</code>. Відкочувати — лише
+незакомічену транзакцію, або просто <code>async with conn.transaction():</code>.</p>
+</div>
+<p>У News Hub Unit of Work — це сесія SQLAlchemy на запит: <code>get_db</code> робить <code>COMMIT</code>, якщо ендпоінт завершився без
+винятку, і <code>ROLLBACK</code> — якщо з винятком; <code>scope="function"</code> — щоб клієнт дізнався про збій <code>COMMIT</code>
+(<code>500</code>, а не <code>201</code>). Докладно — <a href="../../tutorials/03_sqlalchemy_alembic/session_per_request/">Сесія на запит</a>.</p>
+<h2 id="microservices">Мікросервіси<a class="headerlink" href="#microservices" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Елемент</th>
+<th>Роль</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API Gateway (nginx, Traefik)</td>
+<td>TLS, маршрутизація до сервісів, ліміти</td>
+</tr>
+<tr>
+<td>сервіс</td>
+<td>свій код, своя база, свій деплой</td>
+</tr>
+<tr>
+<td>BFF (Backend for Frontend)</td>
+<td>збирає дані кількох сервісів для одного клієнта: <code>await asyncio.gather(...)</code></td>
+</tr>
+<tr>
+<td>черга повідомлень (RabbitMQ, Kafka)</td>
+<td>події між сервісами без очікування відповіді</td>
+</tr>
+</tbody>
+</table>
+<p>Ціна — мережа між частинами (затримки, збої, повтори), окремі деплої й журнали. News Hub — один сервіс за nginx
+з PostgreSQL і Redis; бот — у тому самому процесі (webhook) або окремим контейнером (polling). Коли варто
+розділяти — <a href="../../10_docker_and_ci/">Частина X</a>.</p>
+<h2 id="production">Production<a class="headerlink" href="#production" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>клієнт → nginx (TLS, X-Forwarded-For, client_max_body_size) → uvicorn → FastAPI → пул SQLAlchemy → PostgreSQL
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>                                                                                → Redis
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Питання</th>
+<th>Як у News Hub</th>
+<th>Крок</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>скільки процесів</td>
+<td>1 процес uvicorn на контейнер (<code>WEB_CONCURRENCY</code> за замовчуванням 1); масштаб — кількістю контейнерів</td>
+<td><a href="../../tutorials/10_docker/">10</a>, <a href="../../tutorials/11_compose_deploy/deploy/">11</a></td>
+</tr>
+<tr>
+<td>порядок старту</td>
+<td><code>postgres</code> (healthy) → <code>migrate</code> (код 0) → <code>api</code> (healthy) → <code>nginx</code></td>
+<td><a href="../../tutorials/11_compose_deploy/startup_order/">11</a></td>
+</tr>
+<tr>
+<td>здоров'я</td>
+<td><code>/health</code> — процес живий; <code>/health/ready</code> — база й Redis</td>
+<td><a href="../../tutorials/10_docker/health_shutdown/">10</a></td>
+</tr>
+<tr>
+<td>зупинка</td>
+<td>exec-форма <code>CMD</code>: <code>SIGTERM</code> отримує uvicorn</td>
+<td><a href="../../tutorials/10_docker/health_shutdown/">10</a></td>
+</tr>
+<tr>
+<td>справжній IP клієнта</td>
+<td><code>FORWARDED_ALLOW_IPS</code> = адреса nginx</td>
+<td><a href="../../tutorials/11_compose_deploy/nginx_real_ip/">11</a></td>
+</tr>
+<tr>
+<td>секрети</td>
+<td><code>.env</code> поза git і образом; <code>$</code> — в одинарних лапках</td>
+<td><a href="../../tutorials/11_compose_deploy/env_secrets/">11</a></td>
+</tr>
+<tr>
+<td>заголовки й документація</td>
+<td><code>SecurityHeadersMiddleware</code> (чистий ASGI) на кожній відповіді; <code>DOCS_ENABLED=false</code> у Compose — <code>/docs</code> і <code>/openapi.json</code> → <code>404</code>; nginx <code>server_tokens off</code></td>
+<td><a href="../../08_security/secrets_and_headers/#news-hub-fixes">Секрети і заголовки</a></td>
+</tr>
+<tr>
+<td>перевірка перед злиттям</td>
+<td>pytest ×2 Python, мінімальні версії, PostgreSQL, <code>alembic check</code>, mypy, образ + smoke; «залежності й секрети»: lock відповідає <code>requirements.txt</code>, <code>pip-audit</code>, gitleaks</td>
+<td><a href="../../tutorials/12_ci_cd/what_to_check/">12</a></td>
+</tr>
+</tbody>
+</table>
+<p>Порада «(2 × ядра) + 1 воркерів» — з документації Gunicorn для синхронних воркерів. Async-воркер uvicorn
+тримає багато запитів сам, тож процесів зазвичай не більше, ніж ядер; у контейнерах — один процес і кілька
+копій контейнера. <code>uvicorn news_hub.api:app --workers 4</code> — кілька процесів в одному контейнері, кожен зі своїм
+пулом з'єднань.</p>
+<h2 id="checklist">Чекліст перед деплоєм<a class="headerlink" href="#checklist" title="Permanent link">&para;</a></h2>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> У <code>async def</code> немає блокуючих викликів (<code>time.sleep</code>, <code>requests</code>, синхронні драйвери бази).</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Пул з'єднань і клієнти створюються в <code>lifespan</code> і закриваються там само.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Залежності з <code>yield</code> прибирають у <code>finally</code>; <code>COMMIT</code> — з <code>scope="function"</code>.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> CPU-важке — у пул процесів або окремий воркер.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> SQL — у репозиторіях; транзакція — одна на запит.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>response_model</code> на кожному ендпоінті: службові поля не течуть назовні.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Міграції застосовуються окремим кроком до старту API; <code>alembic check</code> у CI.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Секрети — зі змінних середовища, не з коду й не з образу; сканер секретів по історії git у CI.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Залежності образу — з lock-файлу з хешами (<code>pip install --require-hashes</code>), lock перевірено <code>pip-audit</code>.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Заголовки безпеки на кожній відповіді; <code>/docs</code> на публічному сервері вимкнено, якщо API не публічний.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>/health</code> і <code>/health/ready</code> розділені; healthcheck у Compose — на готовність.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Кількість процесів × розмір пулу &lt; <code>max_connections</code> PostgreSQL.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Футер" >
+        
+          
+          <a href="../pydantic_cheatsheet/" class="md-footer__link md-footer__link--prev" aria-label="Назад: Шпаргалка Pydantic">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                Шпаргалка Pydantic
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../django_to_fastapi/" class="md-footer__link md-footer__link--next" aria-label="Вперед: Від Django до FastAPI">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                Від Django до FastAPI
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.path", "navigation.prune", "navigation.footer", "toc.follow", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0456\u0439\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u0421\u043a\u043e\u043f\u0456\u044e\u0432\u0430\u0442\u0438 \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0429\u0435 1 \u0437\u0431\u0456\u0433 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.more.other": "\u0429\u0435 # \u0437\u0431\u0456\u0433\u0456\u0432 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.none": "\u0417\u0431\u0456\u0433\u0456\u0432 \u043d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0437\u0431\u0456\u0433", "search.result.other": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e # \u0437\u0431\u0456\u0433\u0456\u0432", "search.result.placeholder": "\u0420\u043e\u0437\u043f\u043e\u0447\u043d\u0456\u0442\u044c \u043f\u0438\u0441\u0430\u0442\u0438 \u0434\u043b\u044f \u043f\u043e\u0448\u0443\u043a\u0443", "search.result.term.missing": "\u041d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e \u0437\u0430\u043f\u0438\u0442\u0443", "select.version": "\u041e\u0431\u0440\u0430\u0442\u0438 \u0432\u0435\u0440\u0441\u0456\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

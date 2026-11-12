@@ -4037,6 +4037,18 @@
           
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -4096,6 +4108,24 @@
           
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -4153,6 +4183,24 @@
       
         
           
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
         
       
     
@@ -4772,13 +4820,31 @@
 </code></pre></div>
 <p>Інший користувач у той самий час отримує відповідь: ключ ліміту — <code>tg&lt;user_id&gt;</code>.</p>
 <h2 id="admin"><code>/scrape</code> — лише адміну<a class="headerlink" href="#admin" title="Permanent link">&para;</a></h2>
-<p>Бот — ще один вхід у застосунок, і правило кроку 8 «змінювати може лише адмін» діє й тут. JWT у Telegram немає, тому адміни — це список <code>user_id</code> у <code>BOT_ADMIN_IDS</code>:</p>
-<div class="highlight"><span class="filename">news_hub/bot/handlers.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>    <span class="k">if</span> <span class="n">message</span><span class="o">.</span><span class="n">from_user</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">message</span><span class="o">.</span><span class="n">from_user</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">admin_ids</span><span class="p">:</span>
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"/scrape від не-адміна </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">message</span><span class="o">.</span><span class="n">from_user</span><span class="o">.</span><span class="n">id</span> <span class="k">if</span> <span class="n">message</span><span class="o">.</span><span class="n">from_user</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
-<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>        <span class="k">await</span> <span class="n">message</span><span class="o">.</span><span class="n">answer</span><span class="p">(</span><span class="s2">"Ця команда — лише для адміністратора."</span><span class="p">)</span>
-<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>        <span class="k">return</span>
+<p>Бот — ще один вхід у застосунок, і правило кроку 8 «змінювати може лише адмін» діє й тут. JWT у Telegram немає, тому адміни — це список <code>user_id</code> у <code>BOT_ADMIN_IDS</code>. Список читає не бот, а <code>load_admin_settings</code> (<code>AdminSettings.telegram_ids</code>): без адмін-доступу API адмінів немає й у боті (<a href="../polling_webhook/#bot-admins">Polling і webhook</a>).</p>
+<div class="highlight"><span class="filename">news_hub/bot/handlers.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">cmd_scrape</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="n">Message</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="n">CommandObject</span><span class="p">,</span> <span class="n">bot</span><span class="p">:</span> <span class="n">Bot</span><span class="p">,</span> <span class="n">news</span><span class="p">:</span> <span class="n">NewsRepository</span><span class="p">,</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>                     <span class="n">subscriptions</span><span class="p">:</span> <span class="n">SubscriptionRepository</span><span class="p">,</span> <span class="n">admin_ids</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">redis</span><span class="p">:</span> <span class="n">Redis</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">    </span><span class="sd">"""Адмін-команда: зібрати новини (`/scrape snapshot` — зі знімка) і сповістити підписників."""</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>    <span class="k">if</span> <span class="n">message</span><span class="o">.</span><span class="n">from_user</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">message</span><span class="o">.</span><span class="n">from_user</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">admin_ids</span><span class="p">:</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"/scrape від не-адміна </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">message</span><span class="o">.</span><span class="n">from_user</span><span class="o">.</span><span class="n">id</span> <span class="k">if</span> <span class="n">message</span><span class="o">.</span><span class="n">from_user</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>        <span class="k">await</span> <span class="n">message</span><span class="o">.</span><span class="n">answer</span><span class="p">(</span><span class="s2">"Ця команда — лише для адміністратора."</span><span class="p">)</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>        <span class="k">return</span>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>    <span class="n">limit</span><span class="p">,</span> <span class="n">window</span> <span class="o">=</span> <span class="n">LIMITS</span><span class="p">[</span><span class="s2">"scrape"</span><span class="p">]</span>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>    <span class="n">allowed</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">ttl</span> <span class="o">=</span> <span class="k">await</span> <span class="n">RateLimiter</span><span class="p">(</span><span class="n">redis</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">)</span><span class="o">.</span><span class="n">hit</span><span class="p">(</span><span class="sa">f</span><span class="s2">"tg</span><span class="si">{</span><span class="n">message</span><span class="o">.</span><span class="n">from_user</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"scrape"</span><span class="p">)</span>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">allowed</span><span class="p">:</span>
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>        <span class="k">await</span> <span class="n">message</span><span class="o">.</span><span class="n">answer</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Забагато зборів: </span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2"> за </span><span class="si">{</span><span class="n">window</span><span class="si">}</span><span class="s2"> с; спробуй через </span><span class="si">{</span><span class="n">ttl</span><span class="si">}</span><span class="s2"> с."</span><span class="p">)</span>
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>        <span class="k">return</span>
+<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>    <span class="o">...</span>
 </code></pre></div>
 <p>Спроба не-адміна потрапляє в журнал (<code>/scrape від не-адміна 2002</code>) — як невдалий вхід у API.</p>
+<p><strong>Збір — під тим самим лімітом, що в API.</strong> <code>POST /api/scrape*</code> обмежено <code>LIMITS["scrape"]</code> (5 за 60 с з адреси, крок 4). Перша версія бота мала лише загальний ліміт повідомлень (20 за 60 с), тож через <code>/scrape</code> адмін — або той, хто вкрав його Telegram, — міг запускати збір учетверо частіше, ніж через API. Тепер <code>cmd_scrape</code> бере ліміт з тієї самої таблиці <code>LIMITS</code> (<code>middleware.py</code>), ключ — <code>rate:scrape:tg&lt;user_id&gt;</code>. Наживо, адмін 1001 шість разів <code>/scrape snapshot</code> через двійник:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>1 'Зібрано: 168, нових: 168, відхилено: 0; сповіщено чатів: 0'
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>2 'Зібрано: 168, нових: 0, відхилено: 0; сповіщено чатів: 0'
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>3 'Зібрано: 168, нових: 0, відхилено: 0; сповіщено чатів: 0'
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>4 'Зібрано: 168, нових: 0, відхилено: 0; сповіщено чатів: 0'
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>5 'Зібрано: 168, нових: 0, відхилено: 0; сповіщено чатів: 0'
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>6 'Забагато зборів: 5 за 60 с; спробуй через 52 с.'
+</code></pre></div>
+<p>Тест — <code>test_scrape_uses_the_same_rate_limit_as_api</code>: <code>monkeypatch.setitem(LIMITS, "scrape", (1, 60))</code>, і другий <code>/scrape</code> уже відповідає <code>Забагато зборів: 1 за 60 с</code>. Одна таблиця лімітів — одне місце, де змінюють «скільки зборів можна».</p>
 <h2 id="origin">Звідки взялося<a class="headerlink" href="#origin" title="Permanent link">&para;</a></h2>
 <p>Бот не писали з нуля. Основа — стартовий шаблон бота на aiogram 3 (<code>app/bot.py</code>, <code>app/handlers/commands.py</code>, <code>app/middlewares/</code>): фабрики, роутер, outer- і inner-middleware. Що змінилося, переносячи його в <code>news_hub</code>:</p>
 <table>

@@ -1,0 +1,4997 @@
+
+<!doctype html>
+<html lang="uk" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="FastAPI від типів і Pydantic до Docker, Compose і CI/CD — на прикладі новинного агрегатора">
+      
+      
+      
+        <link rel="canonical" href="https://nikoriakviktor.github.io/news_hub/01_http_and_rest/meteo_architecture/">
+      
+      
+        <link rel="prev" href="../legacy_case/">
+      
+      
+        <link rel="next" href="../../02_typing_and_pydantic/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Архітектура meteo_api - News Hub — книга FastAPI</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#архітектура-api-клієнт-і-карта" class="md-skip">
+          Перейти до змісту
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Хедер">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-header__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            News Hub — книга FastAPI
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Архітектура meteo_api
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Пошук" placeholder="Пошук" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Шукати">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистити" aria-label="Очистити" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Пошук розпочато
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Головна
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../00_getting_started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Як користуватися
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Книга FastAPI
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorials/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Zero to Hero
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../deep_dive/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  News Hub Deep Dive
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../labs/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Практика
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Довідник
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../TEACHING_GUIDE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Викладачу
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Навігація" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-nav__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    News Hub — книга FastAPI
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Головна
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../00_getting_started/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Як користуватися
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Книга FastAPI
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Книга FastAPI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина I. HTTP і дизайн REST API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1" id="__nav_3_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина I. HTTP і дизайн REST API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../http_anatomy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP-запит і відповідь
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../http_methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Методи HTTP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../status_codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Коди відповідей
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rest_principles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Принципи REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../collections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Колекції і пагінація
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../versioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Версіонування API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Формат помилок
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_styles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Які бувають API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../http_clients/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP-клієнти
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../legacy_case/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Кейс: API v1 → v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архітектура meteo_api
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архітектура meteo_api
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проблема
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ментальна модель
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Шари всередині API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Шари всередині API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Сховище і винятки
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#factory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Фабрика застосунку
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#request-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Шлях одного запиту
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Клієнт: єдине місце, що знає HTTP
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Карта: лише відображення
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#snapshot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Дані: знімок, а не запит на кожен клік
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docker Compose: два сервіси з одного образу
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Тести
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#news-hub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        У News Hub
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Типові помилки
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Налагодження
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Безпека
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Питання
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../02_typing_and_pydantic/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина II. Типи і Pydantic
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_2" id="__nav_3_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина II. Типи і Pydantic
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/type_hints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Анотації типів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/pydantic_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Моделі Pydantic 2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/strict_mode/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Режими lax і strict
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/validators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Валідатори і computed_field
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/special_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    URL, email і дати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/validation_error/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ValidationError
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pydantic-settings і .env
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/config_dict/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ConfigDict
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/trust_boundary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Межа довіри
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../03_fastapi_core/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина III. Ядро FastAPI
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_3" id="__nav_3_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина III. Ядро FastAPI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/what_is_fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Що таке FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/routes_and_validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Маршрути і валідація
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Залежності і lifespan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/openapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/fastapi_flask_django/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FastAPI, Flask і Django
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/fastapi_vs_drf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FastAPI і DRF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../04_async/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина IV. Async і конкурентність
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_4" id="__nav_3_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина IV. Async і конкурентність
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/concurrency_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Чекати чи рахувати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/asgi_vs_wsgi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ASGI і WSGI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/endpoint_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Три типи ендпоінтів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/blocking_code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Блокуючий код
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/concurrency_patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Паралельні запити
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../05_databases/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_5" id="__nav_3_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/sql_for_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQL для API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/sqlalchemy_async/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLAlchemy async
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/transactions_and_uow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Транзакції й Unit of Work
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/repository_pattern/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Патерн Repository
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/connection_pool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Пул з'єднань
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/migrations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Міграції Alembic
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../06_middleware_cache_jobs/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VI. Middleware, кеш і фонові задачі
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_6" id="__nav_3_6_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VI. Middleware, кеш і фонові задачі
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/middleware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Middleware
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/cors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CORS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/redis_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Redis для API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/caching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Стратегії кешу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/rate_limiting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rate limit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/background_jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фонові задачі й черги
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../07_testing/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VII. Тестування API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_7" id="__nav_3_7_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VII. Тестування API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/pytest_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Основи pytest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/fixtures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фікстури
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/test_doubles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Підміни: mock і fake
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/testing_fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Тестування FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/test_databases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Тести з базою даних
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Якість тестів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../08_security/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VIII. Безпека API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_8" id="__nav_3_8_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VIII. Безпека API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/passwords/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Паролі: хеш, сіль, вартість
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Автентифікація: сесії і JWT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/authorization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Авторизація: ролі, scopes, об'єкти
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/ssrf_and_outbound/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSRF і вихідні запити
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/webhooks_and_signatures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Webhook і підписи
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/secrets_and_headers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Секрети, заголовки, проксі
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/owasp_api_top10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OWASP API Top 10
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_9" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../09_integrations/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина IX. Інтеграції: AI, LLM, Telegram
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_9" id="__nav_3_9_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина IX. Інтеграції: AI, LLM, Telegram
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/ai_dev_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI-агент у проєкті
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/llm_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/llm_reliability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Надійність LLM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/telegram_bots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telegram-бот
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/websockets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WebSocket у FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_10" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../10_docker_and_ci/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина X. Docker, Compose і CI/CD
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_10" id="__nav_3_10_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина X. Docker, Compose і CI/CD
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/docker_image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker-образ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/compose/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker Compose
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/production_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сервер у production
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/ci_cd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD на GitHub Actions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/microservices/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Мікросервіси: коли варто
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../tutorials/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zero to Hero
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../deep_dive/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    News Hub Deep Dive
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../labs/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Практика
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../reference/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Довідник
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TEACHING_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Викладачу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проблема
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ментальна модель
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Шари всередині API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Шари всередині API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Сховище і винятки
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#factory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Фабрика застосунку
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#request-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Шлях одного запиту
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Клієнт: єдине місце, що знає HTTP
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Карта: лише відображення
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#snapshot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Дані: знімок, а не запит на кожен клік
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docker Compose: два сервіси з одного образу
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Тести
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#news-hub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        У News Hub
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Типові помилки
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Налагодження
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Безпека
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Питання
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Навігація" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Головна
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Книга FastAPI
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Частина I. HTTP і дизайн REST API
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="архітектура-api-клієнт-і-карта">Архітектура: API, клієнт і карта<a class="headerlink" href="#архітектура-api-клієнт-і-карта" title="Permanent link">&para;</a></h1>
+<h2 id="problem">Проблема<a class="headerlink" href="#problem" title="Permanent link">&para;</a></h2>
+<p>У першій версії Meteo API дашборд сам будував URL, сам викликав <code>requests</code> і сам розбирав відповіді. Сервер сам ходив в ogimet.com і сам писав у MongoDB. Будь-яка зміна зачіпала все одразу: перейменувати адресу означало правити сторінки Streamlit, змінити базу — маршрути, а коли ogimet лежав, лежав і дашборд.</p>
+<p>Друга версія розділена на частини з одним завданням у кожної: звідки беруться дані, як вони зберігаються, який у них HTTP-контракт, хто і як цей контракт викликає, що показує карта. Тут розберемо ці частини, шлях одного запиту від карти до сховища, з'єднання через Docker Compose і те, що перевіряють тести. Чому контракт саме такий, пояснено в <a href="../legacy_case/">кейсі v1 → v2</a>.</p>
+<h2 id="mental-model">Ментальна модель<a class="headerlink" href="#mental-model" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart TD
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    OG[("ogimet.com&lt;br&gt;getsynop, CSV")] -- "fetch_snapshot.py&lt;br&gt;раз на кілька годин" --&gt; SNAP[("data/*.csv&lt;br&gt;знімок")]
+    SNAP --&gt; REPO["MeteoRepository&lt;br&gt;storage.py"]
+    DEC["decode_synop&lt;br&gt;decoder.py"] --&gt; REPO
+    REPO --&gt; API["Meteo API v2&lt;br&gt;app.py, create_app"]
+    API -- "JSON по HTTP" --&gt; CL["MeteoClient&lt;br&gt;weather_map/client.py"]
+    CL --&gt; MAP["карта погоди&lt;br&gt;weather_map/app.py"]
+    CL --&gt; SCR["скрипти, pandas"]
+    TEST["tests/test_api.py&lt;br&gt;TestClient"] -.-&gt; API
+
+    class OG,SNAP decision
+    class REPO,DEC step
+    class API success
+    class CL warning
+    class MAP,SCR,TEST step</code></pre>
+<table>
+<thead>
+<tr>
+<th>Частина</th>
+<th>Файл</th>
+<th>Знає</th>
+<th>Не знає</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>завантажувач</td>
+<td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/meteo_api/fetch_snapshot.py"><code>fetch_snapshot.py</code></a></td>
+<td>адресу ogimet, формат <code>getsynop</code>, паузи між запитами</td>
+<td>хто й коли читатиме знімок</td>
+</tr>
+<tr>
+<td>декодер</td>
+<td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/meteo_api/decoder.py"><code>decoder.py</code></a></td>
+<td>групи телеграми SYNOP, формулу вологості</td>
+<td>звідки телеграма</td>
+</tr>
+<tr>
+<td>сховище</td>
+<td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/meteo_api/storage.py"><code>storage.py</code></a></td>
+<td>станції, спостереження, пошук, <code>NotFoundError</code> / <code>ConflictError</code></td>
+<td>HTTP, коди відповідей, JSON</td>
+</tr>
+<tr>
+<td>API</td>
+<td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/meteo_api/app.py"><code>app.py</code></a></td>
+<td>адреси, методи, коди, моделі тіла, пагінацію</td>
+<td>що дані зі CSV, а не з бази; хто клієнт</td>
+</tr>
+<tr>
+<td>клієнт</td>
+<td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/weather_map/client.py"><code>weather_map/client.py</code></a></td>
+<td>базову адресу, тайм-аут, сторінки, коди помилок</td>
+<td>Streamlit, графіки</td>
+</tr>
+<tr>
+<td>карта</td>
+<td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/weather_map/app.py"><code>weather_map/app.py</code></a></td>
+<td>вкладки, кольори, графіки</td>
+<td>жодного URL, жодного коду статусу</td>
+</tr>
+</tbody>
+</table>
+<p>Залежності йдуть в один бік: карта → клієнт → HTTP → API → сховище → декодер. Жодна частина не імпортує ту, що вище за неї. Тому кожну можна замінити окремо: сховище — на PostgreSQL, карту — на Telegram-бота, <code>requests</code> у клієнті — на <code>httpx</code>.</p>
+<h2 id="layers">Шари всередині API<a class="headerlink" href="#layers" title="Permanent link">&para;</a></h2>
+<h3 id="repository">Сховище і винятки<a class="headerlink" href="#repository" title="Permanent link">&para;</a></h3>
+<div class="highlight"><span class="filename">meteo_api/storage.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">MeteoRepository</span><span class="p">:</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stations</span><span class="o">=</span><span class="p">(),</span> <span class="n">observations</span><span class="o">=</span><span class="p">()):</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_stations</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="p">[</span><span class="s2">"wmo"</span><span class="p">]:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">stations</span><span class="p">}</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_observations</span> <span class="o">=</span> <span class="p">{}</span>                 <span class="c1"># (wmo, datetime) → dict</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_station</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wmo</span><span class="p">):</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stations</span><span class="p">[</span><span class="n">wmo</span><span class="p">]</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>            <span class="k">raise</span> <span class="n">NotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"станцію </span><span class="si">{</span><span class="n">wmo</span><span class="si">}</span><span class="s2"> не знайдено"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">add_observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">):</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">get_station</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="s2">"station"</span><span class="p">])</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="s2">"station"</span><span class="p">],</span> <span class="n">obs</span><span class="p">[</span><span class="s2">"time"</span><span class="p">])</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span><span class="p">:</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observations</span><span class="p">:</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>                <span class="k">raise</span> <span class="n">ConflictError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"спостереження </span><span class="si">{</span><span class="n">obs</span><span class="p">[</span><span class="s1">'station'</span><span class="p">]</span><span class="si">}</span><span class="s2"> на </span><span class="si">{</span><span class="n">format_time</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="s1">'time'</span><span class="p">])</span><span class="si">}</span><span class="s2"> вже є"</span><span class="p">)</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_observations</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observations</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+</code></pre></div>
+<ul>
+<li><strong>Сховище говорить мовою предметної області.</strong> Воно кидає <code>NotFoundError</code> і <code>ConflictError</code>, а не <code>HTTPException</code>. Що це <code>404</code> і <code>409</code>, вирішує API: два обробники в <code>create_app</code>.</li>
+<li><strong>Ключ спостереження — <code>(wmo, datetime)</code> в UTC.</strong> Той самий природний ключ стоїть в адресі <code>/stations/{wmo}/observations/{moment}</code>, тому id-лічильник не потрібен.</li>
+<li><strong><code>threading.Lock</code></strong> — бо синхронні маршрути FastAPI виконуються в пулі потоків, і два <code>POST</code> можуть писати одночасно (<a href="../../04_async/endpoint_types/">три типи ендпоінтів</a>).</li>
+</ul>
+<h3 id="factory">Фабрика застосунку<a class="headerlink" href="#factory" title="Permanent link">&para;</a></h3>
+<div class="highlight"><span class="filename">meteo_api/app.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_app</span><span class="p">(</span><span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">with_api_types</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">repo</span> <span class="o">=</span> <span class="n">repo</span> <span class="ow">or</span> <span class="n">MeteoRepository</span><span class="o">.</span><span class="n">default</span><span class="p">()</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">imports</span> <span class="o">=</span> <span class="p">{}</span>                                    <span class="c1"># id → стан фонового імпорту</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Meteo API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"2.0.0"</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">app</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">repo</span> <span class="o">=</span> <span class="n">repo</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="nd">@app</span><span class="o">.</span><span class="n">exception_handler</span><span class="p">(</span><span class="n">NotFoundError</span><span class="p">)</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">not_found</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>        <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="p">{</span><span class="s2">"detail"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">)})</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="o">...</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    <span class="k">if</span> <span class="n">with_api_types</span><span class="p">:</span>                               <span class="c1"># RPC, GraphQL, SOAP, WebSocket, SSE, webhook</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">api_types</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>        <span class="n">api_types</span><span class="o">.</span><span class="n">install</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    <span class="k">return</span> <span class="n">app</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="n">app</span> <span class="o">=</span> <span class="n">create_app</span><span class="p">()</span>                                   <span class="c1"># для uvicorn meteo_api.app:app</span>
+</code></pre></div>
+<ul>
+<li><strong>Сховище передається в застосунок, а не імпортується маршрутами.</strong> Тест створює <code>create_app(repo)</code> зі своїм маленьким сховищем, і кожен тест отримує свіжий застосунок. Підміняти глобальні змінні не треба.</li>
+<li><strong>Модульний <code>app</code></strong> — для <code>uvicorn meteo_api.app:app</code>. Він створюється на сховищі за замовчуванням.</li>
+<li><strong>Інші стилі API</strong> (<code>/rpc</code>, <code>/graphql</code>, <code>/soap</code>, <code>/ws/…</code>, <code>/events/…</code>, <code>/webhooks</code>) — окремий модуль <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/meteo_api/api_types.py"><code>api_types.py</code></a> над тим самим сховищем (<a href="../api_styles/">Які бувають API</a>). REST-маршрути про них не знають.</li>
+</ul>
+<p>У News Hub той самий принцип зроблено інакше: застосунок один, модульний, а залежності (сесія бази, Redis, LLM, скрейпери) підміняються через <code>dependency_overrides</code> (<a href="../../07_testing/testing_fastapi/#overrides">Тестування FastAPI</a>).</p>
+<h2 id="request-flow">Шлях одного запиту<a class="headerlink" href="#request-flow" title="Permanent link">&para;</a></h2>
+<p>Карта на вкладці «Карта» викликає <code>client.latest()</code>. Ось що відбувається далі:</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant M as карта (Streamlit)
+    participant C as MeteoClient
+    participant A as FastAPI (app.py)
+    participant R as MeteoRepository
+
+    M-&gt;&gt;C: latest()
+    C-&gt;&gt;A: GET /api/v1/observations/latest&lt;br&gt;timeout=5
+    A-&gt;&gt;R: repo.latest()
+    R--&gt;&gt;A: останнє спостереження кожної станції
+    A-&gt;&gt;R: get_station(wmo) — назва, lat, lon
+    A--&gt;&gt;C: 200 {"items": [...]}
+    C-&gt;&gt;C: last_exchange = метод, URL, статус, заголовки
+    C--&gt;&gt;M: list of dict
+    M-&gt;&gt;M: DataFrame → px.scatter_map</code></pre>
+<p>Те саме з живим сервером (<code>start_server()</code> запускає uvicorn у фоновому потоці) і справжнім <code>MeteoClient</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">client</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeteoClient</span><span class="p">,</span> <span class="n">MeteoError</span><span class="p">,</span> <span class="n">StationNotFound</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">meteo_api.app</span><span class="w"> </span><span class="kn">import</span> <span class="n">start_server</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">client</span> <span class="o">=</span> <span class="n">MeteoClient</span><span class="p">(</span><span class="n">start_server</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="mi">8042</span><span class="p">))</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">client</span><span class="o">.</span><span class="n">latest</span><span class="p">()</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">client</span><span class="o">.</span><span class="n">observations</span><span class="p">(</span><span class="s2">"34504"</span><span class="p">)</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">client</span><span class="o">.</span><span class="n">observations</span><span class="p">(</span><span class="s2">"99999"</span><span class="p">)</span>                         <span class="c1"># → StationNotFound</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="n">MeteoClient</span><span class="p">(</span><span class="s2">"http://127.0.0.1:8099"</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">latest</span><span class="p">()</span>   <span class="c1"># нікого немає → MeteoError</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>--- 2. MeteoClient.latest()
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>   {'station': '34504', 'station_name': 'Дніпро', 'time': '2024-09-02T18:00Z', 'temperature': 25.1, 'lat': 48.6, 'lon': 34.967}
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>   last_exchange: {'request': 'GET http://127.0.0.1:8042/api/v1/observations/latest', 'status': 200} content-length: 381
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>--- 3. MeteoClient.observations('34504')
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>   [{'time': '2024-09-02T18:00Z', 'temperature': 25.1, 'wind_speed': 6, 'pressure': 998.9}]
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>   last_exchange: GET http://127.0.0.1:8042/api/v1/stations/34504/observations?fields=time%2Ctemperature%2Cpressure%2Cwind_speed&amp;limit=200&amp;offset=0
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>--- 4. помилки — винятки клієнта, а не коди HTTP
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>   StationNotFound: станцію 99999 не знайдено | status 404
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>   MeteoError: API недоступний: ConnectionError
+</code></pre></div>
+<ul>
+<li><strong>Координати є.</strong> <code>lat</code> / <code>lon</code> беруться зі станції (<code>stations_sample.csv</code> = рядок Дніпра зі <code>stations_ua.csv</code>), тож карта може поставити точку навіть на фікстурі (<a href="#snapshot">дані</a>).</li>
+<li><strong>Порядок ключів задає модель відповіді, а не <code>fields=</code>.</strong> Клієнт просив <code>time,temperature,pressure,wind_speed</code>, а отримав <code>wind_speed</code> перед <code>pressure</code>: маршрут має <code>response_model=ObservationPage</code>, і FastAPI серіалізує поля в порядку оголошення в <code>Observation</code> (<code>response_model_exclude_unset=True</code> прибирає ті, яких не просили). Для JSON-об'єкта порядок ключів значення не має — звертайся за назвою, а не за позицією.</li>
+</ul>
+<p>Крок за кроком для <code>observations("34504")</code>, з тими самими даними:</p>
+<pre class="mermaid"><code>flowchart TD
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    subgraph S1 ["1. MeteoClient._get"]
+        direction LR
+        Q1["GET …/stations/34504/observations&lt;br&gt;fields=time,temperature,…"] ~~~ Q2["limit=200&lt;br&gt;offset=0"]
+    end
+    subgraph S2 ["2. FastAPI: параметри"]
+        direction LR
+        V1{"hour, limit, offset,&lt;br&gt;fields коректні?"}
+        V1 -- "ні" --&gt; E1["422&lt;br&gt;detail[0].loc"]
+    end
+    subgraph S3 ["3. сховище"]
+        direction LR
+        R1["list_observations&lt;br&gt;34504 → 1 запис"] ~~~ R2["to_json(obs, names)&lt;br&gt;лише 4 поля"]
+    end
+    subgraph S4 ["4. сторінка"]
+        direction LR
+        P1["items: 1, total: 1&lt;br&gt;next: None"]
+    end
+    subgraph S5 ["5. клієнт"]
+        direction LR
+        L1{"next є?"}
+        L1 -- "ні" --&gt; D1["повернути items"]
+    end
+    S1 --&gt; S2
+    V1 -- "так" --&gt; S3
+    S3 --&gt; S4 --&gt; S5
+
+    class Q1,Q2 step
+    class V1,L1 decision
+    class E1 error
+    class R1,R2 step
+    class P1 warning
+    class D1 success</code></pre>
+<h2 id="client">Клієнт: єдине місце, що знає HTTP<a class="headerlink" href="#client" title="Permanent link">&para;</a></h2>
+<div class="highlight"><span class="filename">weather_map/client.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">MeteoClient</span><span class="p">:</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">base_url</span> <span class="o">=</span> <span class="n">base_url</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">timeout</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">last_exchange</span> <span class="o">=</span> <span class="kc">None</span>              <span class="c1"># для «HTTP-інспектора»: що саме пішло й прийшло</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">):</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="si">}{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">)</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>        <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">RequestException</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>            <span class="k">raise</span> <span class="n">MeteoError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"API недоступний: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">error</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">last_exchange</span> <span class="o">=</span> <span class="p">{</span><span class="o">...</span><span class="p">}</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">404</span><span class="p">:</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>            <span class="k">raise</span> <span class="n">StationNotFound</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"detail"</span><span class="p">])</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>            <span class="k">raise</span> <span class="n">MeteoError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"GET </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">observations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wmo</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="s2">"time,temperature,pressure,wind_speed"</span><span class="p">):</span>
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>        <span class="n">items</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="p">[],</span> <span class="mi">0</span>
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>            <span class="n">page</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="sa">f</span><span class="s2">"/api/v1/stations/</span><span class="si">{</span><span class="n">wmo</span><span class="si">}</span><span class="s2">/observations"</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="n">fields</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span>
+<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>            <span class="n">items</span> <span class="o">+=</span> <span class="n">page</span><span class="p">[</span><span class="s2">"items"</span><span class="p">]</span>
+<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>            <span class="k">if</span> <span class="n">page</span><span class="p">[</span><span class="s2">"next"</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>                <span class="k">return</span> <span class="n">items</span>
+<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>            <span class="n">offset</span> <span class="o">+=</span> <span class="n">page</span><span class="p">[</span><span class="s2">"limit"</span><span class="p">]</span>
+</code></pre></div>
+<ul>
+<li><strong>Одна <code>Session</code> на клієнт</strong> — з'єднання з API перевикористовується між запитами (<a href="../http_clients/#pooling">пул з'єднань</a>).</li>
+<li><strong>Тайм-аут завжди.</strong> Без нього карта зависне разом з API (<a href="../http_clients/#timeouts">тайм-аути</a>).</li>
+<li><strong>Сторінки гортає клієнт.</strong> Карта викликає <code>observations(wmo)</code> і отримує весь список; про <code>limit</code>, <code>offset</code> і <code>next</code> знає лише цей метод.</li>
+<li><strong>HTTP перетворюється на винятки предметної області.</strong> <code>404</code> → <code>StationNotFound</code>, мережа → <code>MeteoError</code>. Карта ловить <code>MeteoError</code> і показує повідомлення, а не трасування.</li>
+<li><strong><code>fields=</code></strong> — сервер віддає лише чотири поля, які потрібні графікам, а не всю телеграму.</li>
+</ul>
+<p>Загальний патерн «свій клієнт до чужого API» з повторами й тестами без мережі — на сторінці <a href="../http_clients/#api-client">HTTP-клієнти</a>.</p>
+<h2 id="map">Карта: лише відображення<a class="headerlink" href="#map" title="Permanent link">&para;</a></h2>
+<p><a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/weather_map/app.py"><code>weather_map/app.py</code></a> — Streamlit-сторінка з трьома вкладками: «Карта» (температура на станціях: синій — мороз, червоний — тепло), «Станція» (графіки температури й тиску) і «HTTP-інспектор» (останній <code>client.last_exchange</code>). Адресу API вона бере зі змінної <code>METEO_API_URL</code>:</p>
+<div class="highlight"><span class="filename">weather_map/app.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">API_URL</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"METEO_API_URL"</span><span class="p">,</span> <span class="s2">"http://127.0.0.1:8032"</span><span class="p">)</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">client</span> <span class="o">=</span> <span class="n">MeteoClient</span><span class="p">(</span><span class="n">API_URL</span><span class="p">)</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">latest</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">latest</span><span class="p">())</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="k">except</span> <span class="n">MeteoError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Не вдалося отримати дані: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">. Запусти API: `uvicorn meteo_api.app:app --port 8032`"</span><span class="p">)</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">st</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</code></pre></div>
+<p>Сторінку можна запустити без браузера через <code>streamlit.testing.v1.AppTest</code> — з живим API і без нього:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>METEO_API_URL = http://127.0.0.1:8032
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>   title: 🌦️ Погода на метеостанціях України
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>   tabs: ['🗺️ Карта', '📈 Станція', '🔍 HTTP-інспектор']
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>   error: []
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>   info: []
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>   dataframe: [{'station': '34504', 'station_name': 'Дніпро', 'time': '2024-09-02T18:00Z', 'temperature': 25.1, 'pressure': 998.9, 'wind_speed': 6}]
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>   plotly_chart: 3
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>   HTTP-інспектор: {'request': 'GET http://127.0.0.1:8032/api/v1/stations/34504/observations?fields=time%2Ctemperature%2Cpressure%2Cwind_speed&amp;limit=200&amp;offset=0', 'status': 200} content-type: application/json
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>METEO_API_URL = http://127.0.0.1:8099
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>   title: 🌦️ Погода на метеостанціях України
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>   tabs: []
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>   error: ['Не вдалося отримати дані: API недоступний: ConnectionError. Запусти API: `uvicorn meteo_api.app:app --port 8032`']
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>   info: []
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>   plotly_chart: 0
+</code></pre></div>
+<ul>
+<li><strong>Без API сторінка не падає.</strong> <code>MeteoError</code> → червоне повідомлення з підказкою, <code>st.stop()</code> — і вкладки навіть не будуються.</li>
+<li><strong>На фікстурі карта вже з точкою.</strong> Було: у <code>stations_sample.csv</code> координати були порожні, і карта показувала <code>st.info("У станцій немає координат — завантаж знімок…")</code> замість мапи. Стало: у фікстурі Дніпро з <code>lat</code> 48.6, <code>lon</code> 34.967, тож <code>info</code> порожній, а <code>plotly_chart: 3</code> — мапа на вкладці «Карта» і два графіки (температура, тиск) на вкладці «Станція». Підказка в коді лишилась: її побачиш, якщо в жодної станції немає <code>lat</code> / <code>lon</code> (<code>latest.dropna(subset=["lat", "lon", "temperature"])</code> порожній). Таблиця під мапою є в обох випадках.</li>
+<li><strong>HTTP-інспектор</strong> показує останній запит, тобто запит вкладки «Станція»: Streamlit виконує весь скрипт згори донизу, усі вкладки одразу.</li>
+</ul>
+<h2 id="snapshot">Дані: знімок, а не запит на кожен клік<a class="headerlink" href="#snapshot" title="Permanent link">&para;</a></h2>
+<p>API не ходить в ogimet.com на кожен запит клієнта. Окремий скрипт <code>python -m meteo_api.fetch_snapshot --days 3</code> раз на кілька годин завантажує телеграми 12 обласних центрів (з паузою між запитами й чесним <code>User-Agent</code>) і пише CSV. API читає готовий файл при старті. Якщо ogimet недоступний, API і карта працюють на останньому знімку.</p>
+<p>Станції — окремо від телеграм. <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/meteo_api/data/stations_ua.csv"><code>data/stations_ua.csv</code></a> — 12 станцій WMO з координатами й висотою зі списку станцій NOAA ISD (<code>isd-history.csv</code>, колонки <code>LAT</code>, <code>LON</code>, <code>ELEV(M)</code>). Він лежить у репозиторії, бо координати станцій не змінюються щодня. Фікстура <code>stations_sample.csv</code> — рядок Дніпра з нього: <code>34504,Дніпро,48.600,34.967,143.0</code>.</p>
+<div class="highlight"><span class="filename">meteo_api/storage.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nd">@classmethod</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">default</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="sd">"""Знімок даних прикладу, а якщо його ще немає — маленька фікстура для тестів.</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="sd">    Станції (`stations_ua.csv`, координати — зі списку станцій NOAA ISD) лежать у репозиторії; телеграми</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="sd">    (`synop_ua.csv`) робить `fetch_snapshot.py`. Раніше перевірявся файл станцій, якого ніхто не створював,</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="sd">    тож свіжий знімок не підхоплювався ніколи.</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="sd">    """</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>    <span class="k">if</span> <span class="p">(</span><span class="n">DATA_DIR</span> <span class="o">/</span> <span class="s2">"synop_ua.csv"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_files</span><span class="p">(</span><span class="n">DATA_DIR</span> <span class="o">/</span> <span class="s2">"stations_ua.csv"</span><span class="p">,</span> <span class="n">DATA_DIR</span> <span class="o">/</span> <span class="s2">"synop_ua.csv"</span><span class="p">)</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>    <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_files</span><span class="p">(</span><span class="n">DATA_DIR</span> <span class="o">/</span> <span class="s2">"stations_sample.csv"</span><span class="p">,</span> <span class="n">DATA_DIR</span> <span class="o">/</span> <span class="s2">"synop_sample.csv"</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Було.</strong> <code>default()</code> перемикався на знімок, лише коли існував <code>stations_ua.csv</code>, а <code>fetch_snapshot.py</code> писав тільки <code>synop_ua.csv</code>. Поруч з фікстурою поклали <code>synop_ua.csv</code> — і сховище однаково взяло фікстуру з однією станцією без координат:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>['stations_sample.csv', 'synop_sample.csv', 'synop_ua.csv']
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>default(): [{'wmo': '34504', 'name': 'Дніпро', 'lat': None, 'lon': None, 'elevation': None}]
+</code></pre></div>
+<p>Щоб карта показала 12 станцій, потрібен був <code>stations_ua.csv</code> (<code>wmo,name,lat,lon,elevation</code>), а жоден скрипт прикладу його не робив. Свіжий знімок не підхоплювався ніколи.</p>
+<p><strong>Стало.</strong> <code>stations_ua.csv</code> — у репозиторії, а <code>default()</code> перевіряє файл, який справді з'являється після <code>fetch_snapshot.py</code>, — <code>synop_ua.csv</code>. Без знімка:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>['stations_sample.csv', 'stations_ua.csv', 'synop_sample.csv']
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>[{'wmo': '34504', 'name': 'Дніпро', 'lat': 48.6, 'lon': 34.967, 'elevation': 143.0}]
+</code></pre></div>
+<p>Той самий дослід, що й «було»: поруч кладемо <code>synop_ua.csv</code> (тут — копія фікстури з однією телеграмою):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>['stations_sample.csv', 'stations_ua.csv', 'synop_sample.csv', 'synop_ua.csv']
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>default(): 12 станцій; {'wmo': '33135', 'name': 'Чернігів', 'lat': 51.467, 'lon': 31.25, 'elevation': 141.0} …
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>['Чернігів', 'Суми', 'Рівне', 'Житомир', 'Київ', 'Львів', 'Тернопіль', 'Хмельницький', 'Полтава', 'Одеса', 'Харків', 'Дніпро']
+</code></pre></div>
+<p><strong>Правило.</strong> Умова «є знімок» має перевіряти саме той файл, який пише завантажувач. Довідкові дані, що майже не змінюються (координати станцій), — у репозиторії поруч з кодом, а не в знімку.</p>
+<h2 id="compose">Docker Compose: два сервіси з одного образу<a class="headerlink" href="#compose" title="Permanent link">&para;</a></h2>
+<div class="highlight"><span class="filename">Dockerfile</span><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">FROM</span><span class="w"> </span><span class="s">python:3.12-slim</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="k">COPY</span><span class="w"> </span>requirements.txt<span class="w"> </span>.
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="k">RUN</span><span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--no-cache-dir<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="k">COPY</span><span class="w"> </span>meteo_api<span class="w"> </span>./meteo_api
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="k">COPY</span><span class="w"> </span>weather_map<span class="w"> </span>./weather_map
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="k">ENV</span><span class="w"> </span><span class="nv">PYTHONUNBUFFERED</span><span class="o">=</span><span class="m">1</span>
+</code></pre></div>
+<div class="highlight"><span class="filename">docker-compose.yml</span><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nt">services</span><span class="p">:</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">api</span><span class="p">:</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span><span class="nt">build</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">uvicorn meteo_api.app:app --host 0.0.0.0 --port 8032</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"8032:8032"</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">      </span><span class="c1"># «контейнер запущено» ≠ «API відповідає»: без перевірки карта стартує раніше й перші запити падають</span>
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">"CMD"</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">"python"</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">"-c"</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">"import</span><span class="nv"> </span><span class="s">urllib.request;</span><span class="nv"> </span><span class="s">urllib.request.urlopen('http://localhost:8032/api/v1/stations?limit=1',</span><span class="nv"> </span><span class="s">timeout=3)"</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5s</span>
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5s</span>
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a><span class="w">      </span><span class="nt">start_period</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5s</span>
+<a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>
+<a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a><span class="w">  </span><span class="nt">weather_map</span><span class="p">:</span>
+<a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a><span class="w">    </span><span class="nt">build</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.</span>
+<a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">streamlit run weather_map/app.py --server.address 0.0.0.0 --server.port 8501 --server.headless true</span>
+<a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a><span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">METEO_API_URL=http://api:8032</span>
+<a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<a id="__codelineno-12-21" name="__codelineno-12-21" href="#__codelineno-12-21"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"8501:8501"</span>
+<a id="__codelineno-12-22" name="__codelineno-12-22" href="#__codelineno-12-22"></a><span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<a id="__codelineno-12-23" name="__codelineno-12-23" href="#__codelineno-12-23"></a><span class="w">      </span><span class="nt">api</span><span class="p">:</span>
+<a id="__codelineno-12-24" name="__codelineno-12-24" href="#__codelineno-12-24"></a><span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_healthy</span>
+</code></pre></div>
+<p>Після <code>docker compose up --build --wait</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>$ docker compose up --build --wait                        # без рядків збирання образу
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a> Network meteo_api_default  Creating
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a> Network meteo_api_default  Created
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a> Container meteo_api-api-1  Creating
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a> Container meteo_api-api-1  Created
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a> Container meteo_api-weather_map-1  Creating
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a> Container meteo_api-weather_map-1  Created
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a> Container meteo_api-api-1  Starting
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a> Container meteo_api-api-1  Started
+<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a> Container meteo_api-api-1  Waiting
+<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a> Container meteo_api-api-1  Healthy
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a> Container meteo_api-weather_map-1  Starting
+<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a> Container meteo_api-weather_map-1  Started
+<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a> Container meteo_api-weather_map-1  Waiting
+<a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a> Container meteo_api-api-1  Waiting
+<a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a> Container meteo_api-api-1  Healthy
+<a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a> Container meteo_api-weather_map-1  Healthy
+<a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a>$ docker compose ps --format 'table {{.Service}}\t{{.State}}\t{{.Status}}\t{{.Ports}}'
+<a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a>SERVICE       STATE     STATUS                   PORTS
+<a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a>api           running   Up 6 seconds (healthy)   0.0.0.0:8032-&gt;8032/tcp, [::]:8032-&gt;8032/tcp
+<a id="__codelineno-13-21" name="__codelineno-13-21" href="#__codelineno-13-21"></a>weather_map   running   Up Less than a second    0.0.0.0:8501-&gt;8501/tcp, [::]:8501-&gt;8501/tcp
+<a id="__codelineno-13-22" name="__codelineno-13-22" href="#__codelineno-13-22"></a>$ curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8032/docs
+<a id="__codelineno-13-23" name="__codelineno-13-23" href="#__codelineno-13-23"></a>200
+<a id="__codelineno-13-24" name="__codelineno-13-24" href="#__codelineno-13-24"></a>$ curl -s http://localhost:8501/_stcore/health
+<a id="__codelineno-13-25" name="__codelineno-13-25" href="#__codelineno-13-25"></a>ok
+<a id="__codelineno-13-26" name="__codelineno-13-26" href="#__codelineno-13-26"></a>$ docker compose exec -T weather_map python -c "..."      # зсередини контейнера карти
+<a id="__codelineno-13-27" name="__codelineno-13-27" href="#__codelineno-13-27"></a>1                                                         # http://api:8032/api/v1/stations → total
+<a id="__codelineno-13-28" name="__codelineno-13-28" href="#__codelineno-13-28"></a>URLError &lt;urlopen error [Errno 111] Connection refused&gt;   # http://localhost:8032/... 
+<a id="__codelineno-13-29" name="__codelineno-13-29" href="#__codelineno-13-29"></a>$ curl -s http://localhost:8032/api/v1/stations/34504
+<a id="__codelineno-13-30" name="__codelineno-13-30" href="#__codelineno-13-30"></a>{"wmo":"34504","name":"Дніпро","lat":48.6,"lon":34.967,"elevation":143.0}
+<a id="__codelineno-13-31" name="__codelineno-13-31" href="#__codelineno-13-31"></a>$ docker compose logs api
+<a id="__codelineno-13-32" name="__codelineno-13-32" href="#__codelineno-13-32"></a>api-1  | INFO:     192.168.16.1:32992 - "GET /docs HTTP/1.1" 200 OK
+<a id="__codelineno-13-33" name="__codelineno-13-33" href="#__codelineno-13-33"></a>api-1  | INFO:     127.0.0.1:59640 - "GET /api/v1/stations?limit=1 HTTP/1.1" 200 OK
+<a id="__codelineno-13-34" name="__codelineno-13-34" href="#__codelineno-13-34"></a>api-1  | INFO:     192.168.16.1:43070 - "GET /api/v1/stations/34504 HTTP/1.1" 200 OK
+<a id="__codelineno-13-35" name="__codelineno-13-35" href="#__codelineno-13-35"></a>api-1  | INFO:     192.168.16.3:35164 - "GET /api/v1/stations HTTP/1.1" 200 OK
+</code></pre></div>
+<ul>
+<li><strong>Один образ — два процеси.</strong> Код API і карти в одному образі, різні лише <code>command</code>. Для прикладу це простіше, ніж два <code>Dockerfile</code>. Ціна — карта тягне <code>fastapi</code>, а API — <code>streamlit</code> і <code>plotly</code>.</li>
+<li><strong><code>localhost</code> у контейнері — сам контейнер.</strong> Зсередини <code>weather_map</code> адреса <code>localhost:8032</code> відповідає <code>Connection refused</code>, а <code>api:8032</code> працює: <code>api</code> — ім'я сервісу в мережі Compose (<a href="../../10_docker_and_ci/compose/#networks">мережі Compose</a>). Тому <code>METEO_API_URL=http://api:8032</code>.</li>
+<li><strong>У журналі API видно, хто клієнт.</strong> <code>192.168.16.1</code> — запит з хоста через опублікований порт, <code>192.168.16.3</code> — запит з контейнера карти мережею Compose, <code>127.0.0.1</code> — сам <code>healthcheck</code> усередині контейнера API (<code>/api/v1/stations?limit=1</code> кожні 5 секунд).</li>
+<li><strong>Карта стартує після готовності API, а не після старту контейнера.</strong> Було: <code>depends_on: [api]</code> чекав лише, поки контейнер API запуститься. Якщо карта відкривалась раніше, ніж uvicorn почав слухати порт, вона показувала повідомлення <code>MeteoError</code>, і лише наступне оновлення сторінки отримувало дані. Стало: <code>healthcheck</code> робить справжній HTTP-запит до API (<code>python -c "import urllib.request; …"</code> — у <code>python:3.12-slim</code> немає <code>curl</code>), а <code>condition: service_healthy</code> тримає <code>weather_map</code>, доки API не стане <code>healthy</code>. У виводі <code>up --wait</code> це видно за порядком: <code>api-1 Healthy</code> → <code>weather_map-1 Starting</code> (<a href="../../10_docker_and_ci/compose/#depends-on">depends_on</a>).</li>
+<li><strong><code>(healthy)</code> лише в API.</strong> У <code>weather_map</code> <code>healthcheck</code> немає, тому в <code>STATUS</code> просто <code>Up</code>. <code>--wait</code> вважає такий контейнер готовим, щойно його запущено, — звідси <code>weather_map-1 Healthy</code> у виводі <code>up</code>, хоча перевірки в нього немає.</li>
+</ul>
+<h2 id="tests">Тести<a class="headerlink" href="#tests" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>$ pytest -v
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>tests/test_api.py::test_station_and_404 PASSED                           [  7%]
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>tests/test_api.py::test_decoded_observation PASSED                       [ 14%]
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>tests/test_api.py::test_fields_and_bad_fields PASSED                     [ 21%]
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>tests/test_api.py::test_create_conflict_validation PASSED                [ 28%]
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>tests/test_api.py::test_pagination PASSED                                [ 35%]
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>tests/test_api.py::test_patch_and_delete PASSED                          [ 42%]
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>tests/test_api.py::test_import_accepted PASSED                           [ 50%]
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>tests/test_api.py::test_bad_time_in_path_is_422 PASSED                   [ 57%]
+<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>tests/test_api.py::test_time_in_path_any_offset PASSED                   [ 64%]
+<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>tests/test_api.py::test_patch_null_temperature_rejected PASSED           [ 71%]
+<a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>tests/test_api.py::test_unknown_body_fields_rejected PASSED              [ 78%]
+<a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>tests/test_api.py::test_broken_import_csv_is_422_with_line PASSED        [ 85%]
+<a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>tests/test_api.py::test_import_failure_is_reported PASSED                [ 92%]
+<a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>tests/test_api.py::test_openapi_has_schemas PASSED                       [100%]
+<a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a>======================== 14 passed, 1 warning in 1.04s =========================
+</code></pre></div>
+<p>Час залежить від машини; <code>1 warning</code> — попередження Starlette про <code>httpx</code> у <code>TestClient</code>, не про код прикладу. Тести створюють застосунок на фікстурі з однією справжньою телеграмою (Дніпро, 02.09.2024 18:00 UTC), тож вони не залежать ні від мережі, ні від знімка:</p>
+<div class="highlight"><span class="filename">tests/test_api.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">client</span><span class="p">():</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>    <span class="n">repo</span> <span class="o">=</span> <span class="n">MeteoRepository</span><span class="o">.</span><span class="n">from_files</span><span class="p">(</span><span class="n">DATA_DIR</span> <span class="o">/</span> <span class="s2">"stations_sample.csv"</span><span class="p">,</span> <span class="n">DATA_DIR</span> <span class="o">/</span> <span class="s2">"synop_sample.csv"</span><span class="p">)</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>    <span class="k">return</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">create_app</span><span class="p">(</span><span class="n">repo</span><span class="p">))</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Тест</th>
+<th>Що закріплює</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_station_and_404</code></td>
+<td>станція за WMO; невідома станція → <code>404</code> з номером у <code>detail</code></td>
+</tr>
+<tr>
+<td><code>test_decoded_observation</code></td>
+<td>декодер: <code>25.1</code> °C, <code>998.9</code> / <code>1015.1</code> гПа, вологість <code>47</code> %</td>
+</tr>
+<tr>
+<td><code>test_fields_and_bad_fields</code></td>
+<td><code>fields=time,temperature</code> → лише ці ключі; невідоме поле → <code>422</code> з <code>detail[0].loc == ["query", "fields"]</code></td>
+</tr>
+<tr>
+<td><code>test_create_conflict_validation</code></td>
+<td><code>201</code> + <code>Location</code>; повтор → <code>409</code>; <code>99</code> °C → <code>422</code></td>
+</tr>
+<tr>
+<td><code>test_pagination</code></td>
+<td><code>total</code>, <code>limit</code>, <code>next</code> з правильним <code>offset</code>; на останній сторінці <code>next is None</code></td>
+</tr>
+<tr>
+<td><code>test_patch_and_delete</code></td>
+<td><code>PATCH</code> змінює одне поле, решта лишається; <code>204</code>, повтор → <code>404</code></td>
+</tr>
+<tr>
+<td><code>test_import_accepted</code></td>
+<td><code>202</code> + <code>Location</code>; за ним — <code>done</code>, <code>added: 1</code></td>
+</tr>
+<tr>
+<td><code>test_bad_time_in_path_is_422</code></td>
+<td><code>GET …/вчора</code>, <code>PATCH …/2024-13-40T99:00Z</code>, <code>DELETE …/not-a-time</code> → <code>422</code>, а не <code>500</code></td>
+</tr>
+<tr>
+<td><code>test_time_in_path_any_offset</code></td>
+<td><code>…/2024-09-02T21:00+03:00</code> — той самий запис, що <code>18:00Z</code> (<code>25.1</code> °C)</td>
+</tr>
+<tr>
+<td><code>test_patch_null_temperature_rejected</code></td>
+<td><code>{"temperature": null}</code> → <code>422</code>, температура лишилась <code>25.1</code>; <code>{"wind_speed": null}</code> → <code>200</code></td>
+</tr>
+<tr>
+<td><code>test_unknown_body_fields_rejected</code></td>
+<td><code>dew_point</code> у <code>POST</code>, одруківка <code>temprature</code> у <code>PATCH</code> → <code>422</code></td>
+</tr>
+<tr>
+<td><code>test_broken_import_csv_is_422_with_line</code></td>
+<td><code>{"csv": "34504,2024,09\n"}</code> → <code>422</code>, у <code>msg</code> — <code>рядок 1</code></td>
+</tr>
+<tr>
+<td><code>test_import_failure_is_reported</code></td>
+<td>сховище кидає <code>RuntimeError("диск повний")</code> → <code>202</code>, далі <code>status: "failed"</code> і причина в <code>error</code></td>
+</tr>
+<tr>
+<td><code>test_openapi_has_schemas</code></td>
+<td>схема <code>200</code> у <code>GET …/{moment}</code> — <code>Observation</code>, є <code>404</code>; у <code>components.schemas</code> — <code>Station</code>, <code>ObservationPage</code>, <code>ImportJob</code>, <code>ErrorOut</code></td>
+</tr>
+</tbody>
+</table>
+<p>Чого тести <strong>не</strong> перевіряють:</p>
+<ul>
+<li><strong><code>MeteoClient</code></strong> — пагінацію клієнта й перетворення <code>404</code> на <code>StationNotFound</code>. Його можна тестувати проти <code>TestClient</code> або з підміненим транспортом (<a href="../http_clients/#testing">тестування клієнтів</a>).</li>
+<li><strong>Карту.</strong> <code>AppTest</code>, як вище, дає тест сторінки без браузера.</li>
+<li><strong>Інші стилі API</strong> (<code>api_types.py</code>, <code>grpc_meteo.py</code>) — їх показує <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/api_styles_demo.py"><code>api_styles_demo.py</code></a>, але він друкує результати і нічого не перевіряє.</li>
+<li><strong><code>fetch_snapshot.py</code> і <code>MeteoRepository.default()</code>.</strong> Тому й не помітили, що <code>default()</code> перевіряв <code>stations_ua.csv</code>, якого скрипт не писав, і свіжий знімок не підхоплювався (<a href="#snapshot">дані</a>). Тест «після знімка <code>default()</code> бачить усі 12 станцій» зловив би це одразу.</li>
+</ul>
+<p>Сім останніх тестів у таблиці з'явились разом з виправленнями з <a href="../legacy_case/#v2-gaps">кейсу v1 → v2</a>: <code>500</code> на неправильний момент, <code>PATCH null</code>, мовчки відкинуті поля, імпорт, що завис у <code>running</code>, порожні схеми в OpenAPI, <code>400</code> для <code>fields=</code>. Порядок для кожної вади той самий: спершу тест, що падає, потім виправлення.</p>
+<h2 id="news-hub">У News Hub<a class="headerlink" href="#news-hub" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Meteo API</th>
+<th>News Hub</th>
+<th>Різниця</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MeteoRepository</code> (CSV у пам'яті)</td>
+<td><code>NewsRepository</code> (SQLAlchemy, <a href="../../tutorials/03_sqlalchemy_alembic/">крок 3</a>)</td>
+<td>той самий принцип: SQL і зберігання — в одному класі</td>
+</tr>
+<tr>
+<td><code>create_app(repo)</code></td>
+<td>модульний <code>app</code> + <code>dependency_overrides</code></td>
+<td>інший спосіб підмінити залежності в тестах</td>
+</tr>
+<tr>
+<td><code>fetch_snapshot.py</code> → CSV</td>
+<td>скрейпер rbc.ua + <code>data/rbc_news_snapshot.json</code> як <code>source="snapshot"</code></td>
+<td>у News Hub збір запускає API (<code>POST /api/scrape</code>), а знімок — запасний варіант і тестові дані</td>
+</tr>
+<tr>
+<td>карта ходить в API по HTTP через <code>MeteoClient</code></td>
+<td>бот читає ту саму базу через репозиторій, без HTTP (<a href="../../tutorials/09_telegram_bot/">крок 9</a>)</td>
+<td>бот живе в тому ж коді, тому окремий HTTP-клієнт йому не потрібен</td>
+</tr>
+<tr>
+<td>один образ, два сервіси в Compose</td>
+<td>один образ <code>news_hub:11</code> для API, міграцій і бота (<a href="../../tutorials/11_compose_deploy/">крок 11</a>)</td>
+<td>той самий прийом: різні лише <code>command</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="mistakes">Типові помилки<a class="headerlink" href="#mistakes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Помилка</th>
+<th>Наслідок</th>
+<th>Як правильно</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>URL і <code>requests.get</code> прямо в коді сторінок</td>
+<td>перейменування адреси — правки по всьому фронтенду</td>
+<td>один клас-клієнт; сторінки викликають методи</td>
+</tr>
+<tr>
+<td><code>HTTPException</code> у сховищі</td>
+<td>сховище прив'язане до HTTP, його не використати зі скрипта</td>
+<td>винятки предметної області; коди — в обробниках API</td>
+</tr>
+<tr>
+<td>глобальне сховище, яке імпортують маршрути</td>
+<td>тести ділять стан і залежать від порядку</td>
+<td><code>create_app(repo)</code> або залежність FastAPI</td>
+</tr>
+<tr>
+<td>запит до зовнішнього сайту на кожен запит клієнта</td>
+<td>повільно; зовнішній сайт лежить — лежить і твій API</td>
+<td>знімок за розкладом, API читає знімок</td>
+</tr>
+<tr>
+<td><code>localhost</code> як адреса іншого контейнера</td>
+<td><code>Connection refused</code></td>
+<td>ім'я сервісу Compose: <code>http://api:8032</code></td>
+</tr>
+<tr>
+<td><code>depends_on</code> як «чекати готовності»</td>
+<td>карта стартує раніше за API</td>
+<td><code>healthcheck</code> + <code>condition: service_healthy</code></td>
+</tr>
+<tr>
+<td>тести лише сервера</td>
+<td>клієнт і карта ламаються непомітно</td>
+<td>тести клієнта проти <code>TestClient</code>, <code>AppTest</code> для сторінки</td>
+</tr>
+</tbody>
+</table>
+<h2 id="debugging">Налагодження<a class="headerlink" href="#debugging" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Карта пише «API недоступний»</strong> — перевір адресу: <code>echo $METEO_API_URL</code>, <code>curl $METEO_API_URL/api/v1/stations</code>. У Compose — <code>docker compose exec weather_map python -c "import urllib.request; print(urllib.request.urlopen('http://api:8032/api/v1/stations').status)"</code>.</li>
+<li><strong>Що саме пішло в API</strong> — вкладка «HTTP-інспектор» або <code>client.last_exchange</code> у скрипті: метод, повний URL з параметрами, статус, заголовки.</li>
+<li><strong>Карта без точок</strong> — у станцій немає <code>lat</code> / <code>lon</code>: подивись <code>GET /api/v1/stations</code>. Координати беруться з <code>stations_ua.csv</code> (знімок) чи <code>stations_sample.csv</code> (фікстура); порожня клітинка в CSV стає <code>null</code>. Яке сховище взято, видно з кількості станцій: <code>total: 1</code> — фікстура, бо <code>synop_ua.csv</code> немає (<a href="#snapshot">вище</a>).</li>
+<li><strong>Чи бачить API запити карти</strong> — <code>docker compose logs -f api</code>: адреса з мережі Compose (<code>192.168.x.y</code>, не <code>.1</code>) — це контейнер карти.</li>
+<li><strong>Тест проходить, а живий сервер ні</strong> — <code>TestClient</code> виконує фонові задачі до відповіді, а uvicorn — після. Перевір на живому сервері: <code>start_server()</code> у фоновому потоці.</li>
+</ul>
+<h2 id="security">Безпека<a class="headerlink" href="#security" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Ні API, ні карта не мають автентифікації</strong>, а <code>POST</code>, <code>PATCH</code>, <code>DELETE</code> і <code>/imports</code> змінюють дані. Для прикладу на <code>localhost</code> це прийнятно. Для сервера в мережі запис має бути закритий (<a href="../../08_security/authentication/">автентифікація</a>), а порт API — не опублікований назовні, якщо його клієнт лише карта: тоді досить мережі Compose без <code>ports:</code>.</li>
+<li><strong><code>0.0.0.0:8032</code> в <code>ports:</code></strong> відкриває API на всіх інтерфейсах хоста, не лише на <code>localhost</code>. Для локальної розробки — <code>"127.0.0.1:8032:8032"</code>.</li>
+<li><strong>HTTP-інспектор показує заголовки відповіді.</strong> Додаси в клієнт токен — заголовки <strong>запиту</strong> туди не мають потрапити.</li>
+<li><strong><code>fetch_snapshot.py</code> ходить на чужий сайт</strong>: пауза між запитами, тайм-аут, чесний <code>User-Agent</code> — це не ввічливість, а умова, щоб тебе не заблокували.</li>
+<li><strong>Дані зі знімка — теж ззовні.</strong> Пошкоджену телеграму <code>decode_synop</code> пропускає (<code>None</code> → <code>skipped</code>), а не валить імпорт. Межа довіри — на сторінці <a href="../../02_typing_and_pydantic/trust_boundary/">Межа довіри</a>.</li>
+</ul>
+<h2 id="questions">Питання<a class="headerlink" href="#questions" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Чому <code>MeteoRepository</code> кидає <code>NotFoundError</code>, а не <code>HTTPException(404)</code>?</li>
+<li>Навіщо <code>create_app(repo)</code>, якщо є модульний <code>app</code>?</li>
+<li>Що станеться з картою, якщо API не запущений? Де це обробляється?</li>
+<li>Чому в Compose <code>METEO_API_URL=http://api:8032</code>, а не <code>http://localhost:8032</code>?</li>
+<li>Чи гарантує <code>depends_on: [api]</code>, що API вже відповідає, коли стартує карта?</li>
+<li>Що з архітектури не покрито тестами і як це перевірити?</li>
+<li>Чому API читає знімок, а не ходить в ogimet на кожен запит?</li>
+</ol>
+<details class="success">
+<summary>Відповіді</summary>
+<ol>
+<li>Сховище не знає про HTTP: його можна викликати зі скрипта чи тесту. Що <code>NotFoundError</code> — це <code>404</code>, вирішує обробник в <code>create_app</code>.</li>
+<li>Тест передає своє сховище, і кожен тест отримує свіжий застосунок без спільного стану. Модульний <code>app</code> потрібен лише для <code>uvicorn meteo_api.app:app</code>.</li>
+<li><code>MeteoClient</code> перетворює <code>requests.RequestException</code> на <code>MeteoError</code>, сторінка ловить її, показує <code>st.error</code> і зупиняється (<code>st.stop()</code>).</li>
+<li>Кожен контейнер має свій <code>localhost</code>. <code>api</code> — ім'я сервісу, яке DNS мережі Compose перетворює на адресу контейнера API.</li>
+<li>Ні. Лише що контейнер API запущено. Готовність — <code>healthcheck</code> і <code>condition: service_healthy</code>, як тепер у <code>docker-compose.yml</code> прикладу.</li>
+<li><code>MeteoClient</code>, карта, <code>api_types.py</code>, <code>fetch_snapshot.py</code>. Клієнт — тести проти <code>TestClient</code>; карта — <code>AppTest</code>; знімок — тест, що після скрипта <code>default()</code> бачить усі станції.</li>
+<li>Швидкість і незалежність: відповідь з пам'яті, а недоступний ogimet не ламає API й карту. До того ж ogimet не перевантажується запитами кожного користувача.</li>
+</ol>
+</details>
+<h2 id="next">Що далі<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>
+<p><a href="../../02_typing_and_pydantic/">Частина II. Типи і Pydantic</a> — анотації типів, моделі Pydantic і межа довіри між даними ззовні й кодом, який їм вірить.</p>
+<p><strong>Джерела:</strong> FastAPI — <a href="https://fastapi.tiangolo.com/tutorial/bigger-applications/">Bigger Applications — Multiple Files</a>, <a href="https://fastapi.tiangolo.com/tutorial/handling-errors/#install-custom-exception-handlers">Handling Errors — Install custom exception handlers</a>, <a href="https://fastapi.tiangolo.com/tutorial/testing/">Testing</a>, <a href="https://fastapi.tiangolo.com/tutorial/background-tasks/">Background Tasks</a>; requests — <a href="https://requests.readthedocs.io/en/latest/user/advanced/#session-objects">Session Objects</a>, <a href="https://requests.readthedocs.io/en/latest/user/advanced/#timeouts">Timeouts</a>; Streamlit — <a href="https://docs.streamlit.io/develop/concepts/app-testing">App testing</a>, <a href="https://docs.streamlit.io/develop/api-reference/execution-flow/st.stop"><code>st.stop</code></a>; Docker — <a href="https://docs.docker.com/compose/how-tos/networking/">Networking in Compose</a>, <a href="https://docs.docker.com/compose/how-tos/startup-order/">Control startup order</a>; <a href="https://library.wmo.int/idurl/4/35713">WMO — Manual on Codes, FM 12 SYNOP</a>; <a href="https://pypi.org/project/pymetdecoder/">pymetdecoder</a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Футер" >
+        
+          
+          <a href="../legacy_case/" class="md-footer__link md-footer__link--prev" aria-label="Назад: Кейс: API v1 → v2">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                Кейс: API v1 → v2
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../02_typing_and_pydantic/" class="md-footer__link md-footer__link--next" aria-label="Вперед: Огляд">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                Огляд
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.path", "navigation.prune", "navigation.footer", "toc.follow", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0456\u0439\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u0421\u043a\u043e\u043f\u0456\u044e\u0432\u0430\u0442\u0438 \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0429\u0435 1 \u0437\u0431\u0456\u0433 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.more.other": "\u0429\u0435 # \u0437\u0431\u0456\u0433\u0456\u0432 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.none": "\u0417\u0431\u0456\u0433\u0456\u0432 \u043d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0437\u0431\u0456\u0433", "search.result.other": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e # \u0437\u0431\u0456\u0433\u0456\u0432", "search.result.placeholder": "\u0420\u043e\u0437\u043f\u043e\u0447\u043d\u0456\u0442\u044c \u043f\u0438\u0441\u0430\u0442\u0438 \u0434\u043b\u044f \u043f\u043e\u0448\u0443\u043a\u0443", "search.result.term.missing": "\u041d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e \u0437\u0430\u043f\u0438\u0442\u0443", "select.version": "\u041e\u0431\u0440\u0430\u0442\u0438 \u0432\u0435\u0440\u0441\u0456\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,95 @@
+diff --git a/migrations/versions/0005_search_index.py b/migrations/versions/0005_search_index.py
+new file mode 100644
+index 0000000..91b378a
+--- /dev/null
++++ b/migrations/versions/0005_search_index.py
+@@ -0,0 +1,42 @@
++"""Пошук за заголовком — trigram-індекс; прибрати зайвий індекс subscriptions.chat_id
++
++`NewsRepository.search` робить `title.icontains(q)`. На PostgreSQL SQLAlchemy компілює це в
++`title ILIKE '%' || q || '%'` (а `lower(title) LIKE …` — лише на SQLite і в `str(stmt)` без діалекту).
++B-tree такому запиту не допомагає (`%` на початку), trigram-індекс `gin (title gin_trgm_ops)` — так:
++pg_trgm обслуговує і LIKE, і ILIKE. Індекс на `lower(title)` запит з ILIKE не використовує — вираз інший.
++CONCURRENTLY — щоб не блокувати запис у таблицю, поки індекс будується (на великій таблиці це хвилини);
++такий індекс не можна будувати в транзакції → autocommit_block. SQLite trigram не має — там звичайний
++індекс на title, щоб схема збігалася з моделлю (`alembic check`).
++
++Revision ID: 0005
++Revises: 0004
++"""
++from typing import Sequence, Union
++
++from alembic import op
++
++revision: str = "0005"
++down_revision: Union[str, Sequence[str], None] = "0004"
++branch_labels: Union[str, Sequence[str], None] = None
++depends_on: Union[str, Sequence[str], None] = None
++
++
++def upgrade() -> None:
++    # (chat_id) — початок UNIQUE (chat_id, keyword): пошук за chat_id іде по унікальному індексу
++    op.drop_index("ix_subscriptions_chat_id", table_name="subscriptions")
++    if op.get_bind().dialect.name != "postgresql":                # SQLite (тести): звичайний індекс
++        op.create_index("ix_news_title_trgm", "news", ["title"])
++        return
++    op.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm")
++    with op.get_context().autocommit_block():
++        op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_news_title_trgm "
++                   "ON news USING gin (title gin_trgm_ops)")
++
++
++def downgrade() -> None:
++    if op.get_bind().dialect.name == "postgresql":
++        with op.get_context().autocommit_block():
++            op.execute("DROP INDEX CONCURRENTLY IF EXISTS ix_news_title_trgm")
++    else:
++        op.drop_index("ix_news_title_trgm", table_name="news")
++    op.create_index("ix_subscriptions_chat_id", "subscriptions", ["chat_id"])
+diff --git a/news_hub/tables.py b/news_hub/tables.py
+index 2e61c5b..1233e44 100644
+--- a/news_hub/tables.py
++++ b/news_hub/tables.py
+@@ -8,10 +8,12 @@
+ Усі поля можуть бути NULL: новину зберігаємо одразу, аналізуємо пізніше (або ніколи).
+ Крок 8: таблиця `sources` — RSS-джерела, які додає адмін (міграція 0003).
+ Крок 9: таблиця `subscriptions` — ключові слова, на які чат Telegram підписався (міграція 0004).
++Фінальна лаба: trigram-індекс для пошуку за заголовком, без зайвого індексу subscriptions.chat_id (міграція 0005).
+ """
+ from datetime import datetime, time
++from typing import Any
+ 
+-from sqlalchemy import JSON, BigInteger, DateTime, String, Time, UniqueConstraint, func
++from sqlalchemy import JSON, BigInteger, Connection, DateTime, Index, String, Time, UniqueConstraint, event, func, text
+ from sqlalchemy.orm import Mapped, mapped_column
+ 
+ from .db import Base
+@@ -36,6 +38,10 @@ class NewsRow(Base):
+     keywords: Mapped[list[str] | None] = mapped_column(JSON)
+     analyzed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+ 
++    # search() — title.icontains(q): на PostgreSQL це `title ILIKE '%…%'` → trigram-індекс на title (міграція 0005)
++    __table_args__ = (Index("ix_news_title_trgm", "title", postgresql_using="gin",
++                            postgresql_ops={"title": "gin_trgm_ops"}),)
++
+     def __repr__(self) -> str:
+         return f"<NewsRow id={self.id} lang={self.lang} title={self.title[:30]!r}>"
+ 
+@@ -63,9 +69,16 @@ class SubscriptionRow(Base):
+     __table_args__ = (UniqueConstraint("chat_id", "keyword", name="uq_subscription_chat_keyword"),)
+ 
+     id: Mapped[int] = mapped_column(primary_key=True)
+-    chat_id: Mapped[int] = mapped_column(BigInteger, index=True)
++    chat_id: Mapped[int] = mapped_column(BigInteger)
+     keyword: Mapped[str] = mapped_column(String(40))
+     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+ 
+     def __repr__(self) -> str:
+         return f"<SubscriptionRow chat_id={self.chat_id} keyword={self.keyword!r}>"
++
++
++# create_all (тести на PostgreSQL) теж має знати про розширення: без нього gin_trgm_ops не існує
++@event.listens_for(Base.metadata, "before_create")
++def create_pg_trgm(target: object, connection: Connection, **kw: Any) -> None:
++    if connection.dialect.name == "postgresql":
++        connection.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm"))

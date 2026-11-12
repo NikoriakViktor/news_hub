@@ -1,0 +1,5553 @@
+
+<!doctype html>
+<html lang="uk" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="FastAPI від типів і Pydantic до Docker, Compose і CI/CD — на прикладі новинного агрегатора">
+      
+      
+      
+        <link rel="canonical" href="https://nikoriakviktor.github.io/news_hub/01_http_and_rest/http_clients/">
+      
+      
+        <link rel="prev" href="../api_styles/">
+      
+      
+        <link rel="next" href="../legacy_case/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>HTTP-клієнти - News Hub — книга FastAPI</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#http-клієнти-requests-httpx-aiohttp" class="md-skip">
+          Перейти до змісту
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Хедер">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-header__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            News Hub — книга FastAPI
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              HTTP-клієнти
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Пошук" placeholder="Пошук" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Шукати">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистити" aria-label="Очистити" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Пошук розпочато
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Головна
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../00_getting_started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Як користуватися
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Книга FastAPI
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorials/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Zero to Hero
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../deep_dive/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  News Hub Deep Dive
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../labs/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Практика
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Довідник
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../TEACHING_GUIDE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Викладачу
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Навігація" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-nav__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    News Hub — книга FastAPI
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Головна
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../00_getting_started/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Як користуватися
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Книга FastAPI
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Книга FastAPI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина I. HTTP і дизайн REST API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1" id="__nav_3_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина I. HTTP і дизайн REST API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../http_anatomy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP-запит і відповідь
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../http_methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Методи HTTP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../status_codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Коди відповідей
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rest_principles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Принципи REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../collections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Колекції і пагінація
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../versioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Версіонування API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Формат помилок
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_styles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Які бувають API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP-клієнти
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP-клієнти
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проблема
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ментальна модель
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Мінімальний приклад: той самий GET трьома бібліотеками
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#timeouts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Тайм-аути
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Тайм-аути">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#no-timeout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Без тайм-ауту — вічно
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#timeout-kinds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connect, read, total
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read-timeout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Read-тайм-аут — між байтами, а не на всю відповідь
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pooling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Пул з'єднань: один клієнт на застосунок
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Повтори з паузою
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Повтори з паузою">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#retry-post" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Чому POST не повторюють
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#builtin-retries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Вбудовані повтори
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redirects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Перенаправлення
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#body" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Тіло: bytes, str, JSON
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#streaming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Великі відповіді: потоком і зі стелею
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#concurrency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Багато сторінок одночасно
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Свій клієнт до чужого API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Тестування клієнтів
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#news-hub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        У News Hub
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Типові помилки
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Налагодження
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Безпека
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#practice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Практика
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Практика">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#find-the-bug" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Знайди помилку
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#practice-retry-after" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Зміни приклад: Retry-After у клієнті
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#practice-many" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Спробуй самостійно: заголовки кількох новин одночасно
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Питання
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../legacy_case/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Кейс: API v1 → v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../meteo_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архітектура meteo_api
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../02_typing_and_pydantic/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина II. Типи і Pydantic
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_2" id="__nav_3_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина II. Типи і Pydantic
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/type_hints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Анотації типів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/pydantic_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Моделі Pydantic 2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/strict_mode/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Режими lax і strict
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/validators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Валідатори і computed_field
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/special_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    URL, email і дати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/validation_error/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ValidationError
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pydantic-settings і .env
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/config_dict/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ConfigDict
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/trust_boundary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Межа довіри
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../03_fastapi_core/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина III. Ядро FastAPI
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_3" id="__nav_3_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина III. Ядро FastAPI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/what_is_fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Що таке FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/routes_and_validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Маршрути і валідація
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Залежності і lifespan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/openapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/fastapi_flask_django/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FastAPI, Flask і Django
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/fastapi_vs_drf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FastAPI і DRF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../04_async/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина IV. Async і конкурентність
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_4" id="__nav_3_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина IV. Async і конкурентність
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/concurrency_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Чекати чи рахувати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/asgi_vs_wsgi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ASGI і WSGI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/endpoint_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Три типи ендпоінтів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/blocking_code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Блокуючий код
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/concurrency_patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Паралельні запити
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../05_databases/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_5" id="__nav_3_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/sql_for_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQL для API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/sqlalchemy_async/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLAlchemy async
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/transactions_and_uow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Транзакції й Unit of Work
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/repository_pattern/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Патерн Repository
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/connection_pool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Пул з'єднань
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/migrations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Міграції Alembic
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../06_middleware_cache_jobs/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VI. Middleware, кеш і фонові задачі
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_6" id="__nav_3_6_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VI. Middleware, кеш і фонові задачі
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/middleware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Middleware
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/cors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CORS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/redis_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Redis для API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/caching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Стратегії кешу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/rate_limiting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rate limit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/background_jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фонові задачі й черги
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../07_testing/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VII. Тестування API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_7" id="__nav_3_7_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VII. Тестування API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/pytest_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Основи pytest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/fixtures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фікстури
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/test_doubles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Підміни: mock і fake
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/testing_fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Тестування FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/test_databases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Тести з базою даних
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Якість тестів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../08_security/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VIII. Безпека API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_8" id="__nav_3_8_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VIII. Безпека API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/passwords/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Паролі: хеш, сіль, вартість
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Автентифікація: сесії і JWT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/authorization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Авторизація: ролі, scopes, об'єкти
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/ssrf_and_outbound/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSRF і вихідні запити
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/webhooks_and_signatures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Webhook і підписи
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/secrets_and_headers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Секрети, заголовки, проксі
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/owasp_api_top10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OWASP API Top 10
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_9" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../09_integrations/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина IX. Інтеграції: AI, LLM, Telegram
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_9" id="__nav_3_9_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина IX. Інтеграції: AI, LLM, Telegram
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/ai_dev_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI-агент у проєкті
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/llm_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/llm_reliability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Надійність LLM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/telegram_bots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telegram-бот
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/websockets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WebSocket у FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_10" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../10_docker_and_ci/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина X. Docker, Compose і CI/CD
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_10" id="__nav_3_10_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина X. Docker, Compose і CI/CD
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/docker_image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker-образ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/compose/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker Compose
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/production_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сервер у production
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/ci_cd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD на GitHub Actions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/microservices/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Мікросервіси: коли варто
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../tutorials/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zero to Hero
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../deep_dive/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    News Hub Deep Dive
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../labs/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Практика
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../reference/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Довідник
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TEACHING_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Викладачу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проблема
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ментальна модель
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Мінімальний приклад: той самий GET трьома бібліотеками
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#timeouts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Тайм-аути
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Тайм-аути">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#no-timeout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Без тайм-ауту — вічно
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#timeout-kinds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connect, read, total
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read-timeout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Read-тайм-аут — між байтами, а не на всю відповідь
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pooling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Пул з'єднань: один клієнт на застосунок
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Повтори з паузою
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Повтори з паузою">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#retry-post" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Чому POST не повторюють
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#builtin-retries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Вбудовані повтори
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redirects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Перенаправлення
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#body" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Тіло: bytes, str, JSON
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#streaming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Великі відповіді: потоком і зі стелею
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#concurrency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Багато сторінок одночасно
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Свій клієнт до чужого API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Тестування клієнтів
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#news-hub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        У News Hub
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Типові помилки
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Налагодження
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Безпека
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#practice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Практика
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Практика">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#find-the-bug" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Знайди помилку
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#practice-retry-after" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Зміни приклад: Retry-After у клієнті
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#practice-many" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Спробуй самостійно: заголовки кількох новин одночасно
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Питання
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Навігація" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Головна
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Книга FastAPI
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Частина I. HTTP і дизайн REST API
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="http-клієнти-requests-httpx-aiohttp">HTTP-клієнти: requests, httpx, aiohttp<a class="headerlink" href="#http-клієнти-requests-httpx-aiohttp" title="Permanent link">&para;</a></h1>
+<h2 id="problem">Проблема<a class="headerlink" href="#problem" title="Permanent link">&para;</a></h2>
+<p>Сервер на FastAPI теж буває клієнтом. News Hub завантажує сторінки rbc.ua (<a href="../../tutorials/02_fastapi_basics/scrape_endpoint/">крок 2</a>), RSS адмінських джерел через <code>safe_fetch</code> (<a href="../../tutorials/08_security/ssrf/">крок 8</a>), звертається до Gemini й Anthropic (<a href="../../tutorials/07_llm_api/">крок 7</a>), а тести ходять в API через <code>httpx</code> (<a href="../../tutorials/05_api_testing/fake_server/">крок 5</a>). Чужий сервер не обіцяє нічого: може не відповісти зовсім, відповідати по байту, повернути <code>503</code>, перенаправити, надіслати текст у Windows-1251 чи файл на 200 МБ.</p>
+<p><code>requests.get(url)</code> виглядає як виклик функції, а насправді це DNS, TCP, TLS, очікування, читання тіла й декодування. На кожному кроці щось може піти не так, і тоді або програма зависає назавжди, або один збій валить увесь збір, або повтор створює дубль замовлення. На цій сторінці всі ці випадки відтворені на локальному сервері, без інтернету.</p>
+<h2 id="mental-model">Ментальна модель<a class="headerlink" href="#mental-model" title="Permanent link">&para;</a></h2>
+<p>Один запит клієнта — п'ять кроків. На кожному свій тайм-аут і свій виняток:</p>
+<pre class="mermaid"><code>flowchart TD
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    subgraph K1["1. взяти з'єднання з пулу"]
+        direction LR
+        P1["client.get('/news')"] --&gt; P2{"є вільне&lt;br&gt;з'єднання?"}
+        P2 -- ні --&gt; P3["чекати на пул&lt;br&gt;PoolTimeout"]
+    end
+    subgraph K2["2. з'єднатися: DNS → TCP → TLS"]
+        direction LR
+        C1["127.0.0.1:8741"] --&gt; C2["ConnectError&lt;br&gt;ConnectTimeout, SSLError"]
+    end
+    subgraph K3["3. надіслати запит"]
+        direction LR
+        W1["GET /news HTTP/1.1&lt;br&gt;заголовки, тіло"] --&gt; W2["WriteTimeout"]
+    end
+    subgraph K4["4. чекати й читати відповідь"]
+        direction LR
+        R1["статус + заголовки&lt;br&gt;тіло частинами"] --&gt; R2["ReadTimeout&lt;br&gt;між байтами"]
+    end
+    subgraph K5["5. розібрати"]
+        direction LR
+        D1{"raise_for_status():&lt;br&gt;2xx?"} -- так --&gt; D2["bytes → str → json()"]
+        D1 -- ні --&gt; D3["HTTPStatusError"]
+    end
+    K1 --&gt; K2 --&gt; K3 --&gt; K4 --&gt; K5
+
+    class P1,C1,W1,R1 step
+    class P2,D1 decision
+    class P3,W2,R2 warning
+    class C2,D3 error
+    class D2 success</code></pre>
+<ul>
+<li><strong>Крок 1 — лише у клієнта з пулом.</strong> <code>requests.Session</code>, <code>httpx.Client</code>, <code>aiohttp.ClientSession</code> тримають відкриті з'єднання й віддають їх наступним запитам. Якщо з'єднання вже є, кроку 2 немає зовсім.</li>
+<li><strong>Крок 2 — найдорожчий.</strong> Нове з'єднання — це DNS, рукостискання TCP і для <code>https</code> ще рукостискання TLS: кілька обмінів «туди й назад» до першого байта запиту.</li>
+<li><strong>Кроки 4–5 — окремо.</strong> Статус приходить раніше за тіло. Бібліотека може повернути відповідь, а тіло ще тільки йде мережею.</li>
+<li><strong><code>404</code> чи <code>503</code> — не виняток.</strong> Запит відбувся, відповідь прийшла. Виняток буде лише після <code>raise_for_status()</code>.</li>
+</ul>
+<p>Чому пул важливий, видно на часовій діаграмі:</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant C as клієнт
+    participant S as сервер :443
+    Note over C,S: перший запит — нове з'єднання
+    C-&gt;&gt;S: TCP: SYN
+    S--&gt;&gt;C: SYN-ACK
+    C-&gt;&gt;S: ACK
+    C-&gt;&gt;S: TLS: які шифри підтримую
+    S--&gt;&gt;C: сертифікат, ключ
+    Note over C: перевіряє сертифікат
+    C-&gt;&gt;S: GET /news
+    S--&gt;&gt;C: 200 OK + JSON
+    Note over C,S: другий запит через той самий клієнт
+    C-&gt;&gt;S: GET /news/1
+    S--&gt;&gt;C: 200 OK + JSON</code></pre>
+<p>Другий запит одразу йде з <code>GET</code>: з'єднання з пулу вже пройшло TCP і TLS.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>requests</code></th>
+<th><code>httpx</code></th>
+<th><code>aiohttp</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>модель</td>
+<td>синхронна: потік чекає відповідь</td>
+<td>синхронна (<code>Client</code>) і асинхронна (<code>AsyncClient</code>), той самий інтерфейс</td>
+<td>лише асинхронна (<code>ClientSession</code>)</td>
+</tr>
+<tr>
+<td>клієнт з пулом</td>
+<td><code>requests.Session</code></td>
+<td><code>httpx.Client</code> / <code>httpx.AsyncClient</code></td>
+<td><code>aiohttp.ClientSession</code></td>
+</tr>
+<tr>
+<td>у <code>async def</code> FastAPI</td>
+<td>блокує цикл подій (<a href="../../tutorials/02_fastapi_basics/async_measurements/">виміри</a>)</td>
+<td><code>AsyncClient</code> — так</td>
+<td>так</td>
+</tr>
+</tbody>
+</table>
+<h2 id="basics">Мінімальний приклад: той самий GET трьома бібліотеками<a class="headerlink" href="#basics" title="Permanent link">&para;</a></h2>
+<p>Код — <a href="https://github.com/NikoriakViktor/news_hub/tree/main/examples/http_clients"><code>examples/http_clients</code></a>. Кожен скрипт сам запускає у фоновому потоці «чужий сайт» <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/http_clients/server.py"><code>server.py</code></a> (FastAPI + uvicorn на <code>127.0.0.1:8741</code>): <code>/news</code>, <code>/slow</code>, <code>/flaky</code>, <code>/old-news</code>, <code>/cp1251</code>, <code>/big</code> тощо.</p>
+<div class="highlight"><span class="filename">basics.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">BASE</span><span class="si">}</span><span class="s2">/news"</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"content-type"</span><span class="p">],</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">missing</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">BASE</span><span class="si">}</span><span class="s2">/news/42"</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="nb">print</span><span class="p">(</span><span class="s2">"404 без винятку:"</span><span class="p">,</span> <span class="n">missing</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">missing</span><span class="o">.</span><span class="n">ok</span><span class="p">,</span> <span class="n">missing</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">missing</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>                                   <span class="c1"># → requests.HTTPError</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="n">BASE</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>                  <span class="c1"># base_url: далі лише шляхи</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/news/42"</span><span class="p">)</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>                <span class="c1"># → httpx.HTTPStatusError</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">async</span> <span class="k">with</span> <span class="n">aiohttp</span><span class="o">.</span><span class="n">ClientSession</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="n">BASE</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="k">async</span> <span class="k">with</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/news"</span><span class="p">)</span> <span class="k">as</span> <span class="n">resp</span><span class="p">:</span>                 <span class="c1"># відповідь — контекстний менеджер</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>        <span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">resp</span><span class="o">.</span><span class="n">content_type</span><span class="p">,</span> <span class="k">await</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>   <span class="c1"># тіло читаємо через await</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>--- requests (синхронний)
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>200 application/json [{'id': 1, 'title': 'Ціни на пальне'}, {'id': 2, 'title': 'Погода в Києві'}]
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>404 без винятку: 404 False {'detail': 'новину 42 не знайдено'}
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>raise_for_status → HTTPError — 404 Client Error: Not Found for url: http://127.0.0.1:8741/news/42
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>User-Agent: python-requests/2.34.2
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>params= → http://127.0.0.1:8741/echo?district=%D0%9F%D0%BE%D0%B4%D1%96%D0%BB&amp;limit=5
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>json= → application/json 49 b'{"title": "\\u041f\\u0440\\u0438\\u0432\\u0456\\u0442"}'
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>--- httpx.Client (синхронний)
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>200 HTTP/1.1 [{'id': 1, 'title': 'Ціни на пальне'}, {'id': 2, 'title': 'Погода в Києві'}]
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>raise_for_status → HTTPStatusError 404 {'detail': 'новину 42 не знайдено'}
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>User-Agent: python-httpx/0.28.1
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>json= → application/json 24 b'{"title":"\xd0\x9f\xd1\x80\xd0\xb8\xd0\xb2\xd1\x96\xd1\x82"}'
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>--- httpx.AsyncClient
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>200 [{'id': 1, 'title': 'Ціни на пальне'}, {'id': 2, 'title': 'Погода в Києві'}]
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>--- aiohttp.ClientSession
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>200 application/json [{'id': 1, 'title': 'Ціни на пальне'}, {'id': 2, 'title': 'Погода в Києві'}]
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>raise_for_status → ClientResponseError 404 Not Found
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>User-Agent: Python/3.12 aiohttp/3.14.5
+</code></pre></div>
+<p>Що тут видно:</p>
+<ul>
+<li><strong>Жодна бібліотека не кидає виняток на <code>404</code>.</strong> <code>missing.ok</code> — <code>False</code>, а тіло — <code>{'detail': ...}</code>, а не новина. Без перевірки статусу програма піде далі й упаде пізніше з <code>KeyError</code> у зовсім іншому місці (див. <a href="#practice">Практику</a>).</li>
+<li><strong><code>params=</code></strong> кодує рядок запиту сам: кирилиця стала байтами UTF-8 через <code>%</code>. Склеювати <code>?district=</code> руками не треба.</li>
+<li><strong><code>json=</code></strong> перетворює словник на тіло й ставить <code>Content-Type: application/json</code>. <code>requests</code> екранує кирилицю (<code>П</code>, 49 байтів), <code>httpx</code> пише UTF-8 як є (24 байти). Сервер прочитає обидва варіанти однаково.</li>
+<li><strong><code>User-Agent</code> за замовчуванням</strong> називає бібліотеку і її версію. Деякі сайти таких клієнтів відсікають, тож свій клієнт представляється сам (див. <a href="#news-hub">У News Hub</a>).</li>
+<li><strong><code>response.headers</code></strong> не залежить від регістру: <code>headers["Content-Type"]</code> і <code>headers["content-type"]</code> дають те саме.</li>
+</ul>
+<p>Винятки трьох бібліотек:</p>
+<table>
+<thead>
+<tr>
+<th>Що сталося</th>
+<th><code>requests</code></th>
+<th><code>httpx</code></th>
+<th><code>aiohttp</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>спільний предок</td>
+<td><code>RequestException</code></td>
+<td><code>HTTPError</code> (мережа — <code>TransportError</code>)</td>
+<td><code>ClientError</code></td>
+</tr>
+<tr>
+<td>нікого немає за адресою</td>
+<td><code>ConnectionError</code></td>
+<td><code>ConnectError</code></td>
+<td><code>ClientConnectorError</code></td>
+</tr>
+<tr>
+<td>не встигли з'єднатися</td>
+<td><code>ConnectTimeout</code></td>
+<td><code>ConnectTimeout</code></td>
+<td><code>ConnectionTimeoutError</code></td>
+</tr>
+<tr>
+<td>не встигли прочитати</td>
+<td><code>ReadTimeout</code></td>
+<td><code>ReadTimeout</code></td>
+<td><code>SocketTimeoutError</code>; <code>total</code> — <code>TimeoutError</code></td>
+</tr>
+<tr>
+<td>збій TLS: сертифікат, протокол</td>
+<td><code>SSLError</code></td>
+<td><code>ConnectError</code></td>
+<td><code>ClientConnectorCertificateError</code>, <code>ClientConnectorSSLError</code></td>
+</tr>
+<tr>
+<td>4xx/5xx після <code>raise_for_status()</code></td>
+<td><code>HTTPError</code></td>
+<td><code>HTTPStatusError</code></td>
+<td><code>ClientResponseError</code></td>
+</tr>
+<tr>
+<td>тіло — не JSON</td>
+<td><code>JSONDecodeError</code></td>
+<td><code>json.JSONDecodeError</code></td>
+<td><code>ContentTypeError</code> (не той <code>Content-Type</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><code>aiohttp</code> за тайм-аут <code>total</code> кидає <code>asyncio.TimeoutError</code>. З Python 3.11 це той самий клас, що <code>TimeoutError</code>; у 3.10 — окремий, тому News Hub ловить обидва (<code>except (aiohttp.ClientError, asyncio.TimeoutError)</code>).</p>
+<h2 id="timeouts">Тайм-аути<a class="headerlink" href="#timeouts" title="Permanent link">&para;</a></h2>
+<h3 id="no-timeout">Без тайм-ауту — вічно<a class="headerlink" href="#no-timeout" title="Permanent link">&para;</a></h3>
+<p><a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/http_clients/timeouts.py"><code>timeouts.py</code></a> запускає <code>requests.get</code> без <code>timeout</code> на сторінку, що відповідає за 30 с, і перевіряє через 3 с:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>--- без тайм-ауту
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>requests.get(url) без timeout: через 3 с ще чекає? True
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>тайм-аути за замовчуванням: httpx Timeout(timeout=5.0) | aiohttp ClientTimeout(total=300, connect=None, sock_read=None, sock_connect=30, ceil_threshold=5)
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Бібліотека</th>
+<th>Тайм-аут за замовчуванням</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>requests</code></td>
+<td><strong>немає</strong>: чекає, доки ОС не закриє з'єднання, а це можуть бути години</td>
+</tr>
+<tr>
+<td><code>httpx</code></td>
+<td>5 с на кожну фазу: з'єднання, читання, запис, пул</td>
+</tr>
+<tr>
+<td><code>aiohttp</code></td>
+<td><code>total=300</code> (5 хвилин на весь запит), <code>sock_connect=30</code></td>
+</tr>
+</tbody>
+</table>
+<p>Зависає не лише цей запит. Синхронний воркер, потік чи задача Celery стоять разом із ним. Кілька таких «вічних» запитів, і пул воркерів зайнятий повністю, хоча сервер нічого не робить.</p>
+<h3 id="timeout-kinds">Connect, read, total<a class="headerlink" href="#timeout-kinds" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>--- сервер не відповідає (read)
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>requests timeout=1, /slow?delay=3            ReadTimeout                  за 1.0 с
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>httpx за замовчуванням (5 с), /slow?delay=3  відповідь 200                за 3.0 с
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>httpx за замовчуванням (5 с), /slow?delay=8  ReadTimeout                  за 5.0 с
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>--- немає кому відповісти (connect)
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>requests, закритий порт 8799                 ConnectionError              за 0.0 с
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>httpx, закритий порт 8799                    ConnectError                 за 0.0 с
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>httpx connect=1, переповнена черга з'єднань  ConnectTimeout               за 1.0 с
+</code></pre></div>
+<p>(Час — з одного запуску, у тебе може трохи відрізнятися.)</p>
+<ul>
+<li><strong>Закритий порт — миттєва відмова</strong>, а не тайм-аут: ОС одразу відповідає «тут ніхто не слухає».</li>
+<li><strong><code>ConnectTimeout</code></strong> — коли пакети з'єднання йдуть у порожнечу: сервер перевантажений, фаєрвол мовчки відкидає, адреса недосяжна. Скрипт відтворює це сокетом, який слухає порт, але ніколи не приймає з'єднань.</li>
+<li><strong>Тайм-аути задають окремо</strong>, бо з'єднання має бути швидким, а відповідь буває довгою: <code>requests.get(url, timeout=(3, 10))</code> — 3 с на з'єднання і 10 на читання; <code>httpx.Timeout(10, connect=3)</code>; <code>aiohttp.ClientTimeout(total=15, sock_connect=3)</code>.</li>
+</ul>
+<h3 id="read-timeout">Read-тайм-аут — між байтами, а не на всю відповідь<a class="headerlink" href="#read-timeout" title="Permanent link">&para;</a></h3>
+<p>Найнеочевидніша пастка. <code>/drip</code> починає відповідь одразу, але тіло надсилає по байту раз на 0,5 с — 6 байтів за 3 с:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>--- тіло капає по байту раз на 0.5 с, 6 байтів (≈ 3 с)
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>requests timeout=1                           відповідь 6                  за 3.0 с
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>httpx timeout=1                              відповідь 6                  за 3.0 с
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>aiohttp sock_read=1                          відповідь 6                  за 3.0 с
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>aiohttp total=1                              TimeoutError                 за 1.0 с
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>httpx timeout=1 + asyncio.timeout(1)         TimeoutError                 за 1.0 с
+</code></pre></div>
+<pre class="mermaid"><code>sequenceDiagram
+    participant C as клієнт, read timeout = 1 с
+    participant S as /drip
+    C-&gt;&gt;S: GET /drip
+    S--&gt;&gt;C: 200 OK, заголовки
+    Note over C: таймер 1 с запущено
+    S--&gt;&gt;C: "." через 0.5 с
+    Note over C: таймер скинуто
+    S--&gt;&gt;C: "." через 0.5 с
+    Note over C: таймер скинуто
+    S--&gt;&gt;C: ... ще 4 байти
+    Note over C,S: 3 с замість 1 с, винятку немає</code></pre>
+<p><code>timeout=1</code> у <code>requests</code> і <code>httpx</code> означає «не більше 1 с <strong>тиші</strong> між двома шматками», а не «вся відповідь за 1 с». Сервер, що повільно цідить байти (зламаний або навмисно), тримає клієнта скільки завгодно. Стелю на весь запит дають:</p>
+<ul>
+<li><code>aiohttp.ClientTimeout(total=...)</code> — є з коробки;</li>
+<li><code>httpx.AsyncClient</code> — <code>async with asyncio.timeout(15):</code> навколо запиту (Python 3.11+; у 3.10 — <code>asyncio.wait_for</code>);</li>
+<li>синхронні <code>requests</code> і <code>httpx.Client</code> — загальної стелі не мають; її дає лише стеля розміру тіла (див. <a href="#streaming">Великі відповіді</a>) або окремий потік чи процес із власним тайм-аутом.</li>
+</ul>
+<h2 id="pooling">Пул з'єднань: один клієнт на застосунок<a class="headerlink" href="#pooling" title="Permanent link">&para;</a></h2>
+<p><a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/http_clients/pooling.py"><code>pooling.py</code></a> показує порт, з якого прийшов клієнт (<code>request.client.port</code> на сервері). Новий порт — нове TCP-з'єднання:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>--- порт клієнта, який бачить сервер (новий порт = нове з'єднання)
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>requests.get × 3:    [48446, 48458, 48468]
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>Session × 3:         [48480, 48480, 48480]
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>httpx.Client × 3:    [48486, 48486, 48486]
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>aiohttp session × 3: [48498, 48498, 48498]
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>--- 200 запитів
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>requests.get щоразу:           0.36 с
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>одна requests.Session:         0.16 с
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>httpx.Client на кожен запит:   3.05 с
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>один httpx.Client:             0.16 с
+</code></pre></div>
+<p>(Час залежить від машини; у трьох запусках <code>httpx.Client</code> на кожен запит займав 2,5–5 с.)</p>
+<ul>
+<li><strong><code>requests.get(...)</code></strong> — це тимчасова <code>Session</code> на один запит: з'єднання відкривається й закривається щоразу.</li>
+<li><strong>Один клієнт</strong> перевикористовує те саме з'єднання: порт не змінюється, 200 запитів — удвічі швидше навіть на <code>127.0.0.1</code>. Через інтернет з HTTPS різниця більша: там кожне нове з'єднання — ще й рукостискання TLS.</li>
+<li><strong><code>httpx.Client</code> на кожен запит — найповільніше</strong>: конструктор щоразу створює SSL-контекст і завантажує сертифікати (≈15 мс у цьому середовищі), навіть для <code>http://</code>.</li>
+<li><strong>Клієнт тримає й спільні налаштування</strong>: <code>base_url</code>, заголовки (токен один раз), тайм-аут, ліміти.</li>
+</ul>
+<p>Тому клієнт створюють <strong>один на застосунок</strong> (або на велику операцію) і закривають у кінці. У FastAPI для цього є <code>lifespan</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nd">@asynccontextmanager</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">lifespan</span><span class="p">(</span><span class="n">app</span><span class="p">:</span> <span class="n">FastAPI</span><span class="p">):</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="k">async</span> <span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"User-Agent"</span><span class="p">:</span> <span class="s2">"news_hub/1.0"</span><span class="p">})</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>        <span class="n">app</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">http</span> <span class="o">=</span> <span class="n">client</span>               <span class="c1"># ендпоінти й залежності беруть його з request.app.state</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>        <span class="k">yield</span>                                 <span class="c1"># при зупинці застосунку клієнт закриється</span>
+</code></pre></div>
+<p><code>lifespan</code> і <code>app.state</code> докладно — у <a href="../../tutorials/02_fastapi_basics/depends_and_lifespan/">кроці 2</a>. Незакритий <code>aiohttp.ClientSession</code> виводить попередження <code>Unclosed client session</code>, а незакриті з'єднання тримають сокети, доки їх не прибере збирач сміття.</p>
+<h2 id="retries">Повтори з паузою<a class="headerlink" href="#retries" title="Permanent link">&para;</a></h2>
+<p>Сервер інколи коротко недоступний: перезапуск, перевантаження, ліміт запитів. Тоді має сенс повторити запит, але за правилами. <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/http_clients/retries.py"><code>retries.py</code></a>:</p>
+<div class="highlight"><span class="filename">retries.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">RETRY_STATUSES</span> <span class="o">=</span> <span class="p">{</span><span class="mi">429</span><span class="p">,</span> <span class="mi">502</span><span class="p">,</span> <span class="mi">503</span><span class="p">,</span> <span class="mi">504</span><span class="p">}</span>           <span class="c1"># «спробуй пізніше»; 4xx інші — помилка запиту, повтор не допоможе</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">SAFE_TO_RETRY</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"GET"</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">,</span> <span class="s2">"OPTIONS"</span><span class="p">,</span> <span class="s2">"PUT"</span><span class="p">,</span> <span class="s2">"DELETE"</span><span class="p">}</span>   <span class="c1"># ідемпотентні методи</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">request_with_retry</span><span class="p">(</span><span class="n">client</span><span class="p">:</span> <span class="n">httpx</span><span class="o">.</span><span class="n">Client</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>                       <span class="n">attempts</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">cap</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">httpx</span><span class="o">.</span><span class="n">Response</span><span class="p">:</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SAFE_TO_RETRY</span><span class="p">:</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>        <span class="n">attempts</span> <span class="o">=</span> <span class="mi">1</span>                             <span class="c1"># POST/PATCH: повтор може створити дубль</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>    <span class="k">for</span> <span class="n">attempt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">attempts</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>            <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>            <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">RETRY_STATUSES</span> <span class="ow">or</span> <span class="n">attempt</span> <span class="o">==</span> <span class="n">attempts</span><span class="p">:</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>                <span class="k">return</span> <span class="n">response</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>            <span class="n">reason</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>            <span class="n">retry_after</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"Retry-After"</span><span class="p">)</span>
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>        <span class="k">except</span> <span class="n">httpx</span><span class="o">.</span><span class="n">TransportError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>   <span class="c1"># ConnectError, ReadTimeout, …</span>
+<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>            <span class="k">if</span> <span class="n">attempt</span> <span class="o">==</span> <span class="n">attempts</span><span class="p">:</span>
+<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>                <span class="k">raise</span>
+<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>            <span class="n">reason</span><span class="p">,</span> <span class="n">retry_after</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">error</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="kc">None</span>
+<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>        <span class="n">pause</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">cap</span><span class="p">,</span> <span class="n">base</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">attempt</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>    <span class="c1"># backoff + jitter</span>
+<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>        <span class="k">if</span> <span class="n">retry_after</span> <span class="ow">and</span> <span class="n">retry_after</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>            <span class="n">pause</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">pause</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">retry_after</span><span class="p">))</span>                              <span class="c1"># сервер сказав, скільки чекати</span>
+<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  спроба </span><span class="si">{</span><span class="n">attempt</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">reason</span><span class="si">}</span><span class="s2">, чекаю </span><span class="si">{</span><span class="n">pause</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> с"</span><span class="p">)</span>
+<a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a>        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">pause</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>--- GET /flaky: три 503, потім 200
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>  спроба 1: 503, чекаю 0.13 с
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>  спроба 2: 503, чекаю 0.27 с
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>  спроба 3: 503, чекаю 0.62 с
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>200 {'ok': True, 'attempt': 4} за 1.0 с
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>--- те саме, але сервер надсилає Retry-After: 1
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>  спроба 1: 503, чекаю 1.00 с
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>  спроба 2: 503, чекаю 1.00 с
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>200 {'ok': True, 'attempt': 3} за 2.0 с
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>--- GET /news/42: 404 не повторюємо
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>404
+</code></pre></div>
+<p>(Паузи випадкові через jitter: у кожному запуску інші.)</p>
+<pre class="mermaid"><code>flowchart TD
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    subgraph A1["спроба 1: межа 0.2 с"]
+        direction LR
+        A1R["GET /flaky"] --&gt; A1S["503"] --&gt; A1W["0.2 × random(0.5, 1)&lt;br&gt;чекаю 0.13 с"]
+    end
+    subgraph A2["спроба 2: межа 0.4 с"]
+        direction LR
+        A2R["GET /flaky"] --&gt; A2S["503"] --&gt; A2W["0.4 × random(0.5, 1)&lt;br&gt;чекаю 0.27 с"]
+    end
+    subgraph A3["спроба 3: межа 0.8 с"]
+        direction LR
+        A3R["GET /flaky"] --&gt; A3S["503"] --&gt; A3W["0.8 × random(0.5, 1)&lt;br&gt;чекаю 0.62 с"]
+    end
+    subgraph A4["спроба 4"]
+        direction LR
+        A4R["GET /flaky"] --&gt; A4S["200&lt;br&gt;attempt: 4"] --&gt; A4W["return response"]
+    end
+    A1 --&gt; A2 --&gt; A3 --&gt; A4
+
+    class A1R,A2R,A3R,A4R step
+    class A1S,A2S,A3S error
+    class A1W,A2W,A3W warning
+    class A4S,A4W success</code></pre>
+<ul>
+<li><strong>Exponential backoff</strong>: межа паузи подвоюється (0,2 → 0,4 → 0,8 с) і обмежена <code>cap</code>. Тисяча клієнтів, що повторюють без паузи, добиває сервер, який намагається піднятися.</li>
+<li><strong>Jitter</strong> — випадкова частка паузи. Без неї всі клієнти, що впали одночасно, і повторять одночасно, хвилею.</li>
+<li><strong><code>Retry-After</code></strong> — сервер сам каже, скільки чекати (<code>429</code>, <code>503</code>; див. <a href="../status_codes/">Коди відповідей</a>). Повторити раніше означає отримати ту саму відмову.</li>
+<li><strong><code>404</code> не повторюється</strong>: за секунду він не стане <code>200</code>. Повторюють лише те, що може минути: <code>429</code>, <code>502</code>, <code>503</code>, <code>504</code>, помилки з'єднання й тайм-аути.</li>
+</ul>
+<h3 id="retry-post">Чому POST не повторюють<a class="headerlink" href="#retry-post" title="Permanent link">&para;</a></h3>
+<p><code>POST /orders</code> на сервері створює замовлення, але відповідає за 1,5 с, а тайм-аут клієнта — 1 с. Наївний повтор «бо тайм-аут»:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>--- POST /orders: сервер відповідає за 1.5 с, тайм-аут 1 с
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>  ReadTimeout — повторюю
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>  ReadTimeout — повторюю
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>  ReadTimeout — повторюю
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>замовлень на сервері: 3
+</code></pre></div>
+<p>Тайм-аут означає «відповіді не дочекались», а не «сервер нічого не зробив». Кожна спроба створила замовлення: три тайм-аути — три дублікати. Повторювати автоматично можна лише ідемпотентні методи (<code>GET</code>, <code>HEAD</code>, <code>PUT</code>, <code>DELETE</code>). Для <code>POST</code> потрібен захист на сервері: унікальний ключ або <code>Idempotency-Key</code> (<a href="../http_methods/#mental-model">Методи HTTP</a>).</p>
+<h3 id="builtin-retries">Вбудовані повтори<a class="headerlink" href="#builtin-retries" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>--- вбудовані повтори httpx: лише помилки з'єднання
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>GET /flaky з retries=2: 503
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>закритий порт: ConnectError після повторів, 0.50 с
+</code></pre></div>
+<p><code>httpx.HTTPTransport(retries=2)</code> повторює <strong>лише невдале з'єднання</strong> (<code>ConnectError</code>, <code>ConnectTimeout</code>): <code>503</code> повернувся як є. Це безпечно навіть для <code>POST</code>, бо запит ще не пішов. Повтори за статусом пишуть самі, як вище, або беруть бібліотеку (<code>tenacity</code>; у <code>requests</code> — <code>urllib3.Retry</code> через <code>HTTPAdapter(max_retries=...)</code>). SDK провайдерів часто мають свої: <code>anthropic.AsyncAnthropic(max_retries=2)</code>.</p>
+<h2 id="redirects">Перенаправлення<a class="headerlink" href="#redirects" title="Permanent link">&para;</a></h2>
+<p><a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/http_clients/redirects_encodings.py"><code>redirects_encodings.py</code></a>, <code>/old-news</code> відповідає <code>301</code> на <code>/news</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>--- 301 /old-news → /news
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>requests: 200 http://127.0.0.1:8741/news history: [301]
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>httpx:    301 location: /news | next: http://127.0.0.1:8741/news
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>httpx follow_redirects=True: 200 http://127.0.0.1:8741/news [301]
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>aiohttp:  200 http://127.0.0.1:8741/news history: [301]
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>aiohttp /loop: TooManyRedirects 5 перенаправлень
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>requests /loop: TooManyRedirects — Exceeded 30 redirects.
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>requests</code></th>
+<th><code>httpx</code></th>
+<th><code>aiohttp</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>за замовчуванням</td>
+<td>іде за перенаправленням</td>
+<td><strong>не йде</strong>: повертає <code>301</code>/<code>302</code></td>
+<td>іде</td>
+</tr>
+<tr>
+<td>увімкнути / вимкнути</td>
+<td><code>allow_redirects=False</code></td>
+<td><code>follow_redirects=True</code></td>
+<td><code>allow_redirects=False</code></td>
+</tr>
+<tr>
+<td>межа</td>
+<td>30 (<code>Session.max_redirects</code>)</td>
+<td>20 (<code>max_redirects</code>)</td>
+<td>10 (<code>max_redirects=</code>)</td>
+</tr>
+<tr>
+<td>ланцюжок</td>
+<td><code>response.history</code></td>
+<td><code>response.history</code></td>
+<td><code>resp.history</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong><code>httpx</code> без <code>follow_redirects=True</code> повертає саму відповідь <code>301</code>.</strong> Код, перенесений з <code>requests</code>, раптом бачить порожнє тіло й <code>location</code> замість даних. Наступний запит уже підготовлено в <code>response.next_request</code>.</li>
+<li><strong><code>response.url</code></strong> — остання адреса, а не та, яку просили. Відносні посилання на сторінці рахують від неї.</li>
+<li><strong>Цикл перенаправлень</strong> обривається винятком <code>TooManyRedirects</code>, а не зависанням.</li>
+<li><strong>Коли сервер сам вирішує, куди піти</strong>, перенаправлення вимикають і перевіряють кожну нову адресу: <code>safe_fetch</code> робить <code>allow_redirects=False</code> і пропускає кожен <code>Location</code> через ті самі перевірки SSRF (<a href="../../tutorials/08_security/ssrf/#redirects">крок 8</a>).</li>
+</ul>
+<h2 id="body">Тіло: bytes, str, JSON<a class="headerlink" href="#body" title="Permanent link">&para;</a></h2>
+<p>Мережею йдуть <strong>байти</strong>. <code>response.content</code> (<code>await resp.read()</code>) — байти як є; <code>response.text</code> (<code>await resp.text()</code>) — байти, декодовані за <code>charset</code>; <code>response.json()</code> — текст, розібраний як JSON.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>--- тіло: bytes і str
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>content[:12]: b'\xcd\xee\xe2\xe8\xed\xe8: \xf6\xb3\xed\xe8'
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>charset з заголовка: windows-1251 → Новини: ціни на пальне, погода
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>без charset: requests.encoding = ISO-8859-1 → Íîâèíè: ö³íè íà ïàëüíå, ïîãîäà
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>  apparent_encoding = johab
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>  encoding = 'cp1251' → Новини: ціни на пальне, погода
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>без charset: httpx.encoding = utf-8 → ������: ���� �� ������, ������
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>--- битий байт: сервер обіцяє UTF-8, а в тілі 0xff
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>requests: 'года �'
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>httpx:    'года �'
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>aiohttp cp1251: windows-1251 → Новини: ціни на пальне, погода
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>aiohttp broken: text() → UnicodeDecodeError invalid start byte
+<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>aiohttp broken: text(errors='replace') → 'года �'
+</code></pre></div>
+<ul>
+<li><strong><code>charset</code> у <code>Content-Type</code> є</strong> — усі три бібліотеки декодують правильно, навіть Windows-1251.</li>
+<li><strong><code>charset</code> немає</strong> — кожна вгадує по-своєму, і всі неправильно. <code>requests</code> для <code>text/*</code> бере ISO-8859-1 (так казав старий стандарт HTTP/1.1) і дає «Íîâèíè». Вгадування за вмістом (<code>apparent_encoding</code>) на короткому тексті назвало корейське <code>johab</code>. <code>httpx</code> бере UTF-8 і замінює все на «�». Якщо кодування сайту відоме, його задають явно: <code>response.encoding = "cp1251"</code>.</li>
+<li><strong>Битий байт</strong> у тілі, яке обіцяє UTF-8: <code>requests</code> і <code>httpx</code> замінюють його на «�», а <code>aiohttp</code> <code>text()</code> <strong>кидає <code>UnicodeDecodeError</code></strong>. Це не <code>ClientError</code>, тож <code>except aiohttp.ClientError</code> його не ловить. Саме так в News Hub одна сторінка з одним байтом валила весь збір (<a href="../../tutorials/05_api_testing/fake_server/#finding">крок 5</a>); виправлення — <code>resp.text(errors="replace")</code>.</li>
+<li><strong><code>json()</code></strong> не дивиться на статус: для <code>502</code> від проксі з HTML-сторінкою він кине <code>JSONDecodeError</code>. Спочатку статус і <code>Content-Type</code>, потім <code>json()</code>.</li>
+</ul>
+<h2 id="streaming">Великі відповіді: потоком і зі стелею<a class="headerlink" href="#streaming" title="Permanent link">&para;</a></h2>
+<p>Без особливих налаштувань бібліотека читає <strong>все тіло в пам'ять</strong>. <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/http_clients/streaming.py"><code>streaming.py</code></a>:</p>
+<div class="highlight"><span class="filename">streaming.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">with</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">BASE</span><span class="si">}</span><span class="s2">/big"</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">"mb"</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span> <span class="k">as</span> <span class="n">response</span><span class="p">:</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">iter_content</span><span class="p">(</span><span class="n">chunk_size</span><span class="o">=</span><span class="mi">64</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">):</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>        <span class="n">total</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>                     <span class="c1"># тут — запис у файл або парсинг частинами</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">Client</span><span class="p">()</span> <span class="k">as</span> <span class="n">client</span><span class="p">,</span> <span class="n">client</span><span class="o">.</span><span class="n">stream</span><span class="p">(</span><span class="s2">"GET"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">BASE</span><span class="si">}</span><span class="s2">/big"</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">"mb"</span><span class="p">:</span> <span class="mi">50</span><span class="p">})</span> <span class="k">as</span> <span class="n">response</span><span class="p">:</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>    <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">iter_bytes</span><span class="p">():</span>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>        <span class="n">total</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="k">async</span> <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">iter_chunked</span><span class="p">(</span><span class="mi">64</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">):</span>      <span class="c1"># aiohttp</span>
+<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>    <span class="n">body</span> <span class="o">+=</span> <span class="n">chunk</span>
+<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">body</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_bytes</span><span class="p">:</span>
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"відповідь більша за </span><span class="si">{</span><span class="n">max_bytes</span><span class="si">}</span><span class="s2"> байт — далі не читаємо"</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>пам'ять процесу на старті: 64 МБ
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>requests stream=True: 50 МБ частинами за 0.0 с, пік пам'яті 65 МБ
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>httpx client.stream: 50 МБ, пік пам'яті 67 МБ
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>aiohttp: Content-Length = None
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>aiohttp: відповідь більша за 5242880 байт — далі не читаємо
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>requests без stream, 200 МБ: len(content) = 200 МБ, пік пам'яті 474 МБ
+</code></pre></div>
+<p>(Пам'ять — <code>ru_maxrss</code> процесу на Linux; сервер працює в тому самому процесі.)</p>
+<ul>
+<li><strong>Потоком</strong> 50 МБ пройшли через процес, а пам'ять майже не зросла: у кожен момент у ній один шматок.</li>
+<li><strong>Без <code>stream=True</code></strong> 200 МБ тіла коштували понад 400 МБ піку: байти й їх склеювання.</li>
+<li><strong><code>Content-Length</code> може не бути</strong> (<code>None</code>): сервер надсилає частинами. Тому стелю перевіряють під час читання, а не лише за заголовком. Так робить <code>_read_limited</code> у <code>safe_fetch</code>: чужий URL може віддати гігабайт і покласти сервер.</li>
+<li><strong>Відповідь потоком треба закрити</strong> (<code>with</code> / <code>async with</code>), інакше з'єднання не повернеться в пул.</li>
+</ul>
+<h2 id="concurrency">Багато сторінок одночасно<a class="headerlink" href="#concurrency" title="Permanent link">&para;</a></h2>
+<p>20 сторінок, кожна відповідає 0,5 с. Сервер рахує, скільки запитів обробляє одночасно. <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/http_clients/concurrency.py"><code>concurrency.py</code></a>:</p>
+<div class="highlight"><span class="filename">concurrency.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="n">client</span><span class="p">:</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>    <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">"/page/</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>    <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>    <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">limited</span><span class="p">(</span><span class="n">limit</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>    <span class="n">semaphore</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Semaphore</span><span class="p">(</span><span class="n">limit</span><span class="p">)</span>         <span class="c1"># не більше `limit` запитів одночасно</span>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">fetch_limited</span><span class="p">(</span><span class="n">client</span><span class="p">:</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>        <span class="k">async</span> <span class="k">with</span> <span class="n">semaphore</span><span class="p">:</span>
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>            <span class="k">return</span> <span class="k">await</span> <span class="n">fetch</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>
+<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>    <span class="k">async</span> <span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="n">BASE</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+<a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>        <span class="k">return</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">fetch_limited</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">PAGES</span><span class="p">)))</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>по черзі, httpx.Client                    10.1 с   сервер бачив одночасно: 1
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>ThreadPoolExecutor(5), httpx.Client        2.1 с   сервер бачив одночасно: 5
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>gather, httpx.AsyncClient                  0.6 с   сервер бачив одночасно: 20
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>  порядок результатів = порядок задач: [0, 1, 2, 3, 4, 5] …
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>gather + Semaphore(5)                      2.1 с   сервер бачив одночасно: 5
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>gather + httpx.Limits(max_connections=5)   2.0 с   сервер бачив одночасно: 5
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>gather + aiohttp limit_per_host=5          2.0 с   сервер бачив одночасно: 5
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>  сторінки по 1 с, 2 з'єднання, pool=0.5: ['Response', 'Response', 'PoolTimeout', 'PoolTimeout', 'PoolTimeout', 'PoolTimeout']
+</code></pre></div>
+<p>(Час з одного запуску, у тебе може трохи відрізнятися.)</p>
+<pre class="mermaid"><code>flowchart TD
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    subgraph SEQ["по черзі: 20 × 0.5 = 10 с"]
+        direction LR
+        S1["0.0–0.5&lt;br&gt;сторінка 0"] --&gt; S2["0.5–1.0&lt;br&gt;сторінка 1"] --&gt; S3["…&lt;br&gt;9.5–10.0 сторінка 19"]
+    end
+    subgraph ALL["gather: 0.5 с, 20 одночасно"]
+        direction LR
+        G1["20 запитів&lt;br&gt;у 0.0"] --&gt; G2["20 відповідей&lt;br&gt;у 0.5"]
+    end
+    subgraph LIM["gather + Semaphore(5): 4 хвилі × 0.5 = 2 с"]
+        direction LR
+        L1["0–4&lt;br&gt;0.0–0.5"] --&gt; L2["5–9&lt;br&gt;0.5–1.0"] --&gt; L3["10–14&lt;br&gt;1.0–1.5"] --&gt; L4["15–19&lt;br&gt;1.5–2.0"]
+    end
+    SEQ --&gt; ALL --&gt; LIM
+
+    class S1,S2,S3 warning
+    class G1 step
+    class G2 error
+    class L1,L2,L3,L4 success</code></pre>
+<ul>
+<li><strong>По черзі</strong> програма 10 с просто <strong>чекала</strong>. Запити не рахують, а чекають, і чекати можна на всі одразу.</li>
+<li><strong><code>gather</code></strong> — 0,5 с, але сервер отримав <strong>20 запитів одночасно</strong>. Для чужого сайту 1000 одночасних запитів від однієї адреси схожі на атаку: блокування, <code>429</code>, а в тебе — ліміт відкритих файлів.</li>
+<li><strong><code>Semaphore(5)</code></strong> пропускає не більше п'яти: 4 хвилі по 0,5 с = 2 с. Той самий результат дають ліміти пулу: <code>httpx.Limits(max_connections=5)</code>, <code>aiohttp.TCPConnector(limit_per_host=5)</code>. Семафор обмежує і роботу навколо запиту (розбір, запис у базу), ліміт пулу — лише з'єднання.</li>
+<li><strong>За замовчуванням ліміти є, але великі</strong>: <code>httpx</code> — 100 з'єднань, <code>aiohttp</code> — 100 усього і без ліміту на хост.</li>
+<li><strong>Черга на пул має свій тайм-аут</strong>: задачі, що чекали вільне з'єднання довше <code>pool=0.5</code>, отримали <code>PoolTimeout</code>, хоча сервер працював. З лімітом пулу <code>pool</code> ставлять не менше за час, який задачі реально стоять у черзі.</li>
+<li><strong>Потоки</strong> (<code>ThreadPoolExecutor</code>) теж працюють для синхронного клієнта: мережеве очікування відпускає GIL. Для десятків запитів цього досить, для сотень і тисяч — async.</li>
+<li><strong><code>gather</code> повертає результати в порядку задач</strong>, а не в порядку відповідей. Без <code>return_exceptions=True</code> перший виняток вилітає з <code>gather</code>, і результатів решти задач ти не отримаєш. News Hub тому ловить помилки всередині <code>fetch_one</code> і повертає їх як дані.</li>
+</ul>
+<h2 id="api-client">Свій клієнт до чужого API<a class="headerlink" href="#api-client" title="Permanent link">&para;</a></h2>
+<p>Коли запити до одного API розкидані по коду, у кожному місці повторюються адреса, токен, тайм-аут, перевірка статусу й повтори. Тому їх збирають в <strong>один клас-клієнт</strong>: решта програми викликає методи й отримує дані та <strong>свої</strong> винятки. <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/http_clients/api_client.py"><code>api_client.py</code></a>:</p>
+<div class="highlight"><span class="filename">api_client.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">NewsAPIError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">    </span><span class="sd">"""Будь-яка помилка чужого API новин."""</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="k">class</span><span class="w"> </span><span class="nc">NotFound</span><span class="p">(</span><span class="n">NewsAPIError</span><span class="p">):</span>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>    <span class="k">pass</span>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>
+<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="k">class</span><span class="w"> </span><span class="nc">NewsAPIClient</span><span class="p">:</span>
+<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+<a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a>                 <span class="n">retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">pause</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">transport</span><span class="p">:</span> <span class="n">httpx</span><span class="o">.</span><span class="n">BaseTransport</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a>        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"User-Agent"</span><span class="p">:</span> <span class="s2">"news_hub/1.0 (+https://github.com/NikoriakViktor/news_hub)"</span><span class="p">}</span>
+<a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a>        <span class="k">if</span> <span class="n">token</span><span class="p">:</span>
+<a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a>            <span class="n">headers</span><span class="p">[</span><span class="s2">"Authorization"</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Bearer </span><span class="si">{</span><span class="n">token</span><span class="si">}</span><span class="s2">"</span>
+<a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_http</span> <span class="o">=</span> <span class="n">httpx</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="n">base_url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">transport</span><span class="o">=</span><span class="n">transport</span><span class="p">)</span>
+<a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_retries</span> <span class="o">=</span> <span class="n">retries</span>
+<a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_pause</span> <span class="o">=</span> <span class="n">pause</span>
+<a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a>
+<a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="nb">list</span><span class="p">:</span>
+<a id="__codelineno-17-20" name="__codelineno-17-20" href="#__codelineno-17-20"></a>        <span class="n">attempts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retries</span> <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">"GET"</span> <span class="k">else</span> <span class="mi">1</span>       <span class="c1"># POST не повторюємо: можна створити дубль</span>
+<a id="__codelineno-17-21" name="__codelineno-17-21" href="#__codelineno-17-21"></a>        <span class="k">for</span> <span class="n">attempt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">attempts</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+<a id="__codelineno-17-22" name="__codelineno-17-22" href="#__codelineno-17-22"></a>            <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-17-23" name="__codelineno-17-23" href="#__codelineno-17-23"></a>                <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_http</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<a id="__codelineno-17-24" name="__codelineno-17-24" href="#__codelineno-17-24"></a>            <span class="k">except</span> <span class="n">httpx</span><span class="o">.</span><span class="n">TransportError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+<a id="__codelineno-17-25" name="__codelineno-17-25" href="#__codelineno-17-25"></a>                <span class="k">if</span> <span class="n">attempt</span> <span class="o">==</span> <span class="n">attempts</span><span class="p">:</span>
+<a id="__codelineno-17-26" name="__codelineno-17-26" href="#__codelineno-17-26"></a>                    <span class="k">raise</span> <span class="n">NewsAPIError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">error</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+<a id="__codelineno-17-27" name="__codelineno-17-27" href="#__codelineno-17-27"></a>            <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-17-28" name="__codelineno-17-28" href="#__codelineno-17-28"></a>                <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">&lt;</span> <span class="mi">500</span> <span class="ow">or</span> <span class="n">attempt</span> <span class="o">==</span> <span class="n">attempts</span><span class="p">:</span>
+<a id="__codelineno-17-29" name="__codelineno-17-29" href="#__codelineno-17-29"></a>                    <span class="k">break</span>
+<a id="__codelineno-17-30" name="__codelineno-17-30" href="#__codelineno-17-30"></a>            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pause</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">attempt</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+<a id="__codelineno-17-31" name="__codelineno-17-31" href="#__codelineno-17-31"></a>
+<a id="__codelineno-17-32" name="__codelineno-17-32" href="#__codelineno-17-32"></a>        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">404</span><span class="p">:</span>
+<a id="__codelineno-17-33" name="__codelineno-17-33" href="#__codelineno-17-33"></a>            <span class="k">raise</span> <span class="n">NotFound</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"detail"</span><span class="p">])</span>
+<a id="__codelineno-17-34" name="__codelineno-17-34" href="#__codelineno-17-34"></a>        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">is_error</span><span class="p">:</span>
+<a id="__codelineno-17-35" name="__codelineno-17-35" href="#__codelineno-17-35"></a>            <span class="k">raise</span> <span class="n">NewsAPIError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: HTTP </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<a id="__codelineno-17-36" name="__codelineno-17-36" href="#__codelineno-17-36"></a>        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<a id="__codelineno-17-37" name="__codelineno-17-37" href="#__codelineno-17-37"></a>
+<a id="__codelineno-17-38" name="__codelineno-17-38" href="#__codelineno-17-38"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">news</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<a id="__codelineno-17-39" name="__codelineno-17-39" href="#__codelineno-17-39"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="s2">"GET"</span><span class="p">,</span> <span class="s2">"/news"</span><span class="p">)</span>
+<a id="__codelineno-17-40" name="__codelineno-17-40" href="#__codelineno-17-40"></a>
+<a id="__codelineno-17-41" name="__codelineno-17-41" href="#__codelineno-17-41"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">one</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">news_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<a id="__codelineno-17-42" name="__codelineno-17-42" href="#__codelineno-17-42"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="s2">"GET"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"/news/</span><span class="si">{</span><span class="n">news_id</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>['Ціни на пальне', 'Погода в Києві']
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>NotFound: новину 42 не знайдено
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>flaky після повторів: {'ok': True, 'attempt': 3}
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>NewsAPIError: GET /news: ConnectError | причина: ConnectError
+</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    APP["логіка застосунку&lt;br&gt;api.one(42)"] --&gt; CL["NewsAPIClient&lt;br&gt;адреса, токен, тайм-аут"]
+    CL --&gt; RT["повтори лише для GET&lt;br&gt;пауза × 2"]
+    RT --&gt; HX["httpx.Client&lt;br&gt;пул з'єднань"]
+    HX -- "TCP / TLS" --&gt; SRV{"чужий API"}
+    SRV -- "статус + JSON" --&gt; MAP["коди → винятки&lt;br&gt;404 → NotFound"]
+    MAP --&gt; APP
+
+    class APP success
+    class CL,HX step
+    class RT,MAP warning
+    class SRV decision</code></pre>
+<p>Що дає такий шар:</p>
+<ul>
+<li><strong>Одне місце для налаштувань.</strong> Тайм-аут, токен зі змінної середовища, кількість повторів — у конструкторі, а не в кожному виклику.</li>
+<li><strong>Свої винятки.</strong> Код застосунку ловить <code>NotFound</code> і нічого не знає про <code>httpx</code>. Причина зберігається в <code>__cause__</code> (<code>raise ... from error</code>), тож у журналі видно справжній <code>ConnectError</code>. Замінити <code>httpx</code> на <code>aiohttp</code> — правка в одному класі.</li>
+<li><strong>Повтори вирішено один раз і правильно</strong>: <code>GET</code> — так, <code>POST</code> — ні.</li>
+<li><strong>Легко тестувати</strong>: параметр <code>transport</code> дозволяє підставити <code>httpx.MockTransport</code> (див. <a href="#testing">нижче</a>).</li>
+</ul>
+<p>Так влаштовані офіційні SDK (Telegram, Gemini, Anthropic): усередині HTTP, назовні методи й винятки. Шар LLM у News Hub — те саме на рівень вище: <code>LLMClient</code> з <code>LLMUnavailable</code> і <code>CircuitOpen</code> замість винятків двох різних SDK (<a href="../../tutorials/07_llm_api/llm_client/">крок 7</a>).</p>
+<h2 id="testing">Тестування клієнтів<a class="headerlink" href="#testing" title="Permanent link">&para;</a></h2>
+<p>Тести не ходять в інтернет. Три способи підмінити той бік, від найдешевшого (<a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/http_clients/test_clients.py"><code>test_clients.py</code></a>):</p>
+<div class="highlight"><span class="filename">test_clients.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_mock_transport_returns_canned_json</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>    <span class="n">seen</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">httpx</span><span class="o">.</span><span class="n">Request</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">handler</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">httpx</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">httpx</span><span class="o">.</span><span class="n">Response</span><span class="p">:</span>
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>        <span class="n">seen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>        <span class="k">return</span> <span class="n">httpx</span><span class="o">.</span><span class="n">Response</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="p">[{</span><span class="s2">"id"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Тест"</span><span class="p">}])</span>
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>
+<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>    <span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">transport</span><span class="o">=</span><span class="n">httpx</span><span class="o">.</span><span class="n">MockTransport</span><span class="p">(</span><span class="n">handler</span><span class="p">),</span> <span class="n">base_url</span><span class="o">=</span><span class="s2">"http://news.test"</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+<a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>        <span class="k">assert</span> <span class="n">titles</span><span class="p">(</span><span class="n">client</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"Тест"</span><span class="p">]</span>
+<a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>    <span class="k">assert</span> <span class="n">seen</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">url</span> <span class="o">==</span> <span class="s2">"http://news.test/news"</span>                 <span class="c1"># перевіряємо й сам запит</span>
+<a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a>
+<a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>
+<a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_asgi_transport_calls_fastapi_app_in_process</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a>        <span class="k">async</span> <span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">(</span><span class="n">transport</span><span class="o">=</span><span class="n">httpx</span><span class="o">.</span><span class="n">ASGITransport</span><span class="p">(</span><span class="n">app</span><span class="o">=</span><span class="n">app</span><span class="p">),</span> <span class="n">base_url</span><span class="o">=</span><span class="s2">"http://test"</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+<a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a>            <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/news"</span><span class="p">)</span>
+<a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a>            <span class="k">return</span> <span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()]</span>
+<a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a>
+<a id="__codelineno-19-19" name="__codelineno-19-19" href="#__codelineno-19-19"></a>    <span class="k">assert</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">run</span><span class="p">())</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"Ціни на пальне"</span><span class="p">,</span> <span class="s2">"Погода в Києві"</span><span class="p">]</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>....                                                                     [100%]
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>4 passed in 0.68s
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Спосіб</th>
+<th>Що виконується по-справжньому</th>
+<th>Що ні</th>
+<th>Коли</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>httpx.MockTransport(handler)</code></td>
+<td>увесь код клієнта; запит можна перевірити</td>
+<td>мережа, декодування байтів, тайм-аути</td>
+<td>логіка навколо відповіді: статуси, повтори, винятки (<code>handler</code> може кинути <code>httpx.ConnectTimeout</code>)</td>
+</tr>
+<tr>
+<td><code>httpx.ASGITransport(app=...)</code></td>
+<td>FastAPI-застосунок повністю, у тому самому процесі</td>
+<td>мережа; <code>lifespan</code> треба запустити самому</td>
+<td>тести власного API (<a href="../../tutorials/05_api_testing/">крок 5</a>)</td>
+</tr>
+<tr>
+<td>локальний сервер (<code>aiohttp.test_utils.TestServer</code>, uvicorn у потоці)</td>
+<td>усе: з'єднання, заголовки, байти, тайм-аути</td>
+<td>лише чужий сайт замінено своїм</td>
+<td>парсинг, кодування, тайм-аути; так у News Hub знайшли <code>UnicodeDecodeError</code> (<a href="../../tutorials/05_api_testing/fake_server/">крок 5</a>)</td>
+</tr>
+</tbody>
+</table>
+<p>Бібліотеки <code>respx</code> (для <code>httpx</code>) і <code>aioresponses</code> (для <code>aiohttp</code>) роблять те саме, що <code>MockTransport</code>: реєструєш «на <code>GET /news</code> відповісти так», і вони перехоплюють запити без зміни коду. Мок відповідає тим, що йому сказали, тож усе між байтами й рядком він не перевіряє: для цього потрібен справжній сервер на <code>127.0.0.1</code>.</p>
+<h2 id="news-hub">У News Hub<a class="headerlink" href="#news-hub" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Де</th>
+<th>Бібліотека</th>
+<th>Що з цієї сторінки</th>
+<th>Крок</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scraper.py</code>: 7 сторінок rbc.ua</td>
+<td><code>aiohttp</code></td>
+<td>одна <code>ClientSession</code> на збір; <code>gather</code>; <code>ClientTimeout(total=15)</code> на сторінку; <code>raise_for_status()</code>; помилка сторінки — у <code>PageResult.error</code>, решта сторінок живе; свій <code>User-Agent</code> і <code>Accept-Language</code></td>
+<td><a href="../../tutorials/02_fastapi_basics/scrape_endpoint/">2</a></td>
+</tr>
+<tr>
+<td><code>scraper.py</code>: битий байт</td>
+<td><code>aiohttp</code></td>
+<td><code>resp.text(errors="replace")</code> замість <code>UnicodeDecodeError</code></td>
+<td><a href="../../tutorials/05_api_testing/fake_server/#finding">5</a></td>
+</tr>
+<tr>
+<td>тести API</td>
+<td><code>httpx.AsyncClient</code> + <code>ASGITransport</code></td>
+<td>клієнт без мережі; <code>lifespan</code> запускається вручну</td>
+<td><a href="../../tutorials/05_api_testing/">5</a></td>
+</tr>
+<tr>
+<td>тести скрапера</td>
+<td><code>aiohttp</code> проти <code>TestServer</code></td>
+<td>справжній HTTP, сайт — свій</td>
+<td><a href="../../tutorials/05_api_testing/fake_server/">5</a></td>
+</tr>
+<tr>
+<td><code>safe_fetch</code>: RSS за адресою адміна</td>
+<td><code>aiohttp</code></td>
+<td><code>ClientTimeout(total=10)</code>; <code>allow_redirects=False</code> і ручні перенаправлення (≤ 3); стеля 2 МБ частинами; лише XML-типи; <code>trust_env=False</code></td>
+<td><a href="../../tutorials/08_security/ssrf/">8</a></td>
+</tr>
+<tr>
+<td><code>llm.py</code>: Gemini, Anthropic</td>
+<td>SDK поверх <code>aiohttp</code> / <code>httpx</code></td>
+<td><code>LLM_TIMEOUT=30</code>; <code>max_retries=2</code> в Anthropic; мережеві помилки обох бібліотек — <code>NETWORK_ERRORS</code></td>
+<td><a href="../../tutorials/07_llm_api/">7</a></td>
+</tr>
+<tr>
+<td>Telegram-бот</td>
+<td><code>aiogram</code> поверх <code>aiohttp</code> (<code>AiohttpSession</code>)</td>
+<td></td>
+<td><a href="../../tutorials/09_telegram_bot/">9</a></td>
+</tr>
+</tbody>
+</table>
+<p>Заголовки скрапера з <a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/02_fastapi_basics/news_hub/scraper.py"><code>steps/02_fastapi_basics/news_hub/scraper.py</code></a>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">HEADERS</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>    <span class="s2">"User-Agent"</span><span class="p">:</span> <span class="s2">"Mozilla/5.0 (compatible; EduScraper/1.0; +educational)"</span><span class="p">,</span>
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>    <span class="s2">"Accept-Language"</span><span class="p">:</span> <span class="s2">"uk,en;q=0.9"</span><span class="p">,</span>
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>    <span class="s2">"Accept"</span><span class="p">:</span> <span class="s2">"text/html,application/xhtml+xml"</span><span class="p">,</span>
+<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="p">}</span>
+</code></pre></div>
+<p><code>ClientSession</code> у скрапері створюється на кожен виклик <code>scrape_all_async</code> і закривається після нього: один збір — сім запитів через один пул. Сторінок сім, тож <code>Semaphore</code> не потрібен: ліміт <code>aiohttp</code> за замовчуванням (100) не досягається. Якщо джерел стане сотні, обмеження одночасності (<code>limit_per_host</code>) додається в <code>TCPConnector</code>, а сесія переїжджає в <code>lifespan</code>.</p>
+<h2 id="mistakes">Типові помилки<a class="headerlink" href="#mistakes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Помилка</th>
+<th>Наслідок</th>
+<th>Як правильно</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>requests.get(url)</code> без <code>timeout</code></td>
+<td>запит, воркер і потік чекають вічно</td>
+<td>завжди <code>timeout=</code>; окремо connect і read</td>
+</tr>
+<tr>
+<td>read-тайм-аут вважають стелею на всю відповідь</td>
+<td>повільний сервер тримає клієнта скільки завгодно</td>
+<td><code>aiohttp</code> <code>total=</code>; <code>asyncio.timeout</code> навколо <code>httpx</code>; стеля розміру</td>
+</tr>
+<tr>
+<td><code>.json()</code> без перевірки статусу</td>
+<td><code>KeyError</code> чи <code>JSONDecodeError</code> далеко від причини</td>
+<td><code>raise_for_status()</code> або явна перевірка <code>status_code</code> перед <code>.json()</code></td>
+</tr>
+<tr>
+<td>новий клієнт на кожен запит</td>
+<td>нове з'єднання щоразу; <code>httpx.Client</code> — ще й новий SSL-контекст</td>
+<td>один клієнт на застосунок (<code>lifespan</code>)</td>
+</tr>
+<tr>
+<td><code>requests</code> в <code>async def</code></td>
+<td>цикл подій стоїть, усі запити до сервера чекають</td>
+<td><code>httpx.AsyncClient</code> / <code>aiohttp</code>, або <code>def</code>-ендпоінт</td>
+</tr>
+<tr>
+<td>повтор <code>POST</code> після тайм-ауту</td>
+<td>дублікати</td>
+<td>повторювати лише ідемпотентні; для <code>POST</code> — <code>Idempotency-Key</code></td>
+</tr>
+<tr>
+<td>повтори без паузи й jitter</td>
+<td>хвиля запитів добиває сервер</td>
+<td>backoff з межею, jitter, <code>Retry-After</code></td>
+</tr>
+<tr>
+<td>повтор <code>4xx</code></td>
+<td>марні запити, той самий результат</td>
+<td>повторювати <code>429</code>, <code>502</code>–<code>504</code>, помилки з'єднання</td>
+</tr>
+<tr>
+<td>код з <code>requests</code> перенесли на <code>httpx</code></td>
+<td><code>301</code>/<code>302</code> замість даних</td>
+<td><code>follow_redirects=True</code></td>
+</tr>
+<tr>
+<td><code>response.text</code> без <code>charset</code> у заголовку</td>
+<td>«Íîâèíè» або «������»</td>
+<td><code>response.encoding = "cp1251"</code> або <code>content.decode(...)</code></td>
+</tr>
+<tr>
+<td><code>aiohttp</code> <code>text()</code> на байтах чужого сайту</td>
+<td><code>UnicodeDecodeError</code> валить <code>gather</code></td>
+<td><code>text(errors="replace")</code>; ловити й <code>UnicodeDecodeError</code></td>
+</tr>
+<tr>
+<td>велике тіло без <code>stream</code></td>
+<td>уся відповідь у пам'яті</td>
+<td><code>stream=True</code> / <code>client.stream</code> / <code>iter_chunked</code> зі стелею</td>
+</tr>
+<tr>
+<td><code>gather</code> на тисячі URL без ліміту</td>
+<td>блокування сайтом, <code>Too many open files</code></td>
+<td><code>Semaphore</code>, <code>Limits</code>, <code>limit_per_host</code></td>
+</tr>
+<tr>
+<td>незакрита сесія чи відповідь потоком</td>
+<td><code>Unclosed client session</code>, з'єднання не повертаються в пул</td>
+<td><code>with</code> / <code>async with</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="debugging">Налагодження<a class="headerlink" href="#debugging" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Що пішло насправді</strong> — <code>response.request.headers</code> (<code>requests</code>, <code>httpx</code>) і <code>resp.request_info</code> (<code>aiohttp</code>). Або тимчасовий ендпоінт, що повертає <code>request.headers</code>, як <code>/echo</code> у прикладі чи <code>/inspect</code> у <a href="../http_anatomy/#wire">HTTP-запиті зсередини</a>.</li>
+<li><strong>Де саме зависає</strong> — тип винятку: <code>ConnectTimeout</code> (не з'єдналися), <code>ReadTimeout</code> (з'єдналися, сервер мовчить), <code>PoolTimeout</code> (чекали своє ж з'єднання; сервер ні до чого).</li>
+<li><strong>Журнал бібліотеки</strong>: <code>logging.basicConfig(level=logging.DEBUG)</code> показує рядки <code>httpx</code> / <code>httpcore</code> і <code>urllib3</code> (<code>requests</code>) — нові з'єднання, перевикористання, перенаправлення.</li>
+<li><strong>Порівняй з <code>curl -v URL</code></strong>: якщо <code>curl</code> отримує дані, а Python ні, різниця в заголовках (<code>User-Agent</code>, <code>Accept</code>) або в проксі зі змінних середовища (<code>HTTP_PROXY</code>, <code>HTTPS_PROXY</code>), які всі три бібліотеки читають самі (<code>aiohttp</code> — з <code>trust_env=True</code>).</li>
+<li><strong>Кракозябри</strong> — подивись <code>response.headers["content-type"]</code> і <code>response.encoding</code>, потім перші байти <code>response.content</code>.</li>
+</ul>
+<h2 id="security">Безпека<a class="headerlink" href="#security" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong><code>verify=False</code> — не рішення.</strong> На <code>SSLError: certificate verify failed</code> часто радять вимкнути перевірку. З'єднання лишається шифрованим, але невідомо з ким: будь-хто посередині підставить свій сертифікат і прочитає токен. Причину виправляють: оновити сертифікати, для корпоративного проксі вказати його CA (<code>verify="ca.pem"</code>).</li>
+<li><strong>Токени — не в коді й не в URL.</strong> Ключ API бери зі змінної середовища, передавай у заголовку <code>Authorization</code>. Рядок запиту (<code>?token=...</code>) потрапляє в журнали серверів і проксі (<a href="../http_anatomy/#access-log">Журнал сервера</a>).</li>
+<li><strong>Помилки клієнта не в журнал як є.</strong> <code>str(error)</code> для <code>HTTPStatusError</code> містить повний URL, разом із <code>?key=...</code>, якщо ключ передано так.</li>
+<li><strong>Чужий URL від користувача — це SSRF.</strong> Сервер піде туди, куди скажуть: <code>localhost</code>, Redis, метадані хмари <code>169.254.169.254</code>. Перевіряти треба IP після DNS і кожне перенаправлення — <code>safe_fetch</code> у <a href="../../tutorials/08_security/ssrf/">кроці 8</a>. <code>requests</code> і <code>httpx</code> при перенаправленні на інший хост прибирають <code>Authorization</code>, але не перевіряють, куди саме ведуть перенаправлення.</li>
+<li><strong>Стеля розміру й тайм-аут</strong> — теж захист: без них один повільний або величезний відповідач тримає воркер і пам'ять.</li>
+<li><strong>Чесний <code>User-Agent</code> і помірна одночасність</strong> — правила ввічливого клієнта. Сайти блокують тих, хто приходить сотнями запитів за секунду.</li>
+</ul>
+<h2 id="practice">Практика<a class="headerlink" href="#practice" title="Permanent link">&para;</a></h2>
+<h3 id="find-the-bug">Знайди помилку<a class="headerlink" href="#find-the-bug" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">news_title</span><span class="p">(</span><span class="n">news_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">BASE</span><span class="si">}</span><span class="s2">/news/</span><span class="si">{</span><span class="n">news_id</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>    <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"title"</span><span class="p">]</span>
+<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>
+<a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>
+<a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="nb">print</span><span class="p">(</span><span class="n">news_title</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="nb">print</span><span class="p">(</span><span class="n">news_title</span><span class="p">(</span><span class="mi">42</span><span class="p">))</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>Погода в Києві
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>KeyError: 'title'
+</code></pre></div>
+<p>Для новини 2 працює, для 42 — <code>KeyError</code>. Знайди <strong>дві</strong> проблеми: одну видно у виводі, друга проявиться в день, коли сервер зависне.</p>
+<details class="success">
+<summary>Відповідь</summary>
+<ol>
+<li><strong>Статус не перевірено.</strong> На <code>404</code> сервер повернув <code>{"detail": ...}</code>, і програма впала з <code>KeyError: 'title'</code>, яке нічого не каже про справжню причину. Потрібен <code>response.raise_for_status()</code> до <code>.json()</code>.</li>
+<li><strong>Немає <code>timeout</code>.</strong> Якщо сервер зависне, <code>requests</code> чекатиме вічно, і разом з ним зависне той, хто викликав функцію.</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">news_title</span><span class="p">(</span><span class="n">news_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">BASE</span><span class="si">}</span><span class="s2">/news/</span><span class="si">{</span><span class="n">news_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>    <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+<a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>    <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"title"</span><span class="p">]</span>
+</code></pre></div>
+<p>Тепер для 42 буде <code>HTTPError: 404 Client Error: Not Found for url: …</code>.</p>
+</details>
+<h3 id="practice-retry-after">Зміни приклад: <code>Retry-After</code> у клієнті<a class="headerlink" href="#practice-retry-after" title="Permanent link">&para;</a></h3>
+<p>Навчи <code>NewsAPIClient._request</code> повторювати <code>GET</code> на <code>429</code> і <code>503</code> з урахуванням <code>Retry-After</code>.</p>
+<p><strong>Критерії перевірки:</strong></p>
+<ul>
+<li>на <code>/flaky?fail=2&amp;retry_after=1</code> клієнт повертає <code>{'ok': True, 'attempt': 3}</code> і витрачає не менше 2 с;</li>
+<li>без <code>Retry-After</code> пауза, як і раніше, подвоюється;</li>
+<li><code>404</code> і <code>POST</code> — одна спроба;</li>
+<li><code>Retry-After</code> більший за розумну межу (наприклад, 30 с) не чекається: клієнт кидає <code>NewsAPIError</code>.</li>
+</ul>
+<h3 id="practice-many">Спробуй самостійно: заголовки кількох новин одночасно<a class="headerlink" href="#practice-many" title="Permanent link">&para;</a></h3>
+<p>Напиши асинхронну функцію <code>titles(ids)</code>, яка <strong>одночасно</strong> запитує <code>/news/{id}</code> для кожного id і повертає словник <code>{id: заголовок}</code>; для неіснуючої новини значення — <code>None</code>.</p>
+<p><strong>Критерії перевірки:</strong></p>
+<ul>
+<li><code>titles([1, 2, 42])</code> повертає <code>{1: 'Ціни на пальне', 2: 'Погода в Києві', 42: None}</code>;</li>
+<li>запити йдуть одночасно (<code>httpx.AsyncClient</code> + <code>gather</code>), через <strong>один</strong> клієнт, з тайм-аутом;</li>
+<li>одночасно не більше 5 запитів;</li>
+<li><code>404</code> обробляється, а інші помилки (<code>5xx</code>, немає з'єднання) вилітають винятком.</li>
+</ul>
+<details class="tip">
+<summary>Підказка</summary>
+<p>Корутина для одного id повертає пару <code>(id, title)</code>; <code>dict(await asyncio.gather(...))</code> складе з пар словник. Перевір <code>response.status_code == 404</code> <strong>до</strong> <code>raise_for_status()</code>. Сервер — <code>from server import start_server</code> з прикладу.</p>
+</details>
+<h2 id="questions">Питання<a class="headerlink" href="#questions" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Чому <code>requests.get(url)</code> без <code>timeout</code> — помилка? Які тайм-аути за замовчуванням у <code>httpx</code> і <code>aiohttp</code>?</li>
+<li>Сервер почав відповідь одразу, але тіло надсилає по байту раз на пів секунди. Чи спрацює <code>timeout=1</code> у <code>requests</code>? Як обмежити час усієї відповіді?</li>
+<li>Чому один клієнт на застосунок швидший за <code>requests.get</code> на кожен запит? Що додатково сповільнює <code>httpx.Client</code> на кожен запит?</li>
+<li>Що повертає <code>requests.get</code> для <code>404</code>: виняток чи відповідь? А <code>httpx.get</code> для <code>301</code>?</li>
+<li>Які відповіді й помилки має сенс повторювати? Чому не можна автоматично повторювати <code>POST /orders</code> після <code>ReadTimeout</code>?</li>
+<li>Навіщо до експоненційної паузи додають jitter?</li>
+<li>Сервер віддав текст у Windows-1251 без <code>charset</code> у заголовку. Що покажуть <code>requests</code> і <code>httpx</code>, і як це виправити?</li>
+<li>20 сторінок по 0,5 с: скільки часу займуть по черзі, з <code>gather</code> і з <code>Semaphore(5)</code>? Чому <code>gather</code> без ліміту небезпечний?</li>
+<li>Чим <code>httpx.MockTransport</code> відрізняється від локального тестового сервера? Що мок не перевірить?</li>
+</ol>
+<details class="success">
+<summary>Відповіді</summary>
+<ol>
+<li>Якщо сервер зависне, запит (і воркер разом із ним) чекатиме вічно. <code>httpx</code> — 5 с на кожну фазу; <code>aiohttp</code> — <code>total=300</code>, <code>sock_connect=30</code>.</li>
+<li>Ні: read-тайм-аут рахує тишу між шматками, і кожен байт його скидає. Загальна стеля — <code>aiohttp.ClientTimeout(total=...)</code> або <code>asyncio.timeout</code> навколо запиту <code>httpx.AsyncClient</code>; для синхронних клієнтів — стеля розміру або окремий потік з тайм-аутом.</li>
+<li>Клієнт перевикористовує відкрите з'єднання: немає нових TCP і TLS рукостискань. <code>httpx.Client</code> при створенні ще й будує SSL-контекст і завантажує сертифікати.</li>
+<li>Відповідь зі <code>status_code == 404</code>; виняток — лише після <code>raise_for_status()</code>. <code>httpx</code> за замовчуванням не йде за перенаправленням і повертає саму відповідь <code>301</code>.</li>
+<li><code>429</code>, <code>502</code>, <code>503</code>, <code>504</code>, помилки з'єднання й тайм-аути — і лише для ідемпотентних методів. Тайм-аут не означає, що сервер нічого не зробив: замовлення могло створитися, і повтор створить дубль.</li>
+<li>Щоб клієнти, які впали одночасно, не повторювали теж одночасно — хвилею, яка знову покладе сервер.</li>
+<li><code>requests</code> декодує як ISO-8859-1 («Íîâèíè»), <code>httpx</code> — як UTF-8 («������»). Задати кодування явно: <code>response.encoding = "cp1251"</code> або <code>response.content.decode("cp1251")</code>.</li>
+<li>Близько 10 с, 0,5 с і 2 с. <code>gather</code> без ліміту відкриває стільки з'єднань, скільки задач: для чужого сайту це схоже на атаку, а в себе впираєшся в ліміт файлів.</li>
+<li>Мок відповідає готовим об'єктом без мережі: код клієнта виконується, але з'єднання, заголовки на дроті, декодування байтів і тайм-аути — ні. Локальний сервер перевіряє все це по-справжньому.</li>
+</ol>
+</details>
+<h2 id="next">Що далі<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>
+<p><a href="../legacy_case/">Кейс: API v1 → v2</a> — що було не так у першій версії Meteo API, що змінила друга і як перевести клієнтів, нікого не зламавши.</p>
+<p><strong>Джерела:</strong> requests — <a href="https://requests.readthedocs.io/en/latest/user/quickstart/">Quickstart</a>, <a href="https://requests.readthedocs.io/en/latest/user/advanced/">Advanced Usage</a> (Session Objects, Timeouts, Body Content Workflow); httpx — <a href="https://www.python-httpx.org/quickstart/">QuickStart</a>, <a href="https://www.python-httpx.org/advanced/clients/">Clients</a>, <a href="https://www.python-httpx.org/advanced/timeouts/">Timeouts</a>, <a href="https://www.python-httpx.org/advanced/resource-limits/">Resource Limits</a>, <a href="https://www.python-httpx.org/advanced/transports/">Transports</a>, <a href="https://www.python-httpx.org/async/">Async Support</a>, <a href="https://www.python-httpx.org/compatibility/">Requests Compatibility</a>; aiohttp — <a href="https://docs.aiohttp.org/en/stable/client_quickstart.html">Client Quickstart</a>, <a href="https://docs.aiohttp.org/en/stable/client_advanced.html">Advanced Client Usage</a>, <a href="https://docs.aiohttp.org/en/stable/testing.html">Testing</a>; <a href="https://www.rfc-editor.org/rfc/rfc9110">RFC 9110 — HTTP Semantics</a> (§9.2 безпечні й ідемпотентні методи, §15.4 перенаправлення, §10.2.3 <code>Retry-After</code>); <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Retry-After">MDN — Retry-After</a>; Python — <a href="https://docs.python.org/3/library/asyncio-task.html#asyncio.timeout"><code>asyncio.timeout</code></a>, <a href="https://docs.python.org/3/library/asyncio-sync.html#asyncio.Semaphore"><code>asyncio.Semaphore</code></a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Футер" >
+        
+          
+          <a href="../api_styles/" class="md-footer__link md-footer__link--prev" aria-label="Назад: Які бувають API">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                Які бувають API
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../legacy_case/" class="md-footer__link md-footer__link--next" aria-label="Вперед: Кейс: API v1 → v2">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                Кейс: API v1 → v2
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.path", "navigation.prune", "navigation.footer", "toc.follow", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0456\u0439\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u0421\u043a\u043e\u043f\u0456\u044e\u0432\u0430\u0442\u0438 \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0429\u0435 1 \u0437\u0431\u0456\u0433 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.more.other": "\u0429\u0435 # \u0437\u0431\u0456\u0433\u0456\u0432 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.none": "\u0417\u0431\u0456\u0433\u0456\u0432 \u043d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0437\u0431\u0456\u0433", "search.result.other": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e # \u0437\u0431\u0456\u0433\u0456\u0432", "search.result.placeholder": "\u0420\u043e\u0437\u043f\u043e\u0447\u043d\u0456\u0442\u044c \u043f\u0438\u0441\u0430\u0442\u0438 \u0434\u043b\u044f \u043f\u043e\u0448\u0443\u043a\u0443", "search.result.term.missing": "\u041d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e \u0437\u0430\u043f\u0438\u0442\u0443", "select.version": "\u041e\u0431\u0440\u0430\u0442\u0438 \u0432\u0435\u0440\u0441\u0456\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,2300 @@
+
+<!doctype html>
+<html lang="uk" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="FastAPI від типів і Pydantic до Docker, Compose і CI/CD — на прикладі новинного агрегатора">
+      
+      
+      
+        <link rel="canonical" href="https://nikoriakviktor.github.io/news_hub/deep_dive/data_model/">
+      
+      
+        <link rel="prev" href="../request_lifecycle/">
+      
+      
+        <link rel="next" href="../patterns/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Модель даних і Redis - News Hub — книга FastAPI</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#модель-даних-і-redis" class="md-skip">
+          Перейти до змісту
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Хедер">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-header__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            News Hub — книга FastAPI
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Модель даних і Redis
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Пошук" placeholder="Пошук" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Шукати">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистити" aria-label="Очистити" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Пошук розпочато
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Головна
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../00_getting_started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Як користуватися
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../01_http_and_rest/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Книга FastAPI
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorials/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Zero to Hero
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  News Hub Deep Dive
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../labs/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Практика
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Довідник
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../TEACHING_GUIDE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Викладачу
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Навігація" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-nav__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    News Hub — книга FastAPI
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Головна
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../00_getting_started/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Як користуватися
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    
+  
+  
+  
+    <a href="../../01_http_and_rest/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Книга FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../tutorials/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zero to Hero
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    News Hub Deep Dive
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    News Hub Deep Dive
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архітектура
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../request_lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Життєвий цикл запиту
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Модель даних і Redis
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Модель даних і Redis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#task" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Задача
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Таблиці
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Таблиці">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#news-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Стовпці news
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#news-forms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Одна новина — чотири форми
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migrations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Міграції
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#indexes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Індекси і запити, яким вони потрібні
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dialects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SQLite і PostgreSQL — що відрізняється
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Redis: що там лежить
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Redis: що там лежить">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cache-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Версія кешу: від 0 до 7
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#job-hash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Статус задачі — hash
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redis-down" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Якщо Redis недоступний
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Каталог патернів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../test_map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Карта тестів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Як розширювати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../labs/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Практика
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../reference/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Довідник
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TEACHING_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Викладачу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#task" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Задача
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Таблиці
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Таблиці">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#news-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Стовпці news
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#news-forms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Одна новина — чотири форми
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migrations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Міграції
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#indexes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Індекси і запити, яким вони потрібні
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dialects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SQLite і PostgreSQL — що відрізняється
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Redis: що там лежить
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Redis: що там лежить">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cache-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Версія кешу: від 0 до 7
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#job-hash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Статус задачі — hash
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redis-down" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Якщо Redis недоступний
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Навігація" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Головна
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    News Hub Deep Dive
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="модель-даних-і-redis">Модель даних і Redis<a class="headerlink" href="#модель-даних-і-redis" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>News Hub Deep Dive · сторінка 3 з 6. Код: <a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/news_hub/tables.py"><code>news_hub/tables.py</code></a>,
+<a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/news_hub/repository.py"><code>news_hub/repository.py</code></a>,
+<a href="https://github.com/NikoriakViktor/news_hub/tree/main/steps/12_ci_cd/migrations/versions"><code>migrations/versions/</code></a>,
+<a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/news_hub/cache.py"><code>news_hub/cache.py</code></a>.
+Теорія: <a href="../../05_databases/">Частина V. Бази даних</a>, <a href="../../tutorials/03_sqlalchemy_alembic/">крок 3</a>.</p>
+</blockquote>
+<h2 id="task">Задача<a class="headerlink" href="#task" title="Permanent link">&para;</a></h2>
+<p>Зібрати в одному місці <strong>усе, що News Hub зберігає</strong>: три таблиці в базі й близько десятка видів ключів у Redis.
+Для кожного — хто пише, хто читає, скільки живе і з якого кроку з'явилось.</p>
+<h2 id="tables">Таблиці<a class="headerlink" href="#tables" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>erDiagram
+    news {
+        int id PK
+        string url UK "500, унікальний"
+        string title "300"
+        string source "100, індекс"
+        string lang "2, індекс"
+        string category "100, індекс"
+        time published_time "NULL"
+        datetime scraped_at "now()"
+        string summary "300, NULL"
+        string ai_category "30, NULL, індекс"
+        string sentiment "10, NULL, індекс"
+        json keywords "NULL"
+        datetime analyzed_at "NULL"
+    }
+    sources {
+        int id PK
+        string url UK "500, унікальний"
+        string name "100"
+        datetime created_at "now()"
+    }
+    subscriptions {
+        int id PK
+        bigint chat_id "індекс"
+        string keyword "40"
+        datetime created_at "now()"
+    }
+    alembic_version {
+        string version_num PK "0004"
+    }</code></pre>
+<p>Зовнішніх ключів між таблицями <strong>немає</strong>, і це не недогляд:</p>
+<ul>
+<li><code>sources</code> — лише адреси RSS, які додав адмін; новина з RSS не пам'ятає, з якого джерела прийшла (<code>news.source</code> —
+  домен з URL, <code>rbc.ua</code>, <code>pravda.com.ua</code>);</li>
+<li><code>subscriptions</code> прив'язані до чату Telegram, а не до новини: збіг «слово ↔ заголовок» рахується в Python
+  (<code>bot/formatting.py:54</code> <code>matches</code>) щоразу після збору, а не зберігається.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Таблиця</th>
+<th>Модель</th>
+<th>Міграція</th>
+<th>Крок</th>
+<th>Хто пише</th>
+<th>Хто читає</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>news</code></td>
+<td><code>NewsRow</code> (<code>tables.py:20</code>)</td>
+<td><code>0001</code>, <code>0002</code></td>
+<td>3, 7</td>
+<td><code>NewsRepository.insert_new</code> (збір: API, фонова задача, RSS, <code>/scrape</code>), <code>create</code>, <code>PATCH</code>, <code>save_analysis</code>, <code>delete</code>, <code>clear</code></td>
+<td><code>find</code>, <code>search</code>, <code>stats</code>, <code>count</code>, <code>latest</code> (бот), <code>find_unanalyzed</code> (задача аналізу)</td>
+</tr>
+<tr>
+<td><code>sources</code></td>
+<td><code>SourceRow</code> (<code>tables.py:43</code>)</td>
+<td><code>0003</code></td>
+<td>8</td>
+<td><code>SourceRepository.create</code>, <code>delete</code></td>
+<td><code>all</code>, <code>get</code> → <code>POST /api/sources/{id}/fetch</code></td>
+</tr>
+<tr>
+<td><code>subscriptions</code></td>
+<td><code>SubscriptionRow</code> (<code>tables.py:56</code>)</td>
+<td><code>0004</code></td>
+<td>9</td>
+<td><code>SubscriptionRepository.subscribe</code>, <code>unsubscribe</code>, <code>remove_chat</code> (чат заблокував бота)</td>
+<td><code>for_chat</code>, <code>by_chat</code> (розсилка)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="news-columns">Стовпці <code>news</code><a class="headerlink" href="#news-columns" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Стовпець</th>
+<th>Тип</th>
+<th>NULL</th>
+<th>Звідки значення</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>INTEGER</code> PK</td>
+<td>ні</td>
+<td>база; росте разом із часом збору — тому <code>latest</code> сортує за <code>id DESC</code> (<code>repository.py:85</code>)</td>
+</tr>
+<tr>
+<td><code>url</code></td>
+<td><code>VARCHAR(500)</code>, <code>UNIQUE</code></td>
+<td>ні</td>
+<td><code>NewsItem.url</code>; унікальність — опора <code>ON CONFLICT (url) DO NOTHING</code> і <code>409</code></td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td><code>VARCHAR(300)</code></td>
+<td>ні</td>
+<td><code>NewsItem.title</code>, 10–300 символів</td>
+</tr>
+<tr>
+<td><code>source</code></td>
+<td><code>VARCHAR(100)</code>, індекс</td>
+<td>ні</td>
+<td>домен з URL без <code>www.</code> (<code>models.py:66</code>)</td>
+</tr>
+<tr>
+<td><code>lang</code></td>
+<td><code>VARCHAR(2)</code>, індекс</td>
+<td>ні</td>
+<td><code>/ukr/</code> → <code>uk</code>, <code>/rus/</code> → <code>ru</code>; pravda.com.ua — завжди <code>uk</code></td>
+</tr>
+<tr>
+<td><code>category</code></td>
+<td><code>VARCHAR(100)</code>, індекс</td>
+<td>ні</td>
+<td>розділ у шляху URL (<code>CATEGORIES</code>, <code>models.py:22</code>) або з RSS <code>&lt;category&gt;</code>; змінює <code>PATCH</code></td>
+</tr>
+<tr>
+<td><code>published_time</code></td>
+<td><code>TIME</code></td>
+<td>так</td>
+<td>«HH:MM» зі стрічки або час з ISO <code>&lt;time datetime&gt;</code></td>
+</tr>
+<tr>
+<td><code>scraped_at</code></td>
+<td><code>DATETIME(timezone=True)</code>, <code>server_default now()</code></td>
+<td>ні</td>
+<td>база в момент INSERT</td>
+</tr>
+<tr>
+<td><code>summary</code>, <code>ai_category</code>, <code>sentiment</code>, <code>keywords</code>, <code>analyzed_at</code></td>
+<td><code>VARCHAR(300)</code>, <code>VARCHAR(30)</code> індекс, <code>VARCHAR(10)</code> індекс, <code>JSON</code>, <code>DATETIME(tz)</code></td>
+<td>так</td>
+<td><code>save_analysis</code> (<code>repository.py:132</code>); <code>NULL</code> — ще не аналізували</td>
+</tr>
+</tbody>
+</table>
+<p>Аналіз LLM лежить у тому самому рядку, а не в окремій таблиці: одна новина — один аналіз, повторний аналіз
+(<code>?force=true</code>) перезаписує попередній. Окрема таблиця знадобилась би для історії аналізів чи кількох моделей
+на одну новину — зараз цього немає.</p>
+<h3 id="news-forms">Одна новина — чотири форми<a class="headerlink" href="#news-forms" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>flowchart LR
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    RAW["RawNews&lt;br&gt;TypedDict, лише рядки"] --&gt; V{"NewsItem&lt;br&gt;Pydantic"}
+    V --&gt;|"ні"| REJ["Rejected&lt;br&gt;raw + errors"]
+    V --&gt;|"так"| VAL["news_values()&lt;br&gt;dict стовпців"]
+    VAL --&gt; ROW["NewsRow&lt;br&gt;рядок таблиці"]
+    ROW --&gt; OUT["NewsOut&lt;br&gt;відповідь API"]
+    ROW --&gt; NEW["NewNews&lt;br&gt;id, title, url"]
+
+    class RAW,VAL,NEW step
+    class V decision
+    class ROW,OUT success
+    class REJ error</code></pre>
+<table>
+<thead>
+<tr>
+<th>Форма</th>
+<th>Де</th>
+<th>Навіщо окремо</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>RawNews</code></td>
+<td><code>parser.py:31</code></td>
+<td>так дані дає HTML чи RSS: рядки, ще не перевірені; будь-яке джерело повертає саме його</td>
+</tr>
+<tr>
+<td><code>NewsItem</code></td>
+<td><code>models.py:48</code></td>
+<td>перевірена новина: або вона правильна, або її немає (<code>ValidationError</code> → <code>Rejected</code>)</td>
+</tr>
+<tr>
+<td><code>NewsRow</code></td>
+<td><code>tables.py:20</code></td>
+<td>рядок таблиці: <code>id</code>, час збору, аналіз — того, чого в HTML немає</td>
+</tr>
+<tr>
+<td><code>NewsOut</code></td>
+<td><code>api.py:280</code></td>
+<td><code>NewsItem</code> + поля бази; <code>from_attributes=True</code> — будується прямо з <code>NewsRow</code></td>
+</tr>
+<tr>
+<td><code>NewNews</code></td>
+<td><code>repository.py:54</code></td>
+<td>лише те, що потрібно для сповіщення: результат <code>RETURNING id, title, url</code></td>
+</tr>
+</tbody>
+</table>
+<p>Чому моделей кілька, а не одна на все, — <a href="../../tutorials/03_sqlalchemy_alembic/engine_and_table/">крок 3</a>.</p>
+<h2 id="migrations">Міграції<a class="headerlink" href="#migrations" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$ alembic history
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>0003 -&gt; 0004 (head), subscriptions — підписки чатів Telegram на ключові слова (крок 9)
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>0002 -&gt; 0003, sources — RSS-джерела, які додає адмін (крок 8)
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>0001 -&gt; 0002, llm analysis — колонки аналізу LLM у таблиці news (крок 7)
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;base&gt; -&gt; 0001, news table — таблиця новин агрегатора (крок 3)
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Міграція</th>
+<th>Що робить</th>
+<th>Ручні правки після <code>--autogenerate</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0001_news_table.py</code></td>
+<td>таблиця <code>news</code> (8 стовпців), <code>UNIQUE (url)</code>, індекси <code>ix_news_category</code>, <code>ix_news_lang</code>, <code>ix_news_source</code></td>
+<td><code>server_default=sa.text('now()')</code> (лише PostgreSQL) → <code>sa.func.now()</code> — кожна база отримує свій SQL</td>
+</tr>
+<tr>
+<td><code>0002_llm_analysis.py</code></td>
+<td>5 стовпців аналізу, усі <code>nullable=True</code>; індекси <code>ix_news_ai_category</code>, <code>ix_news_sentiment</code></td>
+<td>наявні рядки не переписуються: лишаються з <code>NULL</code>; <code>batch_alter_table</code> — для SQLite</td>
+</tr>
+<tr>
+<td><code>0003_sources_table.py</code></td>
+<td>таблиця <code>sources</code>, <code>UNIQUE (url)</code></td>
+<td><code>server_default</code> → <code>sa.func.now()</code></td>
+</tr>
+<tr>
+<td><code>0004_subscriptions_table.py</code></td>
+<td>таблиця <code>subscriptions</code>, <code>UNIQUE (chat_id, keyword)</code> з іменем <code>uq_subscription_chat_keyword</code>, індекс <code>ix_subscriptions_chat_id</code></td>
+<td><code>chat_id</code> — <code>BigInteger</code>: id груп Telegram (<code>-100…</code>) не вміщаються в 32 біти</td>
+</tr>
+</tbody>
+</table>
+<p><code>migrations/env.py</code> бере адресу бази з <code>news_hub.db.DATABASE_URL</code>, а не з <code>alembic.ini</code>: застосунок і міграції
+завжди дивляться в ту саму базу. Для SQLite вмикається <code>render_as_batch</code> — там немає <code>ALTER COLUMN</code>, і Alembic
+перебудовує таблицю копіюванням.</p>
+<p>Застосування на чистій SQLite-базі — справжній вивід:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>$ alembic upgrade head
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>INFO  [alembic.runtime.migration] Running upgrade  -&gt; 0001, news table — таблиця новин агрегатора (крок 3)
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>INFO  [alembic.runtime.migration] Running upgrade 0001 -&gt; 0002, llm analysis — колонки аналізу LLM у таблиці news (крок 7)
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>INFO  [alembic.runtime.migration] Running upgrade 0002 -&gt; 0003, sources — RSS-джерела, які додає адмін (крок 8)
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>INFO  [alembic.runtime.migration] Running upgrade 0003 -&gt; 0004, subscriptions — підписки чатів Telegram на ключові слова (крок 9)
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>$ alembic check
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>No new upgrade operations detected.
+</code></pre></div>
+<p><code>alembic check</code> порівнює <code>tables.py</code> з базою після міграцій: «No new upgrade operations» — моделі й міграції
+збігаються. Той самий результат — на PostgreSQL 16 (так це робить job <code>postgres</code> у CI).</p>
+<p>Що в базі після міграцій (SQLite, <code>sqlite_master</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="p">(</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="n">id</span><span class="w"> </span><span class="nb">INTEGER</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="n">url</span><span class="w"> </span><span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="n">title</span><span class="w"> </span><span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">300</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="k">source</span><span class="w"> </span><span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="n">lang</span><span class="w"> </span><span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="n">category</span><span class="w"> </span><span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="n">published_time</span><span class="w"> </span><span class="k">TIME</span><span class="p">,</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="n">scraped_at</span><span class="w"> </span><span class="n">DATETIME</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">CURRENT_TIMESTAMP</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="n">summary</span><span class="w"> </span><span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">300</span><span class="p">),</span><span class="w"> </span><span class="n">ai_category</span><span class="w"> </span><span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span><span class="w"> </span><span class="n">sentiment</span><span class="w"> </span><span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span><span class="w"> </span><span class="n">keywords</span><span class="w"> </span><span class="n">JSON</span><span class="p">,</span><span class="w"> </span><span class="n">analyzed_at</span><span class="w"> </span><span class="n">DATETIME</span><span class="p">,</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="p">),</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span><span class="k">UNIQUE</span><span class="w"> </span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">)</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">subscriptions</span><span class="w"> </span><span class="p">(</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">    </span><span class="n">id</span><span class="w"> </span><span class="nb">INTEGER</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">    </span><span class="n">chat_id</span><span class="w"> </span><span class="nb">BIGINT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">    </span><span class="n">keyword</span><span class="w"> </span><span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">    </span><span class="n">created_at</span><span class="w"> </span><span class="n">DATETIME</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">CURRENT_TIMESTAMP</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">    </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="p">),</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">    </span><span class="k">CONSTRAINT</span><span class="w"> </span><span class="n">uq_subscription_chat_keyword</span><span class="w"> </span><span class="k">UNIQUE</span><span class="w"> </span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span><span class="w"> </span><span class="n">keyword</span><span class="p">)</span>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="p">)</span>
+</code></pre></div>
+<p>Стовпці <code>0002</code> дописано в кінець рядка <code>scraped_at</code> — так виглядає <code>ALTER TABLE … ADD COLUMN</code> у SQLite.
+<code>sa.func.now()</code> став <code>CURRENT_TIMESTAMP</code> — це і є «кожна база отримує свій SQL».</p>
+<div class="admonition warning">
+<p class="admonition-title">Тести не застосовують міграцій</p>
+<p>Тестова база створюється з <code>Base.metadata.create_all</code> (<code>tests/integration/conftest.py</code>, <code>TestDatabase.create_tables</code>),
+а не <code>alembic upgrade head</code>. Тож зелений <code>pytest</code> нічого не каже про міграції. Їх перевіряють три інші
+місця: <code>alembic upgrade head</code> + <code>alembic check</code> у job <code>postgres</code>, тест образу
+<code>tests/docker/test_image.py::test_migrations_run_on_a_volume</code> і сервіс <code>migrate</code> у smoke-тесті Compose.
+Як додати міграцію і нічого з цього не пропустити — <a href="../extending/#migration">Як розширювати</a>.</p>
+</div>
+<h2 id="indexes">Індекси і запити, яким вони потрібні<a class="headerlink" href="#indexes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Індекс</th>
+<th>Стовпці</th>
+<th>Який запит його використовує</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>UNIQUE (url)</code> у <code>news</code></td>
+<td><code>url</code></td>
+<td><code>INSERT … ON CONFLICT (url) DO NOTHING</code> (<code>repository.py:81</code>), <code>409</code> у <code>POST /api/news</code></td>
+</tr>
+<tr>
+<td><code>ix_news_source</code>, <code>ix_news_lang</code>, <code>ix_news_category</code></td>
+<td>по одному</td>
+<td>фільтри <code>GET /api/news?source=&amp;lang=&amp;category=</code> (<code>repository.py:94</code>) і <code>GROUP BY</code> у <code>/api/news/stats</code></td>
+</tr>
+<tr>
+<td><code>ix_news_ai_category</code>, <code>ix_news_sentiment</code></td>
+<td>по одному</td>
+<td>фільтри <code>?ai_category=&amp;sentiment=</code> і статистика за аналізом</td>
+</tr>
+<tr>
+<td><code>UNIQUE (url)</code> у <code>sources</code></td>
+<td><code>url</code></td>
+<td><code>409</code> у <code>POST /api/sources</code></td>
+</tr>
+<tr>
+<td><code>uq_subscription_chat_keyword</code></td>
+<td><code>chat_id, keyword</code></td>
+<td><code>ON CONFLICT (chat_id, keyword) DO NOTHING</code> — повторна підписка нічого не додає (<code>repository.py:165</code>)</td>
+</tr>
+<tr>
+<td><code>ix_subscriptions_chat_id</code></td>
+<td><code>chat_id</code></td>
+<td><code>for_chat</code>, <code>unsubscribe</code>, <code>remove_chat</code></td>
+</tr>
+</tbody>
+</table>
+<p>Індексу на <code>title</code> немає: пошук <code>GET /api/news/search</code> — <code>lower(title) LIKE lower('%' || :q || '%')</code>
+(<code>repository.py:114</code>), а <code>LIKE</code> з <code>%</code> спереду звичайний B-tree однаково не використовує. Для кількох тисяч
+новин повний перегляд — мілісекунди; для мільйонів знадобився б повнотекстовий пошук PostgreSQL.</p>
+<h2 id="dialects">SQLite і PostgreSQL — що відрізняється<a class="headerlink" href="#dialects" title="Permanent link">&para;</a></h2>
+<p>Код один, бази дві: SQLite — локально, у тестах і в образі без <code>DATABASE_URL</code>; PostgreSQL — у Compose і в
+job <code>postgres</code> CI. Різниця сховалась у чотирьох місцях:</p>
+<table>
+<thead>
+<tr>
+<th>Що</th>
+<th>Де</th>
+<th>Чому</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>insert(...).on_conflict_do_nothing()</code></td>
+<td><code>repository.py:79–80</code>, <code>:162–163</code></td>
+<td><code>ON CONFLICT</code> — діалектний синтаксис: <code>postgresql.insert</code> чи <code>sqlite.insert</code> за <code>dialect.name</code></td>
+</tr>
+<tr>
+<td><code>lower()</code> з Unicode</td>
+<td><code>db.py:32</code> <code>_unicode_lower</code></td>
+<td>вбудований <code>lower()</code> SQLite знає лише латиницю: <code>lower('ЗЕЛЕНСЬК') == 'ЗЕЛЕНСЬК'</code></td>
+</tr>
+<tr>
+<td>пул з'єднань</td>
+<td><code>db.py:26</code></td>
+<td><code>pool_size=10, max_overflow=20, pool_pre_ping=True</code> — лише для PostgreSQL</td>
+</tr>
+<tr>
+<td>міграції</td>
+<td><code>migrations/env.py</code></td>
+<td><code>render_as_batch</code> лише для SQLite</td>
+</tr>
+</tbody>
+</table>
+<p>Ще одна різниця видна у відповіді API. <code>DateTime(timezone=True)</code> у PostgreSQL — <code>timestamp with time zone</code>, а SQLite
+пояса не зберігає. У запуску на SQLite свіжий аналіз повернув <code>"analyzed_at":"2026-11-12T05:01:56.513569Z"</code>
+(значення з Python), а той самий аналіз, прочитаний з бази наступним запитом, — <code>"2026-11-12T05:01:56.513569"</code>,
+без <code>Z</code>; <code>scraped_at</code> з SQLite теж без пояса. Клієнт, який порівнює час, має це враховувати — або працювати з
+PostgreSQL, як у Compose.</p>
+<h2 id="redis">Redis: що там лежить<a class="headerlink" href="#redis" title="Permanent link">&para;</a></h2>
+<p>Redis у News Hub — не одна функція, а шість: кеш стрічки, кеш аналізу, лічильники лімітів, статус задач, стан
+breaker і пам'ять про доставки webhook. Ось що лежало в ньому після <a href="../request_lifecycle/#run">запуску <code>t00</code>–<code>t22</code></a> (<code>redis-cli --scan</code>, TTL — у секундах
+на момент перегляду):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>job:81a551dffb11 type=hash ttl=86395
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>job:a8f5ae3c308f type=hash ttl=86396
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>llm:analysis:b5bf0e76fdebde35 type=string ttl=604794
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>login:fail:8c6976e5b5410415bde908bd4dee15df type=string ttl=897
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>news:v0:list:51d1e21f0187 type=string ttl=53
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>news:v1:list:51d1e21f0187 type=string ttl=53
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>news:v2:list:51d1e21f0187 type=string ttl=53
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>news:version type=string ttl=-1
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>rate:analyze:127.0.0.1 type=string ttl=52
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>rate:login:127.0.0.1 type=string ttl=291
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>rate:scrape:127.0.0.1 type=string ttl=51
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>webhook:delivery:dd0123456789abcd type=string ttl=593
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Ключ</th>
+<th>Тип</th>
+<th>TTL</th>
+<th>Хто пише</th>
+<th>Хто читає</th>
+<th>Крок</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>news:version</code></td>
+<td>рядок-число</td>
+<td>немає</td>
+<td><code>NewsCache.invalidate</code> — <code>INCR</code> (<code>cache.py:61</code>)</td>
+<td><code>NewsCache.key</code> (<code>cache.py:50</code>)</td>
+<td>4</td>
+</tr>
+<tr>
+<td><code>news:v&lt;версія&gt;:list:&lt;sha1[:12]&gt;</code></td>
+<td>рядок JSON</td>
+<td>60 (<code>NewsCache.TTL</code>)</td>
+<td><code>list_news</code> на промаху</td>
+<td><code>list_news</code></td>
+<td>4</td>
+</tr>
+<tr>
+<td><code>news:v&lt;версія&gt;:stats:&lt;sha1[:12]&gt;</code></td>
+<td>рядок JSON</td>
+<td>60</td>
+<td><code>news_stats</code> на промаху</td>
+<td><code>news_stats</code></td>
+<td>4</td>
+</tr>
+<tr>
+<td><code>rate:scrape:&lt;адреса&gt;</code>, <code>rate:analyze:&lt;адреса&gt;</code></td>
+<td>лічильник</td>
+<td>60 (<code>RATE_LIMIT_WINDOW</code>)</td>
+<td><code>RateLimiter.hit</code> — <code>INCR</code> + <code>EXPIRE NX</code> в одній транзакції (<code>middleware.py:114</code>); ліміти — таблиця <code>LIMITS</code> (<code>middleware.py:50</code>)</td>
+<td>те саме</td>
+<td>4, 7</td>
+</tr>
+<tr>
+<td><code>rate:scrape:tg&lt;user_id&gt;</code></td>
+<td>лічильник</td>
+<td>60</td>
+<td><code>/scrape</code> у боті — той самий <code>RateLimiter</code> і <code>LIMITS["scrape"]</code> (<code>bot/handlers.py:144</code>)</td>
+<td>те саме</td>
+<td>9</td>
+</tr>
+<tr>
+<td><code>rate:login:&lt;адреса&gt;</code></td>
+<td>лічильник</td>
+<td>300 (<code>LOGIN_RATE_WINDOW</code>)</td>
+<td>те саме — <strong>усі</strong> спроби входу з адреси</td>
+<td>те саме</td>
+<td>8</td>
+</tr>
+<tr>
+<td><code>login:fail:&lt;sha256(ім'я)[:32]&gt;</code></td>
+<td>лічильник</td>
+<td>900 (<code>LOGIN_FAIL_WINDOW</code>), від першої невдачі</td>
+<td><code>LoginGuard.failed</code> — <code>INCR</code> + <code>EXPIRE NX</code> (<code>security.py:147</code>); успішний вхід — <code>DEL</code></td>
+<td><code>LoginGuard.retry_after</code>: ≥ 20 (<code>LOGIN_FAIL_LIMIT</code>) → <code>429</code></td>
+<td>8</td>
+</tr>
+<tr>
+<td><code>rate:bot:tg&lt;user_id&gt;</code></td>
+<td>лічильник</td>
+<td>60 (<code>BOT_RATE_WINDOW</code>)</td>
+<td><code>RateLimitMiddleware</code> бота (<code>bot/middlewares.py:26</code>)</td>
+<td>те саме</td>
+<td>9</td>
+</tr>
+<tr>
+<td><code>job:&lt;12 hex&gt;</code></td>
+<td>hash</td>
+<td>86400 (<code>JOB_TTL</code>)</td>
+<td><code>JobStore</code> — <code>HSET</code> + <code>EXPIRE</code> у транзакції (<code>jobs.py:76</code>)</td>
+<td><code>GET /api/scrape/jobs/{id}</code>, <code>GET /api/analyze/jobs/{id}</code></td>
+<td>4, 7</td>
+</tr>
+<tr>
+<td><code>llm:analysis:&lt;sha256[:16]&gt;</code></td>
+<td>рядок JSON</td>
+<td>604800 (7 днів)</td>
+<td><code>AnalysisCache.set</code> (<code>analysis.py:93</code>)</td>
+<td><code>AnalysisCache.get</code></td>
+<td>7</td>
+</tr>
+<tr>
+<td><code>cb:llm:failures</code></td>
+<td>лічильник</td>
+<td>300 (<code>window</code>), лише новому ключу</td>
+<td><code>CircuitBreaker.record_failure</code> (<code>llm.py:249</code>)</td>
+<td>те саме</td>
+<td>7</td>
+</tr>
+<tr>
+<td><code>cb:llm:open</code></td>
+<td><code>1</code></td>
+<td>300 (<code>cooldown</code>)</td>
+<td><code>record_failure</code> після 5 збоїв</td>
+<td><code>retry_after</code> — <code>TTL</code> ключа = скільки ще чекати</td>
+<td>7</td>
+</tr>
+<tr>
+<td><code>webhook:delivery:&lt;id доставки&gt;</code></td>
+<td><code>job_id</code></td>
+<td>600 (2 × 5 хв)</td>
+<td><code>claim_delivery</code> — <code>SET … NX EX</code> (<code>webhooks.py:79</code>)</td>
+<td>те саме: ключ уже є → повтор, відповідь <code>200</code> з цим завданням</td>
+<td>8</td>
+</tr>
+</tbody>
+</table>
+<p><code>cb:llm:*</code>, <code>rate:bot:*</code> і <code>rate:scrape:tg*</code> у запуску не з'явились: збоїв провайдера не було, бот не працював.
+Два значення з запуску: <code>webhook:delivery:dd0123456789abcd</code> = <code>a8f5ae3c308f</code> — <code>job_id</code> з <code>t19</code>, яке отримали
+й повтори <code>t20</code>, <code>t21</code>; <code>login:fail:8c6976e5…</code> = <code>2</code> — дві невдалі спроби <code>t22</code>. Ім'я в ключі — хешем
+(<code>sha256("admin")[:32]</code> = <code>8c6976e5b5410415bde908bd4dee15df</code>): у Redis не потрапляє довільний рядок від клієнта.</p>
+<p>Раніше ключем повтору webhook був сам підпис (<code>webhook:seen:sha256=…</code>, значення <code>1</code>, повтор → <code>409</code>). Новий
+підпис на той самий запит — і повтор проходив; новий ключ тримає id доставки і <code>job_id</code>, тому повтор
+отримує відповідь першої доставки (<a href="../request_lifecycle/#webhook-replay">Життєвий цикл → повтор webhook</a>).</p>
+<h3 id="cache-version">Версія кешу: від 0 до 7<a class="headerlink" href="#cache-version" title="Permanent link">&para;</a></h3>
+<p>Кеш стрічки не видаляється за шаблоном (<code>KEYS news:*</code> блокує Redis) — кожен запис просто збільшує
+<code>news:version</code>, і старі ключі перестають читатися. У запуску версія дійшла до <code>7</code>, і кожне збільшення має автора:</p>
+<table>
+<thead>
+<tr>
+<th>Запит</th>
+<th>Хто збільшив</th>
+<th>Чому</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>t03</code> <code>POST /api/scrape</code></td>
+<td>middleware <code>invalidate_cache</code></td>
+<td><code>path == "/api/scrape"</code>, статус 200</td>
+</tr>
+<tr>
+<td><code>t06</code> <code>PATCH /api/news/1</code></td>
+<td>middleware</td>
+<td><code>path.startswith("/api/news")</code></td>
+</tr>
+<tr>
+<td><code>t11</code> <code>POST /api/news/2/analyze</code></td>
+<td>middleware</td>
+<td>те саме</td>
+</tr>
+<tr>
+<td><code>t12</code> те саме, <code>"source":"db"</code></td>
+<td>middleware</td>
+<td>шлях і статус ті самі — хоча дані не змінились</td>
+</tr>
+<tr>
+<td><code>t13</code> <code>POST /api/scrape/jobs</code></td>
+<td><code>run_scrape_job</code> (<code>jobs.py:96</code>)</td>
+<td>middleware цей шлях не чіпає — фонова задача збільшує сама, після свого COMMIT</td>
+</tr>
+<tr>
+<td><code>t17</code> <code>POST /api/scrape</code></td>
+<td>middleware</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>t19</code> <code>POST /api/webhooks/scrape</code></td>
+<td><code>run_scrape_job</code></td>
+<td>те саме, що <code>t13</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>401</code> (<code>t15</code>, <code>t16</code>, <code>t22</code>), <code>409</code> (<code>t10</code>) і <code>429</code> (<code>t18</code>) версію не змінили: <code>invalidate_cache</code> дивиться на
+<code>status_code &lt; 400</code>. Повтори webhook <code>t20</code> і <code>t21</code> (<code>200</code>) — теж: шлях <code>/api/webhooks/scrape</code> middleware не
+чіпає, а другого збору, який збільшив би версію сам, не було. Рядок <code>t12</code> — дрібна неефективність: повторний <code>analyze</code>, який віддав збережений результат,
+теж скидає кеш, бо middleware не знає, чи щось змінилось.</p>
+<h3 id="job-hash">Статус задачі — hash<a class="headerlink" href="#job-hash" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>$ redis-cli hgetall job:81a551dffb11
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>job_id        81a551dffb11
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>kind          scrape
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>status        done
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>source        snapshot
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>mode          async
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>news_found    168
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>news_saved    0
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>news_analyzed 0
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>news_failed   0
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>created_at    2026-11-12T05:01:56+00:00
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>finished_at   2026-11-12T05:01:56+00:00
+</code></pre></div>
+<p>Усі значення в Redis — рядки (<code>str(value)</code> у <code>jobs.py:79</code>); <code>JobStatus.model_validate</code> перетворює їх назад на
+числа й <code>Literal</code>. <code>news_saved: 0</code> — бо ті самі 168 новин уже зберіг <code>t03</code>.</p>
+<h3 id="redis-down">Якщо Redis недоступний<a class="headerlink" href="#redis-down" title="Permanent link">&para;</a></h3>
+<p>Не всі частини реагують однаково — і це видно з коду:</p>
+<table>
+<thead>
+<tr>
+<th>Хто</th>
+<th>Redis упав</th>
+<th>Де</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/health/ready</code></td>
+<td><code>503</code>, <code>"redis": "&lt;назва винятку&gt;"</code></td>
+<td><code>api.py:385</code></td>
+</tr>
+<tr>
+<td><code>AnalysisCache</code></td>
+<td>промах кешу; аналіз працює, лише дорожче</td>
+<td><code>analysis.py:86</code>, <code>:96</code> — <code>except RedisError</code></td>
+</tr>
+<tr>
+<td><code>CircuitBreaker</code></td>
+<td>вважає себе закритим, LLM викликається</td>
+<td><code>llm.py:244</code></td>
+</tr>
+<tr>
+<td><code>NewsCache</code>, <code>RateLimiter</code>, <code>JobStore</code>, <code>LoginGuard</code>, <code>claim_delivery</code></td>
+<td>виняток не перехоплюється → <code>500</code></td>
+<td><code>cache.py</code>, <code>middleware.py</code>, <code>jobs.py</code>, <code>security.py</code>, <code>webhooks.py</code></td>
+</tr>
+</tbody>
+</table>
+<p>Тобто кеш аналізу й breaker — «прискорення, а не умова роботи», а кеш стрічки й ліміти без Redis не
+працюють. У Compose <code>api</code> стартує лише після <code>redis: service_healthy</code>; якщо Redis зникне вже під час роботи,
+healthcheck <code>api</code> (той самий <code>/health/ready</code>) за кілька перевірок покаже <code>unhealthy</code> у <code>docker compose ps</code>. Сам
+Compose трафік від такого контейнера не відводить — nginx і далі проксіює на <code>api:8000</code>.</p>
+<h2 id="next">Що далі<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>
+<p><a href="../patterns/">Каталог патернів</a> — назви для рішень, які ти щойно бачив: Repository, Unit of Work, Cache-aside…
+і де кожне з них у коді.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Футер" >
+        
+          
+          <a href="../request_lifecycle/" class="md-footer__link md-footer__link--prev" aria-label="Назад: Життєвий цикл запиту">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                Життєвий цикл запиту
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../patterns/" class="md-footer__link md-footer__link--next" aria-label="Вперед: Каталог патернів">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                Каталог патернів
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.path", "navigation.prune", "navigation.footer", "toc.follow", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0456\u0439\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u0421\u043a\u043e\u043f\u0456\u044e\u0432\u0430\u0442\u0438 \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0429\u0435 1 \u0437\u0431\u0456\u0433 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.more.other": "\u0429\u0435 # \u0437\u0431\u0456\u0433\u0456\u0432 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.none": "\u0417\u0431\u0456\u0433\u0456\u0432 \u043d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0437\u0431\u0456\u0433", "search.result.other": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e # \u0437\u0431\u0456\u0433\u0456\u0432", "search.result.placeholder": "\u0420\u043e\u0437\u043f\u043e\u0447\u043d\u0456\u0442\u044c \u043f\u0438\u0441\u0430\u0442\u0438 \u0434\u043b\u044f \u043f\u043e\u0448\u0443\u043a\u0443", "search.result.term.missing": "\u041d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e \u0437\u0430\u043f\u0438\u0442\u0443", "select.version": "\u041e\u0431\u0440\u0430\u0442\u0438 \u0432\u0435\u0440\u0441\u0456\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -4043,6 +4043,18 @@
           
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -4102,6 +4114,24 @@
           
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -4159,6 +4189,24 @@
       
         
           
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
         
       
     
@@ -4477,13 +4525,13 @@
 <h2 id="check">Перевір, що крок робочий<a class="headerlink" href="#check" title="Permanent link">&para;</a></h2>
 <p>З папки <code>steps/09_telegram_bot</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$ pytest -q -p no:cacheprovider
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>........................................................................ [ 21%]
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>........................................................................ [ 20%]
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>...
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>335 passed, 2 deselected in 20.42s
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>355 passed, 2 deselected in 18.00s
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>$ mypy --strict news_hub
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Success: no issues found in 26 source files
 </code></pre></div>
-<p><code>2 deselected</code> — живі тести LLM (<code>tests/live/</code>, лише <code>pytest -m llm</code>). Порівняно з кроком 8 (279 тестів) додалось 56:</p>
+<p><code>2 deselected</code> — живі тести LLM (<code>tests/live/</code>, лише <code>pytest -m llm</code>). Порівняно з кроком 8 (294 тести) додалось 61:</p>
 <table>
 <thead>
 <tr>
@@ -4500,8 +4548,8 @@
 </tr>
 <tr>
 <td><code>tests/integration/test_bot.py</code></td>
-<td>команди через <code>dp.feed_update</code>: ім'я з <code>&lt;</code> і <code>&amp;</code>, <code>/news</code> (найновіші, HTML у заголовку), підписки й ліміт 10, <code>/digest</code> з LLM і без, rate limit, <code>/scrape</code> лише адміну, група з id &gt; 32 біт</td>
-<td>10</td>
+<td>команди через <code>dp.feed_update</code>: ім'я з <code>&lt;</code> і <code>&amp;</code>, <code>/news</code> (найновіші, HTML у заголовку), підписки й ліміт 10, <code>/digest</code> з LLM і без, rate limit, <code>/scrape</code> лише адміну і під лімітом збору API, група з id &gt; 32 біт</td>
+<td>11</td>
 </tr>
 <tr>
 <td><code>tests/integration/test_notify.py</code></td>
@@ -4513,13 +4561,19 @@
 <td>webhook: секрет, 401 (зокрема з JWT адміна), 400, 503 без бота; <code>lifespan</code> ставить webhook і не видаляє його</td>
 <td>7</td>
 </tr>
+<tr>
+<td><code>tests/unit/test_security.py</code> (+4)</td>
+<td><code>BOT_ADMIN_IDS</code> — частина <code>AdminSettings</code>; без адмін-доступу API, не число, не ASCII-цифри → помилка при старті</td>
+<td>4</td>
+</tr>
 </tbody>
 </table>
 <p>Ті самі тести на PostgreSQL і Redis — <code>TEST_DATABASE_URL=postgresql+asyncpg://news:news@localhost:5432/news_hub_test TEST_REDIS_URL=redis://localhost:6379/15 pytest</code> (як у кроці 8). Лише там <code>chat_id</code> групи (<code>-1001234567890</code>) перевіряється на справжньому <code>BIGINT</code>: SQLite зберігає будь-яке ціле.</p>
 <h2 id="checklist">Чекліст<a class="headerlink" href="#checklist" title="Permanent link">&para;</a></h2>
 <ul class="task-list">
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>python -m tests.telegram_twin --port 8081</code> + <code>python -m news_hub.bot</code> з <code>BOT_TOKEN=123456:TEST-TOKEN TELEGRAM_API_URL=http://127.0.0.1:8081</code>: <code>/news</code> через <code>/_twin/say</code> → <code>Новин поки немає.</code></li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>/scrape snapshot</code> від адміна (<code>BOT_ADMIN_IDS</code>) → <code>Зібрано: 168, нових: 168, відхилено: 0; …</code>; від інших → <code>Ця команда — лише для адміністратора.</code></li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>BOT_ADMIN_IDS=1001</code> без <code>JWT_SECRET</code> і <code>ADMIN_PASSWORD_HASH</code> → бот не стартує: <code>RuntimeError: BOT_ADMIN_IDS задано, а адмін-доступ — ні …</code>.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>/scrape snapshot</code> від адміна (<code>BOT_ADMIN_IDS</code>) → <code>Зібрано: 168, нових: 168, відхилено: 0; …</code>; від інших → <code>Ця команда — лише для адміністратора.</code>; шостий <code>/scrape</code> за хвилину → <code>Забагато зборів: 5 за 60 с; …</code></li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>/start</code> з <code>first_name</code> <code>&lt;Олена &amp; Ко&gt;</code> → <code>Привіт, &lt;b&gt;&amp;lt;Олена &amp;amp; Ко&amp;gt;&lt;/b&gt;! …</code>, двійник прийняв повідомлення.</li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>/subscribe Зеленськ</code>, потім <code>POST /api/scrape</code> зі знімком → одне сповіщення <code>🔔 Нові новини за підписками (зеленськ):</code>; повторний збір → нового сповіщення немає.</li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> uvicorn з <code>TELEGRAM_WEBHOOK_URL</code> і <code>TELEGRAM_WEBHOOK_SECRET</code>: <code>getWebhookInfo</code> показує адресу; запит без заголовка → <code>401</code>; після зупинки webhook лишається.</li>
@@ -4549,6 +4603,16 @@
 <td><code>RuntimeError: TELEGRAM_WEBHOOK_SECRET: 32–256 символів …</code></td>
 <td>секрету немає, він короткий або з пробілом</td>
 <td><code>python -c 'import secrets; print(secrets.token_urlsafe(48))'</code></td>
+</tr>
+<tr>
+<td><code>RuntimeError: BOT_ADMIN_IDS задано, а адмін-доступ — ні</code></td>
+<td>адмінів бота задано, а <code>JWT_SECRET</code> і <code>ADMIN_PASSWORD_HASH</code> — ні</td>
+<td><code>python -m news_hub.security</code> і обидва рядки в середовище; адмін один для API і бота</td>
+</tr>
+<tr>
+<td><code>RuntimeError: BOT_ADMIN_IDS — числові id Telegram через кому</code></td>
+<td>у списку <code>@username</code> чи інший не числовий запис</td>
+<td>числовий <code>user_id</code> (його показує, наприклад, журнал <code>/scrape від не-адміна …</code>)</td>
 </tr>
 <tr>
 <td>бот мовчить, у журналі <code>TelegramBadRequest: … can't parse entities</code></td>
@@ -4724,6 +4788,7 @@
 <li>Чому бот у режимі webhook не видаляє webhook при зупинці?</li>
 <li>Чому <code>POST /api/telegram/webhook</code> у <code>PUBLIC</code>, а не під <code>AdminDep</code>? Що його захищає?</li>
 <li>Що перевіряє двійник Telegram, а чого він перевірити не може?</li>
+<li>Чому <code>BOT_ADMIN_IDS</code> читає <code>load_admin_settings</code>, а не <code>load_bot_settings</code>?</li>
 </ol>
 <details class="success">
 <summary>Відповіді</summary>
@@ -4735,6 +4800,7 @@
 <li>Під час перезапуску новий процес уже зареєстрував webhook. Старий, видаляючи його при зупинці, лишив би бота без update.</li>
 <li>У Telegram немає нашого JWT. Захист — секретний заголовок <code>X-Telegram-Bot-Api-Secret-Token</code>, який ми самі передали в <code>setWebhook</code>; порівняння — <code>compare_digest</code>, до розбору тіла. Тест <code>test_wrong_secret_is_401</code> перевіряє, що JWT адміна тут нічого не дає.</li>
 <li>Перевіряє формат викликів бота: метод, чат, текст, HTML за правилами документації, ліміт 4096, реакцію на <code>401</code> / <code>403</code> / <code>429</code> / <code>409</code>. Не перевіряє справжню поведінку Telegram поза цими правилами: доставку на пристрої, реальні ліміти, нові зміни API. Для цього — справжній токен і окремий тестовий бот.</li>
+<li>Щоб правило «хто адмін» було одне. Коли бот мав свій список, <code>/scrape</code> працював і без адмін-доступу API (де запис — <code>503</code>), а помилку в списку видно було лише як <code>ValueError</code>. Тепер адмін-доступ не налаштовано — адмінів немає ніде; <code>BOT_ADMIN_IDS</code> без нього або з не числовим id — <code>RuntimeError</code> при старті. А ліміт збору бот бере з тієї ж <code>LIMITS</code>, що й API.</li>
 </ol>
 </details>
 <h2 id="next">Що далі<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>

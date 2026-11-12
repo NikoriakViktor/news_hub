@@ -1,0 +1,4784 @@
+
+<!doctype html>
+<html lang="uk" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="FastAPI від типів і Pydantic до Docker, Compose і CI/CD — на прикладі новинного агрегатора">
+      
+      
+      
+        <link rel="canonical" href="https://nikoriakviktor.github.io/news_hub/01_http_and_rest/legacy_case/">
+      
+      
+        <link rel="prev" href="../http_clients/">
+      
+      
+        <link rel="next" href="../meteo_architecture/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Кейс: API v1 → v2 - News Hub — книга FastAPI</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#кейс-api-v1--v2" class="md-skip">
+          Перейти до змісту
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Хедер">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-header__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            News Hub — книга FastAPI
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Кейс: API v1 → v2
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Пошук" placeholder="Пошук" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Шукати">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистити" aria-label="Очистити" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Пошук розпочато
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Головна
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../00_getting_started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Як користуватися
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Книга FastAPI
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorials/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Zero to Hero
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../deep_dive/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  News Hub Deep Dive
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../labs/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Практика
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Довідник
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../TEACHING_GUIDE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Викладачу
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Навігація" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-nav__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    News Hub — книга FastAPI
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Головна
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../00_getting_started/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Як користуватися
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Книга FastAPI
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Книга FastAPI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина I. HTTP і дизайн REST API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1" id="__nav_3_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина I. HTTP і дизайн REST API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../http_anatomy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP-запит і відповідь
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../http_methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Методи HTTP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../status_codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Коди відповідей
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rest_principles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Принципи REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../collections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Колекції і пагінація
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../versioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Версіонування API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Формат помилок
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_styles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Які бувають API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../http_clients/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP-клієнти
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Кейс: API v1 → v2
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Кейс: API v1 → v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проблема
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ментальна модель
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Як було: v1 на ділі
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що змінила v2
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v2-gaps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Перша v2 і що в ній виправили
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Міграція клієнтів без поломок
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#meteo-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        У meteo_api
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Типові помилки
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Налагодження
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Безпека
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Питання
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../meteo_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архітектура meteo_api
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../02_typing_and_pydantic/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина II. Типи і Pydantic
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_2" id="__nav_3_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина II. Типи і Pydantic
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/type_hints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Анотації типів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/pydantic_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Моделі Pydantic 2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/strict_mode/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Режими lax і strict
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/validators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Валідатори і computed_field
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/special_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    URL, email і дати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/validation_error/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ValidationError
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pydantic-settings і .env
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/config_dict/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ConfigDict
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/trust_boundary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Межа довіри
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../03_fastapi_core/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина III. Ядро FastAPI
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_3" id="__nav_3_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина III. Ядро FastAPI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/what_is_fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Що таке FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/routes_and_validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Маршрути і валідація
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Залежності і lifespan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/openapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/fastapi_flask_django/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FastAPI, Flask і Django
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/fastapi_vs_drf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FastAPI і DRF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../04_async/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина IV. Async і конкурентність
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_4" id="__nav_3_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина IV. Async і конкурентність
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/concurrency_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Чекати чи рахувати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/asgi_vs_wsgi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ASGI і WSGI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/endpoint_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Три типи ендпоінтів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/blocking_code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Блокуючий код
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/concurrency_patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Паралельні запити
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../05_databases/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_5" id="__nav_3_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/sql_for_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQL для API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/sqlalchemy_async/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLAlchemy async
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/transactions_and_uow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Транзакції й Unit of Work
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/repository_pattern/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Патерн Repository
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/connection_pool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Пул з'єднань
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/migrations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Міграції Alembic
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../06_middleware_cache_jobs/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VI. Middleware, кеш і фонові задачі
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_6" id="__nav_3_6_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VI. Middleware, кеш і фонові задачі
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/middleware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Middleware
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/cors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CORS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/redis_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Redis для API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/caching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Стратегії кешу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/rate_limiting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rate limit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/background_jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фонові задачі й черги
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../07_testing/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VII. Тестування API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_7" id="__nav_3_7_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VII. Тестування API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/pytest_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Основи pytest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/fixtures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фікстури
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/test_doubles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Підміни: mock і fake
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/testing_fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Тестування FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/test_databases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Тести з базою даних
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Якість тестів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../08_security/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VIII. Безпека API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_8" id="__nav_3_8_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VIII. Безпека API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/passwords/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Паролі: хеш, сіль, вартість
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Автентифікація: сесії і JWT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/authorization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Авторизація: ролі, scopes, об'єкти
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/ssrf_and_outbound/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSRF і вихідні запити
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/webhooks_and_signatures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Webhook і підписи
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/secrets_and_headers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Секрети, заголовки, проксі
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/owasp_api_top10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OWASP API Top 10
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_9" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../09_integrations/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина IX. Інтеграції: AI, LLM, Telegram
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_9" id="__nav_3_9_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина IX. Інтеграції: AI, LLM, Telegram
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/ai_dev_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI-агент у проєкті
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/llm_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/llm_reliability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Надійність LLM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/telegram_bots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telegram-бот
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/websockets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WebSocket у FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_10" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../10_docker_and_ci/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина X. Docker, Compose і CI/CD
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_10" id="__nav_3_10_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина X. Docker, Compose і CI/CD
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/docker_image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker-образ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/compose/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker Compose
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/production_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сервер у production
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/ci_cd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD на GitHub Actions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/microservices/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Мікросервіси: коли варто
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../tutorials/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zero to Hero
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../deep_dive/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    News Hub Deep Dive
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../labs/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Практика
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../reference/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Довідник
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TEACHING_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Викладачу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проблема
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ментальна модель
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Як було: v1 на ділі
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що змінила v2
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v2-gaps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Перша v2 і що в ній виправили
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Міграція клієнтів без поломок
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#meteo-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        У meteo_api
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Типові помилки
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Налагодження
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Безпека
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Питання
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Навігація" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Головна
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Книга FastAPI
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Частина I. HTTP і дизайн REST API
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="кейс-api-v1--v2">Кейс: API v1 → v2<a class="headerlink" href="#кейс-api-v1--v2" title="Permanent link">&para;</a></h1>
+<h2 id="problem">Проблема<a class="headerlink" href="#problem" title="Permanent link">&para;</a></h2>
+<p>Перша версія Meteo API працювала: телеграми завантажувались, Streamlit-дашборд їх показував, Swagger відкривався. Але кожен новий клієнт натрапляв на ті самі пастки. «Не знайдено» приходило з кодом <code>200</code>, помилка сервера теж була <code>200</code>, а читання робилося через <code>POST</code>. Id запису ще й був неоднозначним. Виправити це в тій самій версії не можна: дашборд і чужі скрипти вже покладаються саме на таку поведінку.</p>
+<p>Тут розберемо справжню першу версію (<code>legacy/main.py</code>) поруч з другою (<code>meteo_api/app.py</code>): що в v1 було не так, що змінила v2, які вади знайшлися вже в самій v2 і як їх виправили, і як перевести клієнтів зі старого контракту на новий, нікого не зламавши. Самі правила версіонування (сумісні й несумісні зміни, <code>Deprecation</code>, <code>Sunset</code>, <code>410 Gone</code>) — на сторінці <a href="../versioning/">Версіонування API</a>. Тут вони застосовані до живого коду.</p>
+<h2 id="mental-model">Ментальна модель<a class="headerlink" href="#mental-model" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Було (v1)</th>
+<th>Проблема</th>
+<th>Стало (v2)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST /filter_telegrams/</code> з тілом-фільтром</td>
+<td>дієслово в адресі; <code>POST</code> для читання не кешується і не ідемпотентний; половину полів фільтра ніхто не читає</td>
+<td><code>GET /api/v1/stations/{wmo}/observations?hour=18&amp;fields=…</code></td>
+</tr>
+<tr>
+<td><code>POST /download_telegrams</code> чекає хвилини</td>
+<td>клієнт висить до тайм-ауту</td>
+<td><code>POST /api/v1/imports</code> → <code>202</code> + <code>Location</code> зі статусом</td>
+</tr>
+<tr>
+<td><code>GET /telegram/ua/3450420249218</code></td>
+<td>склеєний id без нулів: <code>9</code>+<code>2</code>+<code>18</code> і <code>9</code>+<code>21</code>+<code>8</code> дають той самий рядок; назва колекції MongoDB — в адресі</td>
+<td><code>GET /api/v1/stations/34504/observations/2024-09-02T18:00Z</code></td>
+</tr>
+<tr>
+<td><code>{"message": "Дані за цим ID не знайдено"}</code> з кодом <code>200</code></td>
+<td><code>raise_for_status()</code> мовчить, клієнт падає пізніше з <code>KeyError</code></td>
+<td><code>404</code> + <code>{"detail": …}</code></td>
+</tr>
+<tr>
+<td><code>{"error": str(e)}</code> з кодом <code>200</code></td>
+<td>помилка сервера виглядає як успіх</td>
+<td><code>404</code>, <code>409</code>, <code>422</code>; непередбачене — <code>500</code></td>
+</tr>
+<tr>
+<td><code>PUT</code> з довільним <code>dict</code></td>
+<td><code>PUT</code> мав би замінити ресурс цілком; поля й типи не перевіряються</td>
+<td><code>PATCH</code> з моделлю Pydantic: лише відомі поля, з межами; невідоме поле — <code>422</code></td>
+</tr>
+<tr>
+<td><code>DELETE</code> → <code>200 {"message": …}</code> в обох випадках</td>
+<td>успіх і «не знайдено» не відрізнити</td>
+<td><code>204</code> / <code>404</code></td>
+</tr>
+<tr>
+<td>увесь результат одним списком</td>
+<td>тисячі записів в одній відповіді</td>
+<td><code>limit</code> / <code>offset</code> / <code>total</code> / <code>next</code></td>
+</tr>
+</tbody>
+</table>
+<p>v2 <strong>не складніша</strong> за v1, вона послідовніша. Кожен рядок таблиці — одне правило з попередніх сторінок цієї частини: <a href="../http_methods/">методи</a>, <a href="../status_codes/">коди відповідей</a>, <a href="../rest_principles/#resources">ресурси</a>, <a href="../collections/">колекції й пагінація</a>, <a href="../status_codes/">довга операція</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Чому «v2» живе за адресою <code>/api/v1</code></p>
+<p>«v2» — друге покоління сервісу. Перше не мало версії в адресі взагалі (<code>/telegram/...</code>). Друге — перший <strong>версійований</strong> контракт, тому його префікс <code>/api/v1</code>. Старі й нові адреси не перетинаються, і обидва покоління можуть жити в одному застосунку (<a href="#migration">нижче</a>).</p>
+</div>
+<h2 id="v1">Як було: v1 на ділі<a class="headerlink" href="#v1" title="Permanent link">&para;</a></h2>
+<p>Код v1 — <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/meteo_api/legacy/main.py"><code>legacy/main.py</code></a>. Сам він не запускається: потрібні MongoDB і модулі завантажувача з першого проєкту. Тому для запуску MongoDB підмінено словником у пам'яті з тими самими методами (<code>find_one</code>, <code>find</code>, <code>update_one</code>, <code>delete_one</code>), а завантажувач — функцією, що падає, як при недоступному ogimet.com. Маршрути — без жодної зміни.</p>
+<div class="highlight"><span class="filename">legacy/main.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/telegram/</span><span class="si">{collection_name}</span><span class="s2">/</span><span class="si">{id_teleg}</span><span class="s2">"</span><span class="p">)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_data_from_collection</span><span class="p">(</span><span class="n">collection_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">id_teleg</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">collection</span> <span class="o">=</span> <span class="n">db</span><span class="p">[</span><span class="n">collection_name</span><span class="p">]</span>                 <span class="c1"># назва колекції MongoDB — прямо з URL</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">collection</span><span class="o">.</span><span class="n">find_one</span><span class="p">({</span><span class="s2">"id_telegram"</span><span class="p">:</span> <span class="n">id_teleg</span><span class="p">},</span> <span class="p">{</span><span class="s2">"_id"</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        <span class="k">return</span> <span class="p">{</span><span class="s2">"message"</span><span class="p">:</span> <span class="s2">"Дані за цим ID не знайдено"</span><span class="p">}</span>     <span class="c1"># 200</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="n">clean_data</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/download_telegrams"</span><span class="p">)</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">def</span><span class="w"> </span><span class="nf">download_telegrams</span><span class="p">(</span><span class="n">country_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>        <span class="n">download_and_process_telegrams</span><span class="p">(</span><span class="n">country_code</span><span class="p">)</span>          <span class="c1"># хвилини, клієнт чекає</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        <span class="k">return</span> <span class="p">{</span><span class="s2">"message"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Successfully downloaded telegrams for '</span><span class="si">{</span><span class="n">country_code</span><span class="si">}</span><span class="s2">'"</span><span class="p">}</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        <span class="k">return</span> <span class="p">{</span><span class="s2">"error"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)}</span>                              <span class="c1"># 200</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>--- 1. читання і «не знайдено»
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>GET /telegram/ua/3450420249218               200 {'id_telegram': '3450420249218', 'data': {'station_id': '34504', 'year': 2024, 'month': 9, 'day': 2, 'hour': 18, 'temperature': 25.1, 'pressure': 998.9}}
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>GET /telegram/ua/0000000000000               200 {'message': 'Дані за цим ID не знайдено'}
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>   raise_for_status() мовчить, далі: KeyError 'data'
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>--- 2. помилка сервера з кодом 200
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>POST /download_telegrams?country_code=ua     200 {'error': 'ogimet.com: connection refused'}
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>--- 3. DELETE і PUT
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>PUT {'temperature': 'спекотно', 'colour': 1} 200 {'message': 'Запис успішно оновлено'}
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>   у базі: {'station_id': '34504', 'year': 2024, 'month': 9, 'day': 2, 'hour': 18, 'temperature': 'спекотно', 'pressure': 998.9, 'colour': 1}
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>DELETE (є)                                   200 {'message': 'Запис успішно видалено'}
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>DELETE (уже немає)                           200 {'message': 'Запис з таким ID не знайдено'}
+</code></pre></div>
+<ul>
+<li><strong>Код <code>200</code> нічого не означає.</strong> Знайдено, не знайдено, сервер упав — усе <code>200</code>. Клієнт з <code>raise_for_status()</code> вважає, що все добре, і падає рядком нижче на <code>response.json()["data"]</code>.</li>
+<li><strong><code>PUT</code> з <code>dynamic_updates: dict</code></strong> записує в базу що завгодно: рядок замість числа, вигадане поле <code>colour</code>. Наступний клієнт, що рахує середню температуру, отримає <code>TypeError</code> на чужих даних.</li>
+<li><strong>Повторний <code>DELETE</code></strong> має відповідати <code>404</code>. Тут обидва випадки — <code>200</code> з різним текстом, і клієнту лишається порівнювати рядки українською.</li>
+</ul>
+<p>Фільтр — ще тонше. Модель <code>TelegramFilter</code> оголошує 25 необов'язкових полів, а код маршруту читає лише <code>country_code</code>, <code>station_id</code>, <code>date</code>, <code>hour</code> і <code>fields_to_return</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>--- 4. фільтр: оголошені поля, які ніхто не читає
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>   {'country_code': 'ua'}                               → 2 шт.
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>   {'country_code': 'ua', 'date_start': '20240904'}     → 2 шт.
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>   {'country_code': 'ua', 'temperature': 99}            → 2 шт.
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>   {'country_code': 'ua', 'date': '2024-9-4'}           → 0 шт.
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>--- 5. склеєний id
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>   34504 2024-09-02 18h → 3450420249218
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>   34504 2024-09-21 08h → 3450420249218
+</code></pre></div>
+<ul>
+<li><code>date_start</code> і <code>temperature</code> є в Swagger, клієнт їх передає, а сервер мовчки ігнорує. Клієнт вважає, що отримав відфільтровані дані.</li>
+<li>Дата не того формату (<code>2024-9-4</code>) — не <code>422</code>, а порожній список: <code>date[4:6]</code> дає <code>-9</code>, і запит шукає місяць <code>-9</code>.</li>
+<li>Id <code>f"{station}{year}{month}{day}{hour}"</code> без доповнення нулями неоднозначний: 2 вересня 18:00 і 21 вересня 08:00 дають той самий рядок.</li>
+</ul>
+<p>Що з цього бачить документація:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>--- 6. OpenAPI: які відповіді задокументовано
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>   POST   /download_telegrams                      ['200', '422'] schema={}
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>   GET    /telegram/{collection_name}/{id_teleg}   ['200', '422'] schema={}
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>   DELETE /telegram/{collection_name}/{id_teleg}   ['200', '422'] schema={}
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>   PUT    /telegram/{collection_name}/{id_teleg}   ['200', '422'] schema={}
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>   POST   /filter_telegrams/                       ['200', '422'] schema={}
+</code></pre></div>
+<p>Жодної схеми відповіді (<code>{}</code> — «будь-що»), жодного <code>404</code>. Генератор клієнтів з такого OpenAPI зробить функції, що повертають <code>Any</code>.</p>
+<h2 id="v2">Що змінила v2<a class="headerlink" href="#v2" title="Permanent link">&para;</a></h2>
+<p>Ті самі ситуації у v2 (<a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/meteo_api/app.py"><code>meteo_api/app.py</code></a>):</p>
+<div class="highlight"><span class="filename">meteo_api/app.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">ObservationPatch</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="sd">"""Тіло PATCH: лише поля, які змінюємо (виправлення помилки оператора)."""</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">temperature</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">ge</span><span class="o">=-</span><span class="mi">80</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">pressure</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">850</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">1100</span><span class="p">)</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">wind_speed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">75</span><span class="p">)</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"temperature"</span><span class="p">)</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    <span class="nd">@classmethod</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">temperature_not_null</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">        </span><span class="sd">"""Поле не передали — його не змінюють; передали null — помилка, а не стерта температура."""</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"температура не може бути null; не хочеш міняти — не передавай її"</span><span class="p">)</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>        <span class="k">return</span> <span class="n">value</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="nd">@app</span><span class="o">.</span><span class="n">exception_handler</span><span class="p">(</span><span class="n">NotFoundError</span><span class="p">)</span>          <span class="c1"># виняток сховища → 404 в одному місці</span>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="k">def</span><span class="w"> </span><span class="nf">not_found</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>    <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="p">{</span><span class="s2">"detail"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">)})</span>
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a><span class="nd">@app</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s2">"/api/v1/stations/</span><span class="si">{wmo}</span><span class="s2">/observations/</span><span class="si">{moment}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">Observation</span><span class="p">,</span> <span class="n">responses</span><span class="o">=</span><span class="n">NOT_FOUND</span><span class="p">)</span>
+<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a><span class="k">def</span><span class="w"> </span><span class="nf">patch_observation</span><span class="p">(</span><span class="n">wmo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">moment</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">body</span><span class="p">:</span> <span class="n">ObservationPatch</span><span class="p">):</span>
+<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>    <span class="n">changes</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>    <span class="k">return</span> <span class="n">to_json</span><span class="p">(</span><span class="n">repo</span><span class="o">.</span><span class="n">update_observation</span><span class="p">(</span><span class="n">wmo</span><span class="p">,</span> <span class="n">utc</span><span class="p">(</span><span class="n">moment</span><span class="p">),</span> <span class="n">changes</span><span class="p">))</span>
+<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>
+<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>
+<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a><span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/api/v1/imports"</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">202</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">ImportJob</span><span class="p">,</span> <span class="n">response_model_exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>          <span class="n">responses</span><span class="o">=</span><span class="p">{</span><span class="mi">422</span><span class="p">:</span> <span class="p">{</span><span class="s2">"description"</span><span class="p">:</span> <span class="s2">"тіло не JSON за схемою або CSV зламаний (номер рядка в detail)"</span><span class="p">}})</span>
+<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_import</span><span class="p">(</span><span class="n">body</span><span class="p">:</span> <span class="n">ImportIn</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">,</span> <span class="n">background</span><span class="p">:</span> <span class="n">BackgroundTasks</span><span class="p">):</span>
+<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>    <span class="k">try</span><span class="p">:</span>                                         <span class="c1"># формат перевіряємо до 202: клієнт дізнається одразу</span>
+<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>        <span class="n">records</span> <span class="o">=</span> <span class="n">parse_ogimet_csv</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">csv</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span>
+<a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+<a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="mi">422</span><span class="p">,</span> <span class="p">[{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"value_error"</span><span class="p">,</span> <span class="s2">"loc"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"body"</span><span class="p">,</span> <span class="s2">"csv"</span><span class="p">],</span> <span class="s2">"msg"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">)}])</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+<a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>    <span class="n">job_id</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span>
+<a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>    <span class="n">imports</span><span class="p">[</span><span class="n">job_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="n">job_id</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">:</span> <span class="s2">"queued"</span><span class="p">}</span>
+<a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a>    <span class="n">background</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">run_import</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">records</span><span class="p">)</span>
+<a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a>    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"Location"</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"/api/v1/imports/</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">"</span>
+<a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a>    <span class="k">return</span> <span class="n">imports</span><span class="p">[</span><span class="n">job_id</span><span class="p">]</span>
+</code></pre></div>
+<p><code>utc(moment)</code> — маленька допоміжна функція в <code>create_app</code>: <code>parse_time(moment.isoformat())</code>, тобто будь-який часовий пояс → UTC. Що змінилося в цьому коді порівняно з першим варіантом v2 (<code>moment: str</code>, без валідатора, без <code>extra="forbid"</code>, CSV розбирається у фоні), розібрано <a href="#v2-gaps">нижче</a>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>--- 1. читання і «не знайдено»
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>GET .../observations/2024-09-02T18:00Z         200 {'station': '34504', 'time': '2024-09-02T18:00Z', 'temperature': 25.1, 'dew_point': 12.9, 'relative_humidity': 47, 'wind_dir': 110, 'wind_speed': 6, 'pressure': 998.9, 'sea_level_pressure': 1015.1, 'max_temperature': 33.0, 'min_temperature': None, 'telegram': 'AAXX 02181 34504 32975 51106 10251 20129 39989 40151 52027 80001 333 10330='}
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>GET .../observations/2024-09-02T21:00+03:00    200 {'station': '34504', 'time': '2024-09-02T18:00Z', 'temperature': 25.1, 'dew_point': 12.9, 'relative_humidity': 47, 'wind_dir': 110, 'wind_speed': 6, 'pressure': 998.9, 'sea_level_pressure': 1015.1, 'max_temperature': 33.0, 'min_temperature': None, 'telegram': 'AAXX 02181 34504 32975 51106 10251 20129 39989 40151 52027 80001 333 10330='}
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>GET .../observations/2024-09-02T21:00Z         404 {'detail': 'спостереження 34504 на 2024-09-02T21:00Z немає'}
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>GET /api/v1/stations/99999                     404 {'detail': 'станцію 99999 не знайдено'}
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>--- 2. довга операція
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>POST /api/v1/imports                           202 {'id': 'abbedae3', 'status': 'queued'} Location=/api/v1/imports/abbedae3
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>GET Location                                   200 {'id': 'abbedae3', 'status': 'done', 'added': 1, 'skipped': 0}
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>--- 3. PATCH і DELETE
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>PATCH {'temperature': 'спекотно'}              422 {'detail': [{'type': 'float_parsing', 'loc': ['body', 'temperature'], 'msg': 'Input should be a valid number, unable to parse string as a number', 'input': 'спекотно'}]}
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>PATCH {'temperature': 25.3, 'colour': 1}       422 {'detail': [{'type': 'extra_forbidden', 'loc': ['body', 'colour'], 'msg': 'Extra inputs are not permitted', 'input': 1}]}
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>PATCH {'temperature': 25.3}                    200 {'station': '34504', 'time': '2024-09-02T18:00Z', 'temperature': 25.3, 'dew_point': 12.9, 'relative_humidity': 47, 'wind_dir': 110, 'wind_speed': 6, 'pressure': 998.9, 'sea_level_pressure': 1015.1, 'max_temperature': 33.0, 'min_temperature': None, 'telegram': 'AAXX 02181 34504 32975 51106 10251 20129 39989 40151 52027 80001 333 10330='}
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>DELETE (є)                                     204 
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>DELETE (уже немає)                             404 {'detail': 'спостереження 34504 на 2024-09-02T18:00Z немає'}
+</code></pre></div>
+<ul>
+<li><strong>Адреса — ресурс, а не дія.</strong> Спостереження вкладене в станцію, момент — ISO 8601. Id однозначний, і його можна прочитати очима. Зсув можна передати будь-який: <code>2024-09-02T21:00+03:00</code> — той самий момент, що й <code>18:00Z</code>, і відповідь завжди в UTC.</li>
+<li><strong>Помилки сховища — винятки, а не словники.</strong> <code>MeteoRepository</code> кидає <code>NotFoundError</code> / <code>ConflictError</code>, два обробники перетворюють їх на <code>404</code> / <code>409</code>. Маршрути про коди помилок не думають.</li>
+<li><strong><code>PATCH</code> пропускає лише описані поля.</strong> Рядок замість числа — <code>422</code>. Невідоме <code>colour</code> — теж <code>422</code> з <code>loc: ["body", "colour"]</code>: <code>extra="forbid"</code> не дає йому ні потрапити в сховище, ні зникнути мовчки (<a href="../../02_typing_and_pydantic/config_dict/#extra"><code>ConfigDict</code>: <code>extra</code></a>).</li>
+<li><strong>Довга операція повертає <code>202</code> одразу</strong>, а стан живе за адресою з <code>Location</code>. У тестовому клієнті фонова задача виконується до відповіді, тому вже перший <code>GET</code> бачить <code>done</code>. У живому сервері спершу буде <code>queued</code> / <code>running</code>.</li>
+</ul>
+<p>Фільтри стали параметрами <code>GET</code> і перевіряються:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>--- 4. фільтр і поля — параметри GET
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>   {}                                                           200 {'items': 3, 'total': 3, 'next': None}
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>   {'hour': 3}                                                  200 {'items': 1, 'total': 1, 'next': None}
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>   {'date_from': '2024-09-03T03:00Z', 'fields': 'time,temperature'} 200 {'items': [{'time': '2024-09-03T03:00Z', 'temperature': 18.0}, {'time': '2024-09-03T06:00Z', 'temperature': 21.0}], 'total': 2, 'next': None}
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>   {'hour': 25}                                                 422 [('less_than_equal', ['query', 'hour'])]
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>   {'date_from': '2024-9-4'}                                    422 [('datetime_from_date_parsing', ['query', 'date_from'])]
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>   {'fields': 'colour'}                                         422 {'detail': [{'type': 'value_error', 'loc': ['query', 'fields'], 'msg': 'невідомі поля: colour; є: station, time, temperature, dew_point, relative_humidity, wind_dir, wind_speed, pressure, sea_level_pressure, max_temperature, min_temperature, telegram', 'input': 'colour'}]}
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>   {'limit': 2}                                                 200 {'items': 2, 'total': 3, 'next': 'http://testserver/api/v1/stations/34504/observations?offset=2&amp;limit=2'}
+</code></pre></div>
+<p>Дата не того формату тепер — <code>422</code> з точним <code>loc</code>, а не порожній список. Невідоме поле у <code>fields</code> — теж <code>422</code> і в тому самому форматі, що й <code>hour=25</code>: список <code>detail</code> з <code>loc: ["query", "fields"]</code>, а в <code>msg</code> — які поля є. Кожен параметр, який є в документації, щось робить.</p>
+<h2 id="v2-gaps">Перша v2 і що в ній виправили<a class="headerlink" href="#v2-gaps" title="Permanent link">&para;</a></h2>
+<p><strong>Задача.</strong> Перша версія v2 вже була краща за v1, але не бездоганна. Рецензія на живому сервері (<code>uvicorn</code> у фоновому потоці, запити через <code>requests</code>) знайшла шість вад. Так вона відповідала <strong>до</strong> виправлень:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>GET .../observations/вчора 500 Internal Server Error
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>PATCH temperature=null 200 None
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>POST naive time + dew_point 201 2024-09-03T00:00Z None
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>import broken csv 202 → {'id': '72140b2c', 'status': 'running'}
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>schema 200 GET observations: {}
+</code></pre></div>
+<p><strong>Зміна.</strong> Кожна вада — окреме невелике виправлення в <code>app.py</code> / <code>storage.py</code> і тест у <code>tests/test_api.py</code>, що його закріплює:</p>
+<table>
+<thead>
+<tr>
+<th>Було</th>
+<th>Чому</th>
+<th>Що змінили</th>
+<th>Тест</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET …/observations/вчора</code> → <code>500</code></td>
+<td><code>moment: str</code> розбирав <code>parse_time()</code> усередині маршруту, <code>ValueError</code> ніхто не ловив</td>
+<td><code>moment: datetime</code> у сигнатурі <code>GET</code> / <code>PATCH</code> / <code>DELETE</code> — FastAPI сам дає <code>422</code> з <code>loc: ["path", "moment"]</code>; <code>utc(moment)</code> зводить будь-який зсув до UTC</td>
+<td><code>test_bad_time_in_path_is_422</code>, <code>test_time_in_path_any_offset</code></td>
+</tr>
+<tr>
+<td><code>PATCH {"temperature": null}</code> → <code>200</code>, температура стерта</td>
+<td><code>Optional[float] = None</code> пускає явний <code>null</code>, а <code>exclude_unset=True</code> його лишає</td>
+<td><code>field_validator("temperature")</code>: <code>null</code> — <code>ValueError</code>, як у <code>NewsPatch</code> News Hub (<a href="../../02_typing_and_pydantic/config_dict/#news-hub"><code>ConfigDict</code></a>); <code>pressure</code> і <code>wind_speed</code> <code>null</code> стерти можна, бо й у <code>POST</code> їх може не бути</td>
+<td><code>test_patch_null_temperature_rejected</code></td>
+</tr>
+<tr>
+<td><code>dew_point</code> у тілі <code>POST</code> мовчки відкинуто</td>
+<td><code>ObservationIn</code> не має цього поля, а <code>extra</code> — <code>"ignore"</code></td>
+<td><code>ConfigDict(extra="forbid")</code> в <code>ObservationIn</code>, <code>ObservationPatch</code>, <code>ImportIn</code> → <code>422</code> з назвою поля</td>
+<td><code>test_unknown_body_fields_rejected</code></td>
+</tr>
+<tr>
+<td>імпорт зіпсованого CSV вічно <code>running</code></td>
+<td>CSV розбирався у фоновій задачі; <code>ValueError</code> валив її до <code>status="done"</code>, а виняток бачив лише журнал uvicorn</td>
+<td><code>parse_ogimet_csv</code> розбирає CSV <strong>до</strong> <code>202</code> і кидає <code>ValueError</code> з номером рядка → <code>422</code>; несподіваний виняток у <code>run_import</code> ловить <code>try</code> / <code>except</code> → <code>status: "failed"</code> і <code>error</code></td>
+<td><code>test_broken_import_csv_is_422_with_line</code>, <code>test_import_failure_is_reported</code></td>
+</tr>
+<tr>
+<td>OpenAPI: схема відповіді <code>{}</code>, немає <code>404</code> / <code>409</code></td>
+<td>маршрути без <code>response_model</code> і без <code>responses=</code></td>
+<td>моделі відповідей <code>Station</code>, <code>Observation</code>, <code>LatestObservation</code>, <code>StationPage</code>, <code>ObservationPage</code>, <code>LatestList</code>, <code>ImportJob</code>, <code>ErrorOut</code> і <code>responses=NOT_FOUND</code> / <code>CONFLICT</code> (<a href="../../03_fastapi_core/openapi/">OpenAPI</a>)</td>
+<td><code>test_openapi_has_schemas</code></td>
+</tr>
+<tr>
+<td><code>fields=colour</code> → <code>400</code>, а <code>hour=25</code> → <code>422</code></td>
+<td>помилки параметрів перевіряв код, а не модель, і в іншому форматі</td>
+<td><code>parse_fields</code> кидає <code>HTTPException(422, [...])</code> у форматі FastAPI: <code>loc: ["query", "fields"]</code> (<a href="../status_codes/#400-vs-422">400 чи 422</a>)</td>
+<td><code>test_fields_and_bad_fields</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Результат.</strong> Ті самі запити після виправлень (<code>TestClient</code> на фікстурі, після <code>PATCH {'temperature': 25.3}</code> з блоку вище — тому <code>25.3</code>; для «несподіваної помилки» <code>repo.import_records</code> підмінено функцією, що кидає <code>RuntimeError("диск повний")</code>, як у <code>test_import_failure_is_reported</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>GET .../observations/вчора                     422 {'detail': [{'type': 'datetime_from_date_parsing', 'loc': ['path', 'moment'], 'msg': 'Input should be a valid datetime or date, invalid character in year', 'input': 'вчора', 'ctx': {'error': 'invalid character in year'}}]}
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>DELETE .../observations/not-a-time             422 {'detail': [{'type': 'datetime_from_date_parsing', 'loc': ['path', 'moment'], 'msg': 'Input should be a valid datetime or date, invalid character in year', 'input': 'not-a-time', 'ctx': {'error': 'invalid character in year'}}]}
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>PATCH {'temperature': None}                    422 {'detail': [{'type': 'value_error', 'loc': ['body', 'temperature'], 'msg': 'Value error, температура не може бути null; не хочеш міняти — не передавай її', 'input': None, 'ctx': {'error': {}}}]}
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>PATCH {'wind_speed': None}                     200 {'station': '34504', 'time': '2024-09-02T18:00Z', 'temperature': 25.3, 'dew_point': 12.9, 'relative_humidity': 47, 'wind_dir': 110, 'wind_speed': None, 'pressure': 998.9, 'sea_level_pressure': 1015.1, 'max_temperature': 33.0, 'min_temperature': None, 'telegram': 'AAXX 02181 34504 32975 51106 10251 20129 39989 40151 52027 80001 333 10330='}
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>POST naive time + dew_point                    422 {'detail': [{'type': 'extra_forbidden', 'loc': ['body', 'dew_point'], 'msg': 'Extra inputs are not permitted', 'input': 12}]}
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>POST naive time                                201 {'station': '34504', 'time': '2024-09-03T00:00Z', 'temperature': 21.4, 'dew_point': None, 'relative_humidity': None, 'wind_dir': None, 'wind_speed': None, 'pressure': None, 'sea_level_pressure': None, 'max_temperature': None, 'min_temperature': None, 'telegram': None}
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>POST /api/v1/imports  csv='34504,2024,09'      422 {'detail': [{'type': 'value_error', 'loc': ['body', 'csv'], 'msg': 'рядок 1: очікується «станція,рік,місяць,день,година,хвилина,телеграма» (not enough values to unpack (expected 7, got 3))'}]}
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>POST /api/v1/imports  (сховище падає)          202 {'id': '19bccf32', 'status': 'queued'}
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>GET Location                                   200 {'id': '19bccf32', 'status': 'failed', 'error': 'RuntimeError: диск повний'}
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>--- OpenAPI: які відповіді задокументовано
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>   GET    /api/v1/stations                                 ['200', '422'] schema={'$ref': '#/components/schemas/StationPage'}
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>   GET    /api/v1/stations/{wmo}                           ['200', '404', '422'] schema={'$ref': '#/components/schemas/Station'}
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>   GET    /api/v1/stations/{wmo}/observations              ['200', '404', '422'] schema={'$ref': '#/components/schemas/ObservationPage'}
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>   POST   /api/v1/stations/{wmo}/observations              ['201', '404', '409', '422'] schema={'$ref': '#/components/schemas/Observation'}
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>   GET    /api/v1/stations/{wmo}/observations/{moment}     ['200', '404', '422'] schema={'$ref': '#/components/schemas/Observation'}
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>   PATCH  /api/v1/stations/{wmo}/observations/{moment}     ['200', '404', '422'] schema={'$ref': '#/components/schemas/Observation'}
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>   DELETE /api/v1/stations/{wmo}/observations/{moment}     ['204', '404', '422'] schema={}
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>   GET    /api/v1/observations/latest                      ['200', '422'] schema={'$ref': '#/components/schemas/LatestList'}
+<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a>   POST   /api/v1/imports                                  ['202', '422'] schema={'$ref': '#/components/schemas/ImportJob'}
+<a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>   GET    /api/v1/imports/{job_id}                         ['200', '404', '422'] schema={'$ref': '#/components/schemas/ImportJob'}
+</code></pre></div>
+<ul>
+<li><strong>Неправильний час у шляху — помилка клієнта, а не сервера.</strong> <code>вчора</code> і <code>not-a-time</code> тепер <code>422</code> з <code>loc: ["path", "moment"]</code>, як <code>date_from=2024-9-4</code> у запиті. Тип параметра в сигнатурі — це і перевірка, і документація.</li>
+<li><strong><code>null</code> і «не передав» — різні речі.</strong> Без <code>temperature</code> у тілі <code>PATCH</code> температуру не чіпають; <code>"temperature": null</code> — <code>422</code>, бо спостереження без температури <code>POST</code> теж не прийняв би. <code>wind_speed: null</code> — <code>200</code>: це поле й так необов'язкове.</li>
+<li><strong>Час без зсуву (<code>2024-09-03T00:00</code>) і досі приймається як UTC</strong> — це свідоме рішення <code>parse_time</code>, а не вада. Змінилося інше: <code>dew_point</code>, якого <code>ObservationIn</code> не знає, тепер дає <code>422</code>, а не зникає мовчки.</li>
+<li><strong>Імпорт каже про помилку там, де клієнт її побачить.</strong> Зламаний формат — <code>422</code> одразу, з номером рядка. Збій, якого заздалегідь не перевірити, — <code>status: "failed"</code> і <code>error</code> за адресою з <code>Location</code>, а не вічне <code>running</code>.</li>
+<li><strong>Схеми в OpenAPI.</strong> Генератор клієнтів тепер бачить типи відповідей і <code>404</code> / <code>409</code>. Лише <code>DELETE</code> лишився з <code>schema={}</code>: у <code>204</code> тіла немає.</li>
+</ul>
+<p><strong>Правило.</strong> Помилку клієнта має ловити модель чи тип у сигнатурі, а не код маршруту; повідомляти — у тому самому форматі, що й решта помилок; а фонова задача мусить записати свою помилку туди, куди дивиться клієнт.</p>
+<p>Чи сумісні ці зміни? Для клієнтів, які вже працюють правильно, — так, і нова версія для них не потрібна (<a href="../versioning/#mental-model">яка зміна сумісна</a>). Код змінився лише для запитів, які й раніше були помилкою: <code>500</code> → <code>422</code>, «мовчки прийнято» → <code>422</code>, <code>400</code> → <code>422</code>. Ризик лишається для клієнта, що перевіряє саме <code>status_code == 400</code> для <code>fields=</code>: він тепер має чекати <code>422</code> (або будь-який <code>4xx</code>).</p>
+<h2 id="migration">Міграція клієнтів без поломок<a class="headerlink" href="#migration" title="Permanent link">&para;</a></h2>
+<p>Перейменувати адреси й змінити формат — несумісна зміна. Старий дашборд, чужий скрипт з <code>requests.get(f"{BASE}/telegram/ua/{id}")</code> і закладки в браузері перестануть працювати того ж дня. Тому нове покоління вмикають <strong>поруч</strong>, а старі адреси на перехідний період залишають <strong>адаптером</strong>: тонкий маршрут зі старою адресою і старим форматом, який читає те саме нове сховище.</p>
+<p>Ескіз такого адаптера (у прикладі його немає; це код для запуску поруч з <code>create_app</code>):</p>
+<div class="highlight"><span class="filename">адаптер v1 поверх v2 (ескіз)</span><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">V1_NAMES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"dew_point"</span><span class="p">:</span> <span class="s2">"dew_point_temperature"</span><span class="p">,</span> <span class="s2">"max_temperature"</span><span class="p">:</span> <span class="s2">"maximum_temperature"</span><span class="p">,</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>            <span class="s2">"min_temperature"</span><span class="p">:</span> <span class="s2">"minimum_temperature"</span><span class="p">}</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">candidates</span><span class="p">(</span><span class="n">id_teleg</span><span class="p">):</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">    </span><span class="sd">"""'3450420249218' → усі (станція, час), які могли дати цей id: місяць, день і година — без нулів."""</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="n">wmo</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="n">rest</span> <span class="o">=</span> <span class="n">id_teleg</span><span class="p">[:</span><span class="mi">5</span><span class="p">],</span> <span class="n">id_teleg</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="mi">9</span><span class="p">],</span> <span class="n">id_teleg</span><span class="p">[</span><span class="mi">9</span><span class="p">:]</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">):</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>            <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>                <span class="k">yield</span> <span class="n">wmo</span><span class="p">,</span> <span class="n">datetime</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">year</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">rest</span><span class="p">[:</span><span class="n">i</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">rest</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">j</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">rest</span><span class="p">[</span><span class="n">j</span><span class="p">:]),</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>                <span class="k">continue</span>
+<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a>
+<a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a>
+<a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="n">legacy</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"v1 (застаріло)"</span><span class="p">],</span> <span class="n">deprecated</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a>
+<a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a>
+<a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a><span class="nd">@legacy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/telegram/</span><span class="si">{collection_name}</span><span class="s2">/</span><span class="si">{id_teleg}</span><span class="s2">"</span><span class="p">)</span>
+<a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_telegram</span><span class="p">(</span><span class="n">collection_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">id_teleg</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">):</span>
+<a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a>    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"Deprecation"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"@1793491200"</span>                 <span class="c1"># з 2026-11-01</span>
+<a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a>    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"Sunset"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Thu, 01 Jul 2027 00:00:00 GMT"</span>
+<a id="__codelineno-9-23" name="__codelineno-9-23" href="#__codelineno-9-23"></a>    <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-9-24" name="__codelineno-9-24" href="#__codelineno-9-24"></a>    <span class="k">for</span> <span class="n">wmo</span><span class="p">,</span> <span class="n">moment</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">(</span><span class="n">id_teleg</span><span class="p">)</span> <span class="k">if</span> <span class="n">collection_name</span> <span class="o">==</span> <span class="s2">"ua"</span> <span class="k">else</span> <span class="p">():</span>
+<a id="__codelineno-9-25" name="__codelineno-9-25" href="#__codelineno-9-25"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-9-26" name="__codelineno-9-26" href="#__codelineno-9-26"></a>            <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">repo</span><span class="o">.</span><span class="n">get_observation</span><span class="p">(</span><span class="n">wmo</span><span class="p">,</span> <span class="n">moment</span><span class="p">))</span>
+<a id="__codelineno-9-27" name="__codelineno-9-27" href="#__codelineno-9-27"></a>        <span class="k">except</span> <span class="n">NotFoundError</span><span class="p">:</span>
+<a id="__codelineno-9-28" name="__codelineno-9-28" href="#__codelineno-9-28"></a>            <span class="k">pass</span>
+<a id="__codelineno-9-29" name="__codelineno-9-29" href="#__codelineno-9-29"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+<a id="__codelineno-9-30" name="__codelineno-9-30" href="#__codelineno-9-30"></a>        <span class="k">return</span> <span class="p">{</span><span class="s2">"message"</span><span class="p">:</span> <span class="s2">"Дані за цим ID не знайдено"</span><span class="p">}</span>          <span class="c1"># старий контракт: 200 і message</span>
+<a id="__codelineno-9-31" name="__codelineno-9-31" href="#__codelineno-9-31"></a>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+<a id="__codelineno-9-32" name="__codelineno-9-32" href="#__codelineno-9-32"></a>        <span class="n">urls</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"/api/v1/stations/</span><span class="si">{</span><span class="n">o</span><span class="p">[</span><span class="s1">'station'</span><span class="p">]</span><span class="si">}</span><span class="s2">/observations/</span><span class="si">{</span><span class="n">to_json</span><span class="p">(</span><span class="n">o</span><span class="p">)[</span><span class="s1">'time'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">found</span><span class="p">]</span>
+<a id="__codelineno-9-33" name="__codelineno-9-33" href="#__codelineno-9-33"></a>        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="mi">409</span><span class="p">,</span> <span class="p">{</span><span class="s2">"message"</span><span class="p">:</span> <span class="s2">"id неоднозначний"</span><span class="p">,</span> <span class="s2">"candidates"</span><span class="p">:</span> <span class="n">urls</span><span class="p">})</span>
+<a id="__codelineno-9-34" name="__codelineno-9-34" href="#__codelineno-9-34"></a>    <span class="n">new_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"/api/v1/stations/</span><span class="si">{</span><span class="n">found</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'station'</span><span class="p">]</span><span class="si">}</span><span class="s2">/observations/</span><span class="si">{</span><span class="n">to_json</span><span class="p">(</span><span class="n">found</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="s1">'time'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+<a id="__codelineno-9-35" name="__codelineno-9-35" href="#__codelineno-9-35"></a>    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"Link"</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'&lt;</span><span class="si">{</span><span class="n">new_url</span><span class="si">}</span><span class="s1">&gt;; rel="successor-version"'</span>
+<a id="__codelineno-9-36" name="__codelineno-9-36" href="#__codelineno-9-36"></a>    <span class="k">return</span> <span class="n">to_v1</span><span class="p">(</span><span class="n">id_teleg</span><span class="p">,</span> <span class="n">found</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>          <span class="c1"># {"id_telegram": …, "data": {старі назви полів}}</span>
+<a id="__codelineno-9-37" name="__codelineno-9-37" href="#__codelineno-9-37"></a>
+<a id="__codelineno-9-38" name="__codelineno-9-38" href="#__codelineno-9-38"></a>
+<a id="__codelineno-9-39" name="__codelineno-9-39" href="#__codelineno-9-39"></a><span class="n">app</span> <span class="o">=</span> <span class="n">create_app</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+<a id="__codelineno-9-40" name="__codelineno-9-40" href="#__codelineno-9-40"></a><span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">legacy</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>--- 1. старий клієнт не помічає переїзду
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>   200 {'id_telegram': '3450420249218', 'data': {'station_id': '34504', 'year': 2024, 'month': 9, 'day': 2, 'hour': 18, 'temperature': 25.1, 'dew_point_temperature': 12.9, 'relative_humidity': 47, 'wind_dir': 110, 'wind_speed': 6, 'pressure': 998.9, 'sea_level_pressure': 1015.1, 'maximum_temperature': 33.0, 'minimum_temperature': None}}
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>   {'deprecation': '@1793491200', 'sunset': 'Thu, 01 Jul 2027 00:00:00 GMT', 'link': '&lt;/api/v1/stations/34504/observations/2024-09-02T18:00Z&gt;; rel="successor-version"'}
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>   200 {'message': 'Дані за цим ID не знайдено'}
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>--- 2. новий клієнт іде за Link
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>   GET /api/v1/stations/34504/observations/2024-09-02T18:00Z
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>   200 {'station': '34504', 'time': '2024-09-02T18:00Z', 'temperature': 25.1, 'dew_point': 12.9}
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>--- 3. неоднозначний id
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>   409 {'detail': {'message': 'id неоднозначний', 'candidates': ['/api/v1/stations/34504/observations/2024-09-02T18:00Z', '/api/v1/stations/34504/observations/2024-09-21T08:00Z']}}
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>--- 4. OpenAPI
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>   deprecated: True | tags: ['v1 (застаріло)']
+</code></pre></div>
+<p>Що тут важливо:</p>
+<ul>
+<li><strong>Адаптер зберігає старий контракт разом з його вадами.</strong> «Не знайдено» лишилось <code>200 {"message": …}</code>, бо старі клієнти перевіряють саме <code>"message" in body</code>. Виправляти контракт треба в новій версії, а не в старій: інакше старі клієнти зламаються так само, як без адаптера.</li>
+<li><strong>Логіка одна.</strong> Адаптер не має власних даних, лише перекладає адресу й назви полів (<code>dew_point</code> → <code>dew_point_temperature</code>). Новий запис, доданий через v2, одразу видно й через v1.</li>
+<li><strong>Старий клієнт отримує підказку, куди йти.</strong> <code>Deprecation</code> і <code>Sunset</code> кажуть, що адреса застаріла і коли її вимкнуть, <code>Link</code> з <code>rel="successor-version"</code> — де той самий ресурс у новому контракті. <code>requests</code> розбирає цей заголовок сам: <code>response.links["successor-version"]["url"]</code>.</li>
+<li><strong>Де старий контракт не може відповісти чесно, адаптер каже про це прямо.</strong> Після додавання спостереження за 21.09 08:00 id <code>3450420249218</code> вказує на два записи. Адаптер не вгадує, а повертає <code>409</code> з обома новими адресами.</li>
+</ul>
+<p>Порядок переходу — той самий <a href="../versioning/#lifecycle">життєвий цикл версії</a>, прикладений до Meteo API:</p>
+<pre class="mermaid"><code>flowchart TD
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    subgraph S1 ["1. запит старого клієнта"]
+        direction LR
+        R1["GET /telegram/ua/&lt;br&gt;3450420249218"]
+    end
+    subgraph S2 ["2. адаптер: кандидати з id"]
+        direction LR
+        C1["34504&lt;br&gt;2024-09-02 18:00"] ~~~ C2["34504&lt;br&gt;2024-09-21 08:00"]
+    end
+    subgraph S3 ["3. пошук у MeteoRepository"]
+        direction LR
+        D1{"скільки&lt;br&gt;знайдено?"}
+    end
+    subgraph S4 ["4. відповідь"]
+        direction LR
+        A0["0 → 200&lt;br&gt;message, як у v1"] ~~~ A1["1 → 200 формат v1&lt;br&gt;+ Deprecation, Sunset, Link"] ~~~ A2["2 → 409&lt;br&gt;обидві нові адреси"]
+    end
+    S1 --&gt; S2 --&gt; S3 --&gt; S4
+
+    class R1 step
+    class C1,C2 step
+    class D1 decision
+    class A0 warning
+    class A1 success
+    class A2 error</code></pre>
+<ol>
+<li><strong>v2 поруч з v1.</strong> Адаптер старих адрес і нові маршрути — в одному застосунку, над одним сховищем.</li>
+<li><strong>Клієнти, які контролюєш, переходять першими.</strong> Дашборд переписано на <code>MeteoClient</code> (<a href="../meteo_architecture/#client">Архітектура</a>): адреси й формат v2 живуть лише в цьому класі.</li>
+<li><strong>Решту клієнтів знаходять за журналом.</strong> Кожен запит на <code>/telegram/...</code> чи <code>/filter_telegrams/</code> — клієнт, якому треба написати. Для цього адаптер має писати в журнал <code>User-Agent</code> чи ключ клієнта.</li>
+<li><strong>Після <code>Sunset</code></strong> старі адреси відповідають <code>410 Gone</code> з тим самим <code>Link</code>, а не зникають з <code>404</code>.</li>
+</ol>
+<p>Для <code>POST /filter_telegrams/</code> адаптер робиться так само: тіло <code>TelegramFilter</code> → <code>repo.list_observations(wmo, …, hour)</code> → старий формат <code>{"results": [...]}</code>. Поля, які v1 ігнорувала, адаптер теж має ігнорувати. Інакше старий клієнт, що роками передавав <code>temperature: 99</code>, раптом отримає порожній результат.</p>
+<h2 id="meteo-api">У meteo_api<a class="headerlink" href="#meteo-api" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Файл</th>
+<th>Що в ньому</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/meteo_api/legacy/main.py"><code>legacy/main.py</code></a></td>
+<td>v1: FastAPI + MongoDB, дієслова в адресах, <code>200</code> на все</td>
+</tr>
+<tr>
+<td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/meteo_api/legacy/streamlit_app.py"><code>legacy/streamlit_app.py</code></a></td>
+<td>дашборд v1: URL і <code>requests</code> прямо в коді сторінок</td>
+</tr>
+<tr>
+<td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/meteo_api/app.py"><code>meteo_api/app.py</code></a></td>
+<td>v2: ресурси, методи, коди, пагінація, <code>202</code> для імпорту</td>
+</tr>
+<tr>
+<td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/meteo_api/storage.py"><code>meteo_api/storage.py</code></a></td>
+<td>сховище v2 і винятки <code>NotFoundError</code> / <code>ConflictError</code></td>
+</tr>
+<tr>
+<td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/weather_map/client.py"><code>weather_map/client.py</code></a></td>
+<td>клієнт v2: єдине місце, що знає адреси нового контракту</td>
+</tr>
+<tr>
+<td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/meteo_api/tests/test_api.py"><code>tests/test_api.py</code></a></td>
+<td>контракт v2: <code>404</code>, <code>409</code>, <code>422</code>, <code>201</code> + <code>Location</code>, <code>204</code>, <code>202</code>, пагінація; виправлення з <a href="#v2-gaps">розділу вище</a>: час у шляху, <code>PATCH null</code>, зайві поля, зламаний CSV, <code>failed</code>, схеми OpenAPI</td>
+</tr>
+</tbody>
+</table>
+<p>Адаптера v1 у прикладі немає: старих клієнтів, яких треба було б підтримувати, у нього не лишилось. News Hub версій не має взагалі, чому — на сторінці <a href="../versioning/#news-hub">Версіонування</a>.</p>
+<h2 id="mistakes">Типові помилки<a class="headerlink" href="#mistakes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Помилка</th>
+<th>Наслідок</th>
+<th>Як правильно</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>помилка як <code>200 {"error": …}</code></td>
+<td>клієнт приймає збій за успіх, падає далі з <code>KeyError</code></td>
+<td><code>4xx</code> / <code>5xx</code> і <code>{"detail": …}</code></td>
+</tr>
+<tr>
+<td><code>except Exception</code> навколо всього маршруту</td>
+<td>баг у коді стає «успішною» відповіддю, у журналі порожньо</td>
+<td>ловити лише очікувані винятки; решта — <code>500</code> і трасування в журналі</td>
+</tr>
+<tr>
+<td><code>POST</code> для читання з фільтром у тілі</td>
+<td>не кешується, не ідемпотентний, не можна дати посилання</td>
+<td><code>GET</code> з параметрами запиту</td>
+</tr>
+<tr>
+<td>поле в моделі фільтра, яке код не читає</td>
+<td>документація обіцяє фільтр, якого немає</td>
+<td>кожне оголошене поле — використане, або його немає</td>
+</tr>
+<tr>
+<td>склеєний id без роздільників і нулів</td>
+<td>два записи з однаковим id</td>
+<td>природний ключ у шляху: <code>/stations/{wmo}/observations/{ISO-час}</code></td>
+</tr>
+<tr>
+<td>назва колекції чи таблиці з URL</td>
+<td>клієнт обирає, з якої колекції читати й видаляти</td>
+<td>ресурси в шляху — бізнес-поняття, а не назви в базі</td>
+</tr>
+<tr>
+<td>«виправити» старий контракт в адаптері</td>
+<td>старі клієнти ламаються так само, як без адаптера</td>
+<td>адаптер повторює стару поведінку; виправлення — у новій версії</td>
+</tr>
+<tr>
+<td>вимкнути v1 без попередження</td>
+<td><code>404</code> у клієнтів без пояснень</td>
+<td><code>Deprecation</code> → <code>Sunset</code> → <code>410 Gone</code> + <code>Link</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="debugging">Налагодження<a class="headerlink" href="#debugging" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Чи клієнт ще на старому контракті?</strong> Шукай у журналі доступу адреси без <code>/api/v1</code>: <code>grep -E '"(GET|POST|PUT|DELETE) /(telegram|filter_telegrams|download_telegrams)' access.log</code>.</li>
+<li><strong>Клієнт отримує <code>200</code>, а даних немає</strong> — перевір, чи в тілі не <code>message</code> / <code>error</code>. Для v1 це і є «не знайдено» чи «збій».</li>
+<li><strong>Порівняй контракти автоматично.</strong> Збережи <code>openapi.json</code> обох версій і порівняй <code>paths</code> і <code>components.schemas</code> (<code>jq '.paths | keys'</code>). Зникла адреса чи поле — несумісна зміна.</li>
+<li><strong><code>Link</code> не видно в браузері?</strong> Заголовки — у DevTools → Network → Headers. У коді — <code>response.links</code>.</li>
+<li><strong>Фоновий імпорт <code>failed</code></strong> — причина в полі <code>error</code> стану імпорту (<code>GET</code> за адресою з <code>Location</code>), трасування — у журналі uvicorn. До виправлення імпорт у такому разі вічно лишався <code>running</code>, а виняток фонової задачі був лише в журналі (<code>Exception in ASGI application</code>): якщо статус фонової задачі «завис», шукай саме там.</li>
+</ul>
+<h2 id="security">Безпека<a class="headerlink" href="#security" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Назва колекції з URL.</strong> У v1 <code>db[collection_name]</code> бере будь-яку назву: клієнт може читати й видаляти записи в будь-якій колекції бази <code>telegram</code>, а не лише в <code>ua</code>. В адресі мають бути лише ресурси, які API свідомо відкриває (OWASP API1 — Broken Object Level Authorization).</li>
+<li><strong><code>PUT</code> з довільним <code>dict</code></strong> — масове присвоєння: кожен ключ тіла стає <code>data.&lt;ключ&gt;</code> у <code>$set</code>, тож клієнт перепише <code>station_id</code>, <code>year</code> чи будь-яке службове поле. Модель тіла з <code>extra="forbid"</code> — межа того, що клієнт може змінити (<a href="../../02_typing_and_pydantic/config_dict/#mass-assignment">масове присвоєння</a>).</li>
+<li><strong><code>{"error": str(e)}</code></strong> віддає клієнту текст винятку: адреси внутрішніх сервісів, шляхи до файлів, фрагменти запитів до бази. Клієнту — короткий <code>detail</code>, подробиці — в журнал.</li>
+<li><strong><code>POST /download_telegrams</code> без автентифікації</strong> — будь-хто запускає хвилинне завантаження з ogimet. Кілька паралельних запитів займуть усі потоки сервера. У v2 імпорт теж відкритий, хоча й повертає <code>202</code> одразу. Операції запису мають бути закриті (<a href="../../08_security/authentication/">автентифікація</a>).</li>
+<li><strong><code>allow_origins=["*"]</code> разом з <code>allow_credentials=True</code></strong> у v1: Starlette тоді повертає в <code>Access-Control-Allow-Origin</code> саме той <code>Origin</code>, з якого прийшов запит (перевірено: <code>https://evil.example</code> → <code>https://evil.example</code>), разом з <code>Access-Control-Allow-Credentials: true</code>. Будь-який сайт може робити запити з cookie користувача й читати відповіді. Список дозволених доменів — явний.</li>
+<li><strong>Стара версія — та сама поверхня атаки.</strong> Адаптер v1 має мати ті самі перевірки доступу, що й v2 (<a href="../versioning/#security">Версіонування — безпека</a>).</li>
+</ul>
+<h2 id="questions">Питання<a class="headerlink" href="#questions" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Чому <code>{"message": "не знайдено"}</code> з кодом <code>200</code> гірше, ніж <code>404</code>, навіть якщо текст однаковий?</li>
+<li>Що не так з id <code>3450420249218</code> і як v2 вирішила це в адресі?</li>
+<li>Чому <code>POST /filter_telegrams/</code> погано підходить для читання?</li>
+<li>Що ставалося з полем <code>colour</code> у тілі <code>PATCH</code> першої v2 і що з ним тепер? Що для цього змінили?</li>
+<li>Чому <code>GET …/observations/вчора</code> у першій v2 давав <code>500</code>, а <code>?date_from=2024-9-4</code> — <code>422</code>? Що зробили, щоб обидва давали <code>422</code>?</li>
+<li>Чому адаптер v1 повертає «не знайдено» з кодом <code>200</code>, хоча це погана практика?</li>
+<li>Що мають отримати старі клієнти після дати <code>Sunset</code>?</li>
+</ol>
+<details class="success">
+<summary>Відповіді</summary>
+<ol>
+<li><code>raise_for_status()</code> і будь-який HTTP-клієнт вважають <code>200</code> успіхом; кеші й монітори теж. Клієнт падає пізніше, з <code>KeyError</code>, далеко від справжньої причини.</li>
+<li>Місяць, день і година склеєні без нулів, тому <code>9</code>+<code>2</code>+<code>18</code> і <code>9</code>+<code>21</code>+<code>8</code> дають той самий рядок. У v2 момент — ISO 8601 у шляху: <code>/stations/34504/observations/2024-09-02T18:00Z</code>.</li>
+<li><code>POST</code> не безпечний і не ідемпотентний: його не кешують, не повторюють автоматично, на результат не можна дати посилання. Читання — <code>GET</code> з параметрами запиту.</li>
+<li>Було: Pydantic ігнорував його (<code>extra="ignore"</code> за замовчуванням), відповідь — <code>200</code>, і клієнт не знав, що поле пропало. Стало: <code>ConfigDict(extra="forbid")</code> в <code>ObservationPatch</code> дає <code>422</code> з <code>loc: ["body", "colour"]</code> і <code>type: "extra_forbidden"</code>.</li>
+<li><code>moment</code> був оголошений як <code>str</code>, його розбирав код маршруту, і <code>ValueError</code> ніхто не ловив. <code>date_from</code> оголошено як <code>datetime</code>, і його перевіряє FastAPI. Виправлення — <code>moment: datetime</code> у сигнатурі: тепер <code>вчора</code> — <code>422</code> з <code>loc: ["path", "moment"]</code>.</li>
+<li>Адаптер зберігає старий контракт: старі клієнти перевіряють <code>"message" in body</code>, а не код. Виправлений контракт — це v2.</li>
+<li><code>410 Gone</code> з <code>Link</code> на нову адресу, а не <code>404</code>.</li>
+</ol>
+</details>
+<h2 id="next">Що далі<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>
+<p><a href="../meteo_architecture/">Архітектура: API, клієнт і карта</a> — з яких шарів складається Meteo API v2, як карта погоди отримує дані через <code>MeteoClient</code> і що перевіряють тести.</p>
+<p><strong>Джерела:</strong> <a href="https://www.rfc-editor.org/rfc/rfc9110">RFC 9110 — HTTP Semantics</a> (§9.2 безпечні й ідемпотентні методи, §15.3.3 <code>202 Accepted</code>, §15.5.11 <code>410 Gone</code>); <a href="https://www.rfc-editor.org/rfc/rfc9745">RFC 9745 — The Deprecation HTTP Response Header Field</a>; <a href="https://www.rfc-editor.org/rfc/rfc8594">RFC 8594 — The Sunset HTTP Header Field</a>; <a href="https://www.rfc-editor.org/rfc/rfc8288">RFC 8288 — Web Linking</a>; <a href="https://www.rfc-editor.org/rfc/rfc5829">RFC 5829 — Link Relation Types for Simple Version Navigation</a> (<code>successor-version</code>); FastAPI — <a href="https://fastapi.tiangolo.com/tutorial/path-operation-configuration/#deprecate-a-path-operation">Path Operation Configuration — deprecated</a>, <a href="https://fastapi.tiangolo.com/tutorial/background-tasks/">Background Tasks</a>, <a href="https://fastapi.tiangolo.com/tutorial/cors/">CORS</a>; requests — <a href="https://requests.readthedocs.io/en/latest/user/advanced/#link-headers">Link Headers</a>; <a href="https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/">OWASP API Security Top 10 — API1:2023 Broken Object Level Authorization</a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Футер" >
+        
+          
+          <a href="../http_clients/" class="md-footer__link md-footer__link--prev" aria-label="Назад: HTTP-клієнти">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                HTTP-клієнти
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../meteo_architecture/" class="md-footer__link md-footer__link--next" aria-label="Вперед: Архітектура meteo_api">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                Архітектура meteo_api
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.path", "navigation.prune", "navigation.footer", "toc.follow", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0456\u0439\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u0421\u043a\u043e\u043f\u0456\u044e\u0432\u0430\u0442\u0438 \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0429\u0435 1 \u0437\u0431\u0456\u0433 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.more.other": "\u0429\u0435 # \u0437\u0431\u0456\u0433\u0456\u0432 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.none": "\u0417\u0431\u0456\u0433\u0456\u0432 \u043d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0437\u0431\u0456\u0433", "search.result.other": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e # \u0437\u0431\u0456\u0433\u0456\u0432", "search.result.placeholder": "\u0420\u043e\u0437\u043f\u043e\u0447\u043d\u0456\u0442\u044c \u043f\u0438\u0441\u0430\u0442\u0438 \u0434\u043b\u044f \u043f\u043e\u0448\u0443\u043a\u0443", "search.result.term.missing": "\u041d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e \u0437\u0430\u043f\u0438\u0442\u0443", "select.version": "\u041e\u0431\u0440\u0430\u0442\u0438 \u0432\u0435\u0440\u0441\u0456\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,5230 @@
+
+<!doctype html>
+<html lang="uk" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="FastAPI від типів і Pydantic до Docker, Compose і CI/CD — на прикладі новинного агрегатора">
+      
+      
+      
+        <link rel="canonical" href="https://nikoriakviktor.github.io/news_hub/05_databases/sql_for_api/">
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../sqlalchemy_async/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>SQL для API - News Hub — книга FastAPI</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#sql-яке-потрібне-api" class="md-skip">
+          Перейти до змісту
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Хедер">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-header__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            News Hub — книга FastAPI
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              SQL для API
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Пошук" placeholder="Пошук" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Шукати">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистити" aria-label="Очистити" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Пошук розпочато
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Головна
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../00_getting_started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Як користуватися
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../01_http_and_rest/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Книга FastAPI
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorials/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Zero to Hero
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../deep_dive/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  News Hub Deep Dive
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../labs/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Практика
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Довідник
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../TEACHING_GUIDE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Викладачу
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Навігація" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-nav__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    News Hub — книга FastAPI
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Головна
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../00_getting_started/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Як користуватися
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Книга FastAPI
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Книга FastAPI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../01_http_and_rest/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина I. HTTP і дизайн REST API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1" id="__nav_3_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина I. HTTP і дизайн REST API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/http_anatomy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP-запит і відповідь
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/http_methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Методи HTTP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/status_codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Коди відповідей
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/rest_principles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Принципи REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/collections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Колекції і пагінація
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/versioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Версіонування API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Формат помилок
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/api_styles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Які бувають API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/http_clients/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP-клієнти
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/legacy_case/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Кейс: API v1 → v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/meteo_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архітектура meteo_api
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../02_typing_and_pydantic/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина II. Типи і Pydantic
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_2" id="__nav_3_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина II. Типи і Pydantic
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/type_hints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Анотації типів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/pydantic_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Моделі Pydantic 2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/strict_mode/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Режими lax і strict
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/validators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Валідатори і computed_field
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/special_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    URL, email і дати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/validation_error/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ValidationError
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pydantic-settings і .env
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/config_dict/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ConfigDict
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/trust_boundary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Межа довіри
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../03_fastapi_core/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина III. Ядро FastAPI
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_3" id="__nav_3_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина III. Ядро FastAPI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/what_is_fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Що таке FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/routes_and_validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Маршрути і валідація
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Залежності і lifespan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/openapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/fastapi_flask_django/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FastAPI, Flask і Django
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/fastapi_vs_drf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FastAPI і DRF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../04_async/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина IV. Async і конкурентність
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_4" id="__nav_3_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина IV. Async і конкурентність
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/concurrency_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Чекати чи рахувати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/asgi_vs_wsgi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ASGI і WSGI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/endpoint_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Три типи ендпоінтів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/blocking_code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Блокуючий код
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/concurrency_patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Паралельні запити
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_5" id="__nav_3_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQL для API
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQL для API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проблема
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ментальна модель
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Таблиці, ключі, обмеження
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Таблиці, ключі, обмеження">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Обмеження не пускають погані дані
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UPDATE, DELETE, RETURNING
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#select" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SELECT: фільтри, NULL, сортування
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SELECT: фільтри, NULL, сортування">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#null" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NULL — не значення
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alias" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Псевдонім у WHERE
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#group-by" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Агрегати, GROUP BY, HAVING
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#join" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JOIN і LEFT JOIN
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#subqueries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Підзапити й WITH
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#indexes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Індекси й EXPLAIN
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#transactions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Транзакції
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#n-plus-one" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        N+1: сто один запит замість двох
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#news-hub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        У News Hub
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Типові помилки
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Налагодження
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Безпека
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Питання
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sqlalchemy_async/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLAlchemy async
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transactions_and_uow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Транзакції й Unit of Work
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../repository_pattern/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Патерн Repository
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../connection_pool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Пул з'єднань
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migrations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Міграції Alembic
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../06_middleware_cache_jobs/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VI. Middleware, кеш і фонові задачі
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_6" id="__nav_3_6_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VI. Middleware, кеш і фонові задачі
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/middleware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Middleware
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/cors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CORS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/redis_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Redis для API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/caching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Стратегії кешу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/rate_limiting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rate limit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/background_jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фонові задачі й черги
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../07_testing/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VII. Тестування API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_7" id="__nav_3_7_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VII. Тестування API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/pytest_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Основи pytest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/fixtures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фікстури
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/test_doubles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Підміни: mock і fake
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/testing_fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Тестування FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/test_databases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Тести з базою даних
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Якість тестів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../08_security/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VIII. Безпека API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_8" id="__nav_3_8_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VIII. Безпека API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/passwords/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Паролі: хеш, сіль, вартість
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Автентифікація: сесії і JWT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/authorization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Авторизація: ролі, scopes, об'єкти
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/ssrf_and_outbound/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSRF і вихідні запити
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/webhooks_and_signatures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Webhook і підписи
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/secrets_and_headers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Секрети, заголовки, проксі
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/owasp_api_top10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OWASP API Top 10
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_9" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../09_integrations/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина IX. Інтеграції: AI, LLM, Telegram
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_9" id="__nav_3_9_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина IX. Інтеграції: AI, LLM, Telegram
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/ai_dev_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI-агент у проєкті
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/llm_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/llm_reliability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Надійність LLM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/telegram_bots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telegram-бот
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/websockets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WebSocket у FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_10" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../10_docker_and_ci/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина X. Docker, Compose і CI/CD
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_10" id="__nav_3_10_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина X. Docker, Compose і CI/CD
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/docker_image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker-образ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/compose/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker Compose
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/production_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сервер у production
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/ci_cd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD на GitHub Actions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/microservices/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Мікросервіси: коли варто
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../tutorials/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zero to Hero
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../deep_dive/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    News Hub Deep Dive
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../labs/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Практика
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../reference/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Довідник
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TEACHING_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Викладачу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проблема
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ментальна модель
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Таблиці, ключі, обмеження
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Таблиці, ключі, обмеження">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Обмеження не пускають погані дані
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UPDATE, DELETE, RETURNING
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#select" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SELECT: фільтри, NULL, сортування
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SELECT: фільтри, NULL, сортування">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#null" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NULL — не значення
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alias" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Псевдонім у WHERE
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#group-by" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Агрегати, GROUP BY, HAVING
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#join" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JOIN і LEFT JOIN
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#subqueries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Підзапити й WITH
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#indexes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Індекси й EXPLAIN
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#transactions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Транзакції
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#n-plus-one" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        N+1: сто один запит замість двох
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#news-hub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        У News Hub
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Типові помилки
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Налагодження
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Безпека
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Питання
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Навігація" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Головна
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../../01_http_and_rest/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Книга FastAPI
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="sql-яке-потрібне-api">SQL, яке потрібне API<a class="headerlink" href="#sql-яке-потрібне-api" title="Permanent link">&para;</a></h1>
+<h2 id="problem">Проблема<a class="headerlink" href="#problem" title="Permanent link">&para;</a></h2>
+<p>ORM пише SQL за тебе, але не думає за тебе. <code>GET /api/news?lang=uk</code> повільний — бо немає індексу чи бо запитів не один, а сто один? <code>/api/news/stats</code> рахує в Python те, що база порахувала б одним <code>GROUP BY</code>. Звіт «джерела без негативних новин» мовчки губить джерела, бо фільтр стоїть не в тому місці <code>LEFT JOIN</code>. Два одночасні запити затирають зміни один одного. Новина з <code>lang = 'pl'</code> потрапляє в базу, бо перевірка була лише в Pydantic, а скрипт імпорту її обійшов. Щоб такі помилки бачити, треба читати SQL, який будує SQLAlchemy, і знати, що база вміє сама.</p>
+<p>Ця сторінка — SQL з погляду API: схема з ключами й обмеженнями, запити, які стоять за типовими ендпоінтами, індекси під них, транзакції й N+1. Усі приклади виконано на PostgreSQL 16.14.</p>
+<h2 id="mental-model">Ментальна модель<a class="headerlink" href="#mental-model" title="Permanent link">&para;</a></h2>
+<p>Ми <strong>пишемо</strong> <code>SELECT</code> першим, але база <strong>виконує</strong> його частини в іншому порядку:</p>
+<pre class="mermaid"><code>flowchart LR
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    F["1. FROM / JOIN&lt;br&gt;рядки таблиць"] --&gt; W["2. WHERE&lt;br&gt;відкинути рядки"]
+    W --&gt; G["3. GROUP BY&lt;br&gt;зібрати в групи"]
+    G --&gt; H["4. HAVING&lt;br&gt;відкинути групи"]
+    H --&gt; S["5. SELECT&lt;br&gt;обчислити стовпці"]
+    S --&gt; O["6. ORDER BY&lt;br&gt;відсортувати"]
+    O --&gt; L["7. LIMIT / OFFSET&lt;br&gt;сторінка для API"]
+
+    class F,G,S,O step
+    class W,H warning
+    class L success</code></pre>
+<p>Звідси два правила, які пояснюють більшість помилок:</p>
+<ul>
+<li>у <code>WHERE</code> не можна використати псевдонім з <code>SELECT</code> (<code>AS ...</code>): на кроці 2 його ще не існує;</li>
+<li><code>WHERE</code> фільтрує <strong>рядки</strong> до групування, <code>HAVING</code> — <strong>групи</strong> після.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Що просить API</th>
+<th>Що це в SQL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /items/{id}</code></td>
+<td><code>WHERE id = $1</code> — первинний ключ, індекс є завжди</td>
+</tr>
+<tr>
+<td><code>GET /items?lang=uk&amp;limit=20</code></td>
+<td><code>WHERE … ORDER BY … LIMIT</code> — потрібен індекс під фільтр <strong>і</strong> сортування</td>
+</tr>
+<tr>
+<td><code>GET /items/stats</code></td>
+<td><code>GROUP BY</code> з <code>count</code>/<code>sum</code> — у базі, не в Python</td>
+</tr>
+<tr>
+<td><code>GET /sources</code> з кількістю новин</td>
+<td><code>LEFT JOIN … GROUP BY</code></td>
+</tr>
+<tr>
+<td><code>POST /items</code> з унікальним полем</td>
+<td><code>UNIQUE</code> + <code>INSERT … ON CONFLICT</code></td>
+</tr>
+<tr>
+<td>«+1 перегляд»</td>
+<td><code>UPDATE … SET views = views + 1</code> — атомарно</td>
+</tr>
+</tbody>
+</table>
+<h2 id="keys">Таблиці, ключі, обмеження<a class="headerlink" href="#keys" title="Permanent link">&para;</a></h2>
+<p>Дві таблиці: джерела й новини. Скрипт — <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/databases/sql/sql_basics.sql"><code>examples/databases/sql/sql_basics.sql</code></a>, запуск — <code>docker exec -i part05-pg psql -U postgres &lt; sql/sql_basics.sql</code> (контейнер — у README прикладу).</p>
+<pre class="mermaid"><code>erDiagram
+    SOURCES ||--o{ NEWS : "публікує"
+    SOURCES {
+        int id PK
+        text name UK
+        text url UK
+    }
+    NEWS {
+        int id PK
+        int source_id FK
+        text url UK
+        text title "CHECK length &gt;= 5"
+        text lang "CHECK uk, ru, en"
+        text category
+        int views "CHECK &gt;= 0"
+        text sentiment "NULL - ще не аналізували"
+        timestamptz published_at
+    }</code></pre>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">sources</span><span class="w"> </span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="n">id</span><span class="w">   </span><span class="nb">integer</span><span class="w"> </span><span class="k">GENERATED</span><span class="w"> </span><span class="n">ALWAYS</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">IDENTITY</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="n">name</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">UNIQUE</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="n">url</span><span class="w">  </span><span class="nb">text</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">UNIQUE</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">);</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="p">(</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="n">id</span><span class="w">           </span><span class="nb">integer</span><span class="w"> </span><span class="k">GENERATED</span><span class="w"> </span><span class="n">ALWAYS</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">IDENTITY</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="n">source_id</span><span class="w">    </span><span class="nb">integer</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">REFERENCES</span><span class="w"> </span><span class="n">sources</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="p">),</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="n">url</span><span class="w">          </span><span class="nb">text</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">UNIQUE</span><span class="p">,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">    </span><span class="n">title</span><span class="w">        </span><span class="nb">text</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">CHECK</span><span class="w"> </span><span class="p">(</span><span class="k">length</span><span class="p">(</span><span class="n">title</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">5</span><span class="p">),</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">    </span><span class="n">lang</span><span class="w">         </span><span class="nb">text</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">CHECK</span><span class="w"> </span><span class="p">(</span><span class="n">lang</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">'uk'</span><span class="p">,</span><span class="w"> </span><span class="s1">'ru'</span><span class="p">,</span><span class="w"> </span><span class="s1">'en'</span><span class="p">)),</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">    </span><span class="n">category</span><span class="w">     </span><span class="nb">text</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">    </span><span class="n">views</span><span class="w">        </span><span class="nb">integer</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">CHECK</span><span class="w"> </span><span class="p">(</span><span class="n">views</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">),</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">    </span><span class="n">sentiment</span><span class="w">    </span><span class="nb">text</span><span class="w"> </span><span class="k">CHECK</span><span class="w"> </span><span class="p">(</span><span class="n">sentiment</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">'positive'</span><span class="p">,</span><span class="w"> </span><span class="s1">'neutral'</span><span class="p">,</span><span class="w"> </span><span class="s1">'negative'</span><span class="p">)),</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">    </span><span class="n">published_at</span><span class="w"> </span><span class="n">timestamptz</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="n">now</span><span class="p">()</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="p">);</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Запис</th>
+<th>Що означає</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PRIMARY KEY</code></td>
+<td>стовпець, що однозначно визначає рядок; двох однакових бути не може; індекс створюється сам</td>
+</tr>
+<tr>
+<td><code>GENERATED ALWAYS AS IDENTITY</code></td>
+<td>номер генерує база: 1, 2, 3… (сучасна заміна <code>SERIAL</code>)</td>
+</tr>
+<tr>
+<td><code>REFERENCES sources (id)</code></td>
+<td><strong>зовнішній ключ</strong>: новина не може посилатися на джерело, якого немає</td>
+</tr>
+<tr>
+<td><code>NOT NULL</code></td>
+<td>значення обов'язкове. <code>NULL</code> у SQL — як <code>None</code>: «значення немає»</td>
+</tr>
+<tr>
+<td><code>UNIQUE</code></td>
+<td>повтори заборонені; індекс створюється сам</td>
+</tr>
+<tr>
+<td><code>CHECK (умова)</code></td>
+<td>рядок, для якого умова хибна, не буде записано</td>
+</tr>
+<tr>
+<td><code>DEFAULT</code></td>
+<td>значення, якщо його не вказали</td>
+</tr>
+<tr>
+<td><code>timestamptz</code></td>
+<td>момент часу з часовим поясом; для API — завжди він, а не <code>timestamp</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Один-до-багатьох.</strong> Одне джерело — багато новин. Тому в новині зберігається лише <code>source_id</code>, а не назва й адреса джерела: змінилась назва — змінюємо один рядок у <code>sources</code>, а не тисячі новин. Прибирати такі повтори — суть <strong>нормалізації</strong>.</p>
+<h3 id="constraints">Обмеження не пускають погані дані<a class="headerlink" href="#constraints" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="p">(</span><span class="n">source_id</span><span class="p">,</span><span class="w"> </span><span class="n">url</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="n">lang</span><span class="p">,</span><span class="w"> </span><span class="n">category</span><span class="p">)</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s1">'https://x/10'</span><span class="p">,</span><span class="w"> </span><span class="s1">'Новина'</span><span class="p">,</span><span class="w"> </span><span class="s1">'pl'</span><span class="p">,</span><span class="w"> </span><span class="s1">'Світ'</span><span class="p">);</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="p">(</span><span class="n">source_id</span><span class="p">,</span><span class="w"> </span><span class="n">url</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="n">lang</span><span class="p">,</span><span class="w"> </span><span class="n">category</span><span class="p">)</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="mi">99</span><span class="p">,</span><span class="w"> </span><span class="s1">'https://x/11'</span><span class="p">,</span><span class="w"> </span><span class="s1">'Новина'</span><span class="p">,</span><span class="w"> </span><span class="s1">'uk'</span><span class="p">,</span><span class="w"> </span><span class="s1">'Світ'</span><span class="p">);</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="p">(</span><span class="n">source_id</span><span class="p">,</span><span class="w"> </span><span class="n">url</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="n">lang</span><span class="p">,</span><span class="w"> </span><span class="n">category</span><span class="p">)</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s1">'https://www.rbc.ua/ukr/news/1'</span><span class="p">,</span><span class="w"> </span><span class="s1">'Дубль'</span><span class="p">,</span><span class="w"> </span><span class="s1">'uk'</span><span class="p">,</span><span class="w"> </span><span class="s1">'Світ'</span><span class="p">);</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="p">(</span><span class="n">source_id</span><span class="p">,</span><span class="w"> </span><span class="n">url</span><span class="p">,</span><span class="w"> </span><span class="n">lang</span><span class="p">,</span><span class="w"> </span><span class="n">category</span><span class="p">)</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s1">'https://x/12'</span><span class="p">,</span><span class="w"> </span><span class="s1">'uk'</span><span class="p">,</span><span class="w"> </span><span class="s1">'Світ'</span><span class="p">);</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>ERROR:  new row for relation "news" violates check constraint "news_lang_check"
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>DETAIL:  Failing row contains (10, 1, https://x/10, Новина, pl, Світ, 0, null, 2026-11-12 03:52:47.156932+00).
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>ERROR:  insert or update on table "news" violates foreign key constraint "news_source_id_fkey"
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>DETAIL:  Key (source_id)=(99) is not present in table "sources".
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>ERROR:  duplicate key value violates unique constraint "news_url_key"
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>DETAIL:  Key (url)=(https://www.rbc.ua/ukr/news/1) already exists.
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>ERROR:  null value in column "title" of relation "news" violates not-null constraint
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>DETAIL:  Failing row contains (13, 1, https://x/12, null, uk, Світ, 0, null, 2026-11-12 03:52:47.157811+00).
+</code></pre></div>
+<ul>
+<li><strong>Кожна помилка називає порушене правило</strong>, а рядок не записано. Pydantic перевіряє тіло запиту, але скрипт імпорту, міграція чи інший сервіс Pydantic обходять. Обмеження в схемі обійти не може ніхто.</li>
+<li><strong>Назва обмеження — у тексті помилки</strong> (<code>news_url_key</code>). Саме за нею API відрізняє «такий <code>url</code> уже є» (<code>409</code>) від інших порушень.</li>
+<li><strong>Номери <code>id</code> «згоріли».</strong> Невдалі вставки отримали <code>id</code> 10–13 до перевірки обмежень, і наступна вдала новина буде 14, а не 10. Лічильник не повертається назад — це нормально (<a href="../../tutorials/03_sqlalchemy_alembic/repository/#id-gaps">крок 3: дірки в <code>id</code></a>).</li>
+</ul>
+<h3 id="dml"><code>UPDATE</code>, <code>DELETE</code>, <code>RETURNING</code><a class="headerlink" href="#dml" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">UPDATE</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">views</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">views</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span><span class="w"> </span><span class="n">RETURNING</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">views</span><span class="p">;</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">DELETE</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">sources</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'rbc.ua'</span><span class="p">;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a> id | views
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>----+-------
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>  8 |   281
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>(1 row)
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>UPDATE 1
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>ERROR:  update or delete on table "sources" violates foreign key constraint "news_source_id_fkey" on table "news"
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>DETAIL:  Key (id)=(1) is still referenced from table "news".
+</code></pre></div>
+<ul>
+<li><strong><code>RETURNING</code></strong> повертає те, що записала база, тим самим запитом: новий <code>id</code> після <code>INSERT</code>, нове значення після <code>UPDATE</code>. Відповідь <code>201</code> чи <code>200</code> з тілом не потребує другого <code>SELECT</code>.</li>
+<li><strong><code>views = views + 1</code></strong> обчислює база, у момент запису. Це не те саме, що «прочитати <code>views</code> у Python, додати 1, записати» — чому, на сторінці <a href="../transactions_and_uow/#lost-update">Транзакції й Unit of Work</a>.</li>
+<li><strong>Зовнішній ключ захищає й від видалення</strong>: джерело з новинами видалити не можна. Інші варіанти задаються в схемі: <code>REFERENCES sources (id) ON DELETE CASCADE</code> (видалити новини разом із джерелом) або <code>ON DELETE SET NULL</code>.</li>
+</ul>
+<div class="admonition danger">
+<p class="admonition-title"><code>WHERE</code> — не забувай</p>
+<p><code>UPDATE news SET category = 'Інше';</code> без <code>WHERE</code> змінить <strong>усі</strong> рядки, <code>DELETE FROM news;</code> — видалить усі. База не перепитує. Перед небезпечним <code>UPDATE</code>/<code>DELETE</code> спершу виконай <code>SELECT</code> з тим самим <code>WHERE</code> або працюй у транзакції й подивись результат до <code>COMMIT</code>.</p>
+</div>
+<h2 id="select"><code>SELECT</code>: фільтри, <code>NULL</code>, сортування<a class="headerlink" href="#select" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="n">views</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">views</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">500</span><span class="w"> </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">views</span><span class="w"> </span><span class="k">DESC</span><span class="p">;</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="n">lang</span><span class="p">,</span><span class="w"> </span><span class="n">sentiment</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">FROM</span><span class="w"> </span><span class="n">news</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="k">WHERE</span><span class="w"> </span><span class="n">lang</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">'ru'</span><span class="p">,</span><span class="w"> </span><span class="s1">'en'</span><span class="p">)</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">'Г%'</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">id</span><span class="p">;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a> id |                title                | views
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>----+-------------------------------------+-------
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>  7 | Графіки відключень на тиждень       |  1250
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>  3 | Укрзалізниця призначила нові поїзди |   980
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>  4 | Енергетики відновили живлення       |   760
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>  6 | Kyiv hosts a tech summit            |   610
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>  1 | Гривня зміцнилася на міжбанку       |   540
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>(5 rows)
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a> id |             title             | lang | sentiment
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>----+-------------------------------+------+-----------
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>  1 | Гривня зміцнилася на міжбанку | uk   | positive
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>  2 | Курс евро снизился            | ru   | negative
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>  5 | Цены на топливо выросли       | ru   | negative
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>  6 | Kyiv hosts a tech summit      | en   | neutral
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>  7 | Графіки відключень на тиждень | uk   | negative
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>(5 rows)
+</code></pre></div>
+<ul>
+<li><code>=</code> і <code>&lt;&gt;</code> — рівність і нерівність (одне <code>=</code>, не <code>==</code>); <code>AND</code>, <code>OR</code>, <code>NOT</code> — і дужки, як у Python.</li>
+<li><code>IN (...)</code> — значення зі списку; <code>BETWEEN a AND b</code> — діапазон включно.</li>
+<li><code>LIKE 'Г%'</code> — шаблон: <code>%</code> — будь-які символи, <code>_</code> — один символ. <code>ILIKE</code> (PostgreSQL) — без урахування регістру. <code>%</code> і <code>_</code> у тексті від клієнта — теж частина шаблону, див. <a href="#security">Безпека</a>.</li>
+<li><strong>Без <code>ORDER BY</code> порядок не гарантовано.</strong> База віддає рядки як їй зручно, і після <code>UPDATE</code> порядок може змінитися. Для пагінації це означає дублікати й пропуски між сторінками — сортування потрібне завжди, і з унікальним стовпцем наприкінці (<code>ORDER BY published_at DESC, id DESC</code>). Offset чи курсор — на сторінці <a href="../../01_http_and_rest/collections/#pagination">Колекції</a>.</li>
+</ul>
+<h3 id="null"><code>NULL</code> — не значення<a class="headerlink" href="#null" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">by_equals</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">sentiment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">SELECT</span><span class="w"> </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">by_is</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">sentiment</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a> by_equals
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>-----------
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>         0
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>(1 row)
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a> by_is
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>-------
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>     2
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>(1 row)
+</code></pre></div>
+<p>Порівняння з <code>NULL</code> дає не <code>true</code>, а <code>NULL</code> — і рядок відкидається. «Немає значення» перевіряють лише <code>IS NULL</code> / <code>IS NOT NULL</code>. У SQLAlchemy <code>NewsRow.analyzed_at.is_(None)</code> будує саме <code>IS NULL</code>; <code>== None</code> теж, але лінтери на нього скаржаться.</p>
+<h3 id="alias">Псевдонім у <code>WHERE</code><a class="headerlink" href="#alias" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">views</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">double_views</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">double_views</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">2000</span><span class="p">;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>ERROR:  column "double_views" does not exist
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>LINE 1: ...ECT id, views * 2 AS double_views FROM news WHERE double_vie...
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>                                                             ^
+</code></pre></div>
+<p>Порядок виконання з <a href="#mental-model">ментальної моделі</a>: <code>WHERE</code> (крок 2) іде раніше за <code>SELECT</code> (крок 5). Повтори вираз (<code>WHERE views * 2 &gt; 2000</code>) або загорни запит у підзапит чи <code>WITH</code>.</p>
+<h2 id="group-by">Агрегати, <code>GROUP BY</code>, <code>HAVING</code><a class="headerlink" href="#group-by" title="Permanent link">&para;</a></h2>
+<p>Агрегатні функції згортають багато рядків в одне значення: <code>count</code>, <code>sum</code>, <code>avg</code>, <code>min</code>, <code>max</code>. <code>GROUP BY</code> рахує їх <strong>для кожної групи</strong> — це <code>Counter</code> з Python одним рядком SQL, і без передачі всіх рядків у застосунок.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">news</span><span class="p">,</span><span class="w"> </span><span class="k">sum</span><span class="p">(</span><span class="n">views</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">views</span><span class="p">,</span><span class="w"> </span><span class="n">round</span><span class="p">(</span><span class="k">avg</span><span class="p">(</span><span class="n">views</span><span class="p">),</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">avg_views</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">lang</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'uk'</span><span class="p">;</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">category</span><span class="p">,</span><span class="w"> </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">news</span><span class="p">,</span><span class="w"> </span><span class="k">sum</span><span class="p">(</span><span class="n">views</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">views</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="k">FROM</span><span class="w"> </span><span class="n">news</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">category</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">views</span><span class="w"> </span><span class="k">DESC</span><span class="p">,</span><span class="w"> </span><span class="n">category</span><span class="p">;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a> news | views | avg_views
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>------+-------+-----------
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    6 |  4201 |    700.17
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>(1 row)
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>  category   | news | views
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>-------------+------+-------
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a> Енергетика  |    2 |  2010
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a> Економіка   |    4 |  1591
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a> Технології  |    2 |  1000
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a> Суспільство |    1 |   980
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>(4 rows)
+</code></pre></div>
+<p>Покроково, що робить база з <code>GROUP BY category</code>:</p>
+<pre class="mermaid"><code>flowchart TD
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    subgraph S0 ["1. FROM news — 9 рядків"]
+        direction LR
+        a0["540 Ек · 320 Ек · 980 Сус · 760 Ен · 450 Ек&lt;br&gt;610 Тех · 1250 Ен · 281 Ек · 390 Тех"]
+    end
+    subgraph S1 ["2. GROUP BY category — 4 групи"]
+        direction LR
+        b0["Ек: 540, 320, 450, 281"] ~~~ b1["Ен: 760, 1250"] ~~~ b2["Тех: 610, 390"] ~~~ b3["Сус: 980"]
+    end
+    subgraph S2 ["3. count, sum — рядок на групу"]
+        direction LR
+        c0["Ек: 4 · 1591"] ~~~ c1["Ен: 2 · 2010"] ~~~ c2["Тех: 2 · 1000"] ~~~ c3["Сус: 1 · 980"]
+    end
+    subgraph S3 ["4. ORDER BY views DESC"]
+        direction LR
+        d0["Ен 2010 → Ек 1591&lt;br&gt;→ Тех 1000 → Сус 980"]
+    end
+    S0 --&gt; S1 --&gt; S2 --&gt; S3
+
+    class a0 step
+    class b0,b1,b2,b3 warning
+    class c0,c1,c2,c3 success
+    class d0 step</code></pre>
+<p><code>HAVING</code> — фільтр по групах, після агрегатів:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">category</span><span class="p">,</span><span class="w"> </span><span class="k">sum</span><span class="p">(</span><span class="n">views</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">views</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="k">FROM</span><span class="w"> </span><span class="n">news</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">category</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="k">HAVING</span><span class="w"> </span><span class="k">sum</span><span class="p">(</span><span class="n">views</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1500</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">category</span><span class="p">;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>  category  | views
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>------------+-------
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a> Економіка  |  1591
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a> Енергетика |  2010
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>(2 rows)
+</code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">Кожен стовпець — або в <code>GROUP BY</code>, або в агрегаті</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">category</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="k">sum</span><span class="p">(</span><span class="n">views</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">category</span><span class="p">;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>ERROR:  column "news.title" must appear in the GROUP BY clause or be used in an aggregate function
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>LINE 1: SELECT category, title, sum(views) FROM news GROUP BY catego...
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>                         ^
+</code></pre></div>
+<p>У групі «Економіка» чотири заголовки. Який показати в одному рядку групи? PostgreSQL не вгадує, а відмовляє. (SQLite такий запит виконає й візьме заголовок з довільного рядка групи — ще одна різниця, яку ловлять лише тести на PostgreSQL.)</p>
+</div>
+<h2 id="join"><code>JOIN</code> і <code>LEFT JOIN</code><a class="headerlink" href="#join" title="Permanent link">&para;</a></h2>
+<p>У <code>news</code> лише номери джерел. Назву дає з'єднання: для кожної новини знайти рядок <code>sources</code>, у якого <code>sources.id = news.source_id</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">source</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">title</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="k">FROM</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">n</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="k">JOIN</span><span class="w"> </span><span class="n">sources</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">source_id</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="k">WHERE</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">lang</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'uk'</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">id</span><span class="p">;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a> id |  source   |                title
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>----+-----------+--------------------------------------
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>  1 | rbc.ua    | Гривня зміцнилася на міжбанку
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>  3 | ukrinform | Укрзалізниця призначила нові поїзди
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>  4 | pravda    | Енергетики відновили живлення
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>  7 | pravda    | Графіки відключень на тиждень
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>  8 | rbc.ua    | Нацбанк зберіг облікову ставку
+<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>  9 | ukrinform | Стартап зі Львова залучив інвестиції
+<a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>(6 rows)
+</code></pre></div>
+<p><code>JOIN</code> (повністю — <code>INNER JOIN</code>) лишає лише пари, для яких умова <code>ON</code> істинна. Джерело <code>suspilne</code> без новин з нього зникає. Щоб у звіті були <strong>всі</strong> джерела, потрібен <code>LEFT JOIN</code>: усі рядки лівої таблиці, а де пари немає — <code>NULL</code> у стовпцях правої.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="k">count</span><span class="p">(</span><span class="n">n</span><span class="p">.</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">negative_news</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="k">FROM</span><span class="w"> </span><span class="n">sources</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">s</span>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">sentiment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'negative'</span>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">name</span>
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">negative_news</span><span class="w"> </span><span class="k">DESC</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">name</span><span class="p">;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>   name    | negative_news
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>-----------+---------------
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a> rbc.ua    |             2
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a> pravda    |             1
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a> suspilne  |             0
+<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a> ukrinform |             0
+<a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>(4 rows)
+</code></pre></div>
+<ul>
+<li><code>count(n.id)</code> рахує лише не-<code>NULL</code>, тому в <code>suspilne</code> — 0, а не 1. <code>count(*)</code> дав би 1: рядок-«порожнеча» з <code>LEFT JOIN</code> теж рядок.</li>
+<li><code>coalesce(sum(n.views), 0)</code> — «перше не-<code>NULL</code>», як <code>x if x is not None else 0</code>: <code>sum</code> по порожній групі дає <code>NULL</code>, а не 0.</li>
+<li>Умова на праву таблицю — у <code>ON</code>, а не у <code>WHERE</code>:</li>
+</ul>
+<p>Той самий звіт, але фільтр перенесено у <code>WHERE</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="k">count</span><span class="p">(</span><span class="n">n</span><span class="p">.</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">negative_news</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="k">FROM</span><span class="w"> </span><span class="n">sources</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">s</span>
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">id</span>
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="k">WHERE</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">sentiment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'negative'</span>
+<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">name</span>
+<a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">negative_news</span><span class="w"> </span><span class="k">DESC</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">name</span><span class="p">;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>  name  | negative_news
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>--------+---------------
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a> rbc.ua |             2
+<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a> pravda |             1
+<a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>(2 rows)
+</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    subgraph S0 ["1. LEFT JOIN: ukrinform і suspilne"]
+        direction LR
+        a0["ukrinform × 3 новини&lt;br&gt;sentiment: positive, neutral, NULL"] ~~~ a1["suspilne × нічого&lt;br&gt;рядок з NULL"]
+    end
+    subgraph S1 ["2. WHERE n.sentiment = 'negative'"]
+        direction LR
+        b0{"NULL = 'negative'?"} -- ні --&gt; b1["рядок відкинуто"]
+    end
+    subgraph S2 ["3. GROUP BY"]
+        direction LR
+        c0["груп ukrinform і suspilne&lt;br&gt;немає взагалі"]
+    end
+    S0 --&gt; S1 --&gt; S2
+
+    class a0,a1 step
+    class b0 decision
+    class b1,c0 error</code></pre>
+<p><code>LEFT JOIN</code> дав кожному джерелу рядок, а <code>WHERE</code> після нього відкинув усі, де <code>sentiment</code> не <code>'negative'</code> — разом з «порожніми» рядками джерел без пари. Звіт став <code>INNER JOIN</code>, і ніхто цього не помітив: помилки немає, просто менше рядків. Фільтр по правій таблиці <code>LEFT JOIN</code> ставлять в <code>ON</code> — тоді він обирає <strong>пари</strong>, а не викидає джерела.</p>
+<h2 id="subqueries">Підзапити й <code>WITH</code><a class="headerlink" href="#subqueries" title="Permanent link">&para;</a></h2>
+<p>Підзапит — <code>SELECT</code> усередині іншого запиту. Новини, популярніші за середню:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="n">views</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">views</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="p">(</span><span class="k">SELECT</span><span class="w"> </span><span class="k">avg</span><span class="p">(</span><span class="n">views</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">news</span><span class="p">)</span><span class="w"> </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">views</span><span class="w"> </span><span class="k">DESC</span><span class="p">;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a> id |                title                | views
+<a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>----+-------------------------------------+-------
+<a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>  7 | Графіки відключень на тиждень       |  1250
+<a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>  3 | Укрзалізниця призначила нові поїзди |   980
+<a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>  4 | Енергетики відновили живлення       |   760
+<a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>(3 rows)
+</code></pre></div>
+<p>Довгий запит легше читати, якщо дати проміжному результату ім'я — <strong>CTE</strong> (<code>WITH</code>), як змінна з результатом запиту:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="k">WITH</span><span class="w"> </span><span class="n">source_views</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">source_id</span><span class="p">,</span><span class="w"> </span><span class="k">sum</span><span class="p">(</span><span class="n">views</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">views</span>
+<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">news</span>
+<a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="w">    </span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">source_id</span>
+<a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="p">)</span>
+<a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">sv</span><span class="p">.</span><span class="n">views</span>
+<a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="k">FROM</span><span class="w"> </span><span class="n">source_views</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">sv</span>
+<a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a><span class="k">JOIN</span><span class="w"> </span><span class="n">sources</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sv</span><span class="p">.</span><span class="n">source_id</span>
+<a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a><span class="k">WHERE</span><span class="w"> </span><span class="n">sv</span><span class="p">.</span><span class="n">views</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="p">(</span><span class="k">SELECT</span><span class="w"> </span><span class="k">avg</span><span class="p">(</span><span class="n">views</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">source_views</span><span class="p">)</span>
+<a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">sv</span><span class="p">.</span><span class="n">views</span><span class="w"> </span><span class="k">DESC</span><span class="p">;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>   name    | views
+<a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>-----------+-------
+<a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a> pravda    |  2010
+<a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a> ukrinform |  1980
+<a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>(2 rows)
+</code></pre></div>
+<p>У SQLAlchemy те саме: <code>select(...).subquery()</code>, <code>select(...).cte("source_views")</code> і <code>.scalar_subquery()</code> для значення в <code>WHERE</code>.</p>
+<h2 id="indexes">Індекси й <code>EXPLAIN</code><a class="headerlink" href="#indexes" title="Permanent link">&para;</a></h2>
+<p>Без індексу <code>WHERE url = '...'</code> переглядає всю таблицю — лінійний пошук. <strong>Індекс</strong> — окрема структура (у PostgreSQL за замовчуванням — B-дерево), яка знаходить рядки за значенням за <code>O(log n)</code>. <code>EXPLAIN</code> показує план запиту, <code>EXPLAIN ANALYZE</code> ще й виконує його і показує реальний час. Скрипт — <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/databases/sql/indexes.sql"><code>sql/indexes.sql</code></a>: 200 000 згенерованих новин, <code>ANALYZE news</code>, далі плани.</p>
+<p><strong>1. <code>PRIMARY KEY</code> і <code>UNIQUE</code> уже мають індекс:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a> Index Scan using news_url_key on news  (cost=0.42..8.44 rows=1 width=113)
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>   Index Cond: (url = 'https://gen/777'::text)
+</code></pre></div>
+<p><strong>2. Зовнішній ключ індексу не отримує.</strong> PostgreSQL перевіряє <code>REFERENCES</code> через індекс на <strong>цільовій</strong> таблиці (<code>sources.id</code>), а стовпець <code>news.source_id</code> лишається без індексу:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>EXPLAIN SELECT count(*) FROM news WHERE source_id = 4;
+<a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a> ...
+<a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>               -&gt;  Parallel Seq Scan on news  (cost=0.00..4611.71 rows=20779 width=0)
+<a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a>                     Filter: (source_id = 4)
+<a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>
+<a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>CREATE INDEX news_source_id_idx ON news (source_id);
+<a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a> ...
+<a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a>         -&gt;  Bitmap Index Scan on news_source_id_idx  (cost=0.00..546.31 rows=49869 width=0)
+<a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a>               Index Cond: (source_id = 4)
+</code></pre></div>
+<p>Кожен <code>JOIN</code> за <code>source_id</code> і кожне <code>DELETE FROM sources</code> (перевірка, чи немає посилань) без цього індексу перебирає всю <code>news</code>. У SQLAlchemy — <code>mapped_column(ForeignKey("sources.id"), index=True)</code>.</p>
+<p><strong>3. Стрічка API: фільтр + сортування + <code>LIMIT</code>.</strong> <code>GET /news?lang=uk</code> — останні 20:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>EXPLAIN ANALYZE SELECT id, title FROM news WHERE lang = 'uk' ORDER BY published_at DESC LIMIT 20;
+<a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a> Limit  (cost=6353.75..6356.08 rows=20 width=54) (actual time=13.407..15.702 rows=20 loops=1)
+<a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a>   -&gt;  Gather Merge  ...
+<a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a>         -&gt;  Sort  ...
+<a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a>               Sort Key: published_at DESC
+<a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a>               Sort Method: top-N heapsort  Memory: 30kB
+<a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a>               -&gt;  Parallel Seq Scan on news  ... (actual time=0.010..7.839 rows=22224 loops=3)
+<a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a>                     Filter: (lang = 'uk'::text)
+<a id="__codelineno-29-9" name="__codelineno-29-9" href="#__codelineno-29-9"></a>                     Rows Removed by Filter: 44446
+<a id="__codelineno-29-10" name="__codelineno-29-10" href="#__codelineno-29-10"></a> Execution Time: 15.731 ms
+<a id="__codelineno-29-11" name="__codelineno-29-11" href="#__codelineno-29-11"></a>
+<a id="__codelineno-29-12" name="__codelineno-29-12" href="#__codelineno-29-12"></a>CREATE INDEX news_lang_published_idx ON news (lang, published_at DESC);
+<a id="__codelineno-29-13" name="__codelineno-29-13" href="#__codelineno-29-13"></a> Limit  (cost=0.42..5.10 rows=20 width=54) (actual time=0.060..0.067 rows=20 loops=1)
+<a id="__codelineno-29-14" name="__codelineno-29-14" href="#__codelineno-29-14"></a>   -&gt;  Index Scan using news_lang_published_idx on news  ... (actual time=0.059..0.064 rows=20 loops=1)
+<a id="__codelineno-29-15" name="__codelineno-29-15" href="#__codelineno-29-15"></a>         Index Cond: (lang = 'uk'::text)
+<a id="__codelineno-29-16" name="__codelineno-29-16" href="#__codelineno-29-16"></a> Execution Time: 0.091 ms
+</code></pre></div>
+<p>Без індексу база прочитала всі 200 000 рядків, відкинула 133 338 і відсортувала решту, щоб віддати 20. <strong>Складений індекс</strong> <code>(lang, published_at DESC)</code> уже впорядкований так, як просить запит: база читає з нього рівно 20 записів — 15,7 мс проти 0,09 мс. Порядок стовпців важливий: спершу той, що в <code>WHERE</code> з <code>=</code>, потім той, що в <code>ORDER BY</code>. Окремі індекси на <code>lang</code> і на <code>published_at</code> такого не дають.</p>
+<p><strong>4. Пошук підрядка B-дерево не прискорює:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>CREATE INDEX news_lower_title_idx ON news (lower(title));
+<a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>EXPLAIN SELECT id FROM news WHERE lower(title) LIKE '%новина 777%';
+<a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a>   -&gt;  Parallel Seq Scan on news  (cost=0.00..4820.06 rows=8 width=4)
+<a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a>         Filter: (lower(title) ~~ '%новина 777%'::text)
+<a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a>
+<a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a>EXPLAIN SELECT id FROM news WHERE lower(title) = 'згенерована новина 777';
+<a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a>   -&gt;  Bitmap Index Scan on news_lower_title_idx  (cost=0.00..43.92 rows=1000 width=0)
+<a id="__codelineno-30-8" name="__codelineno-30-8" href="#__codelineno-30-8"></a>         Index Cond: (lower(title) = 'згенерована новина 777'::text)
+<a id="__codelineno-30-9" name="__codelineno-30-9" href="#__codelineno-30-9"></a>
+<a id="__codelineno-30-10" name="__codelineno-30-10" href="#__codelineno-30-10"></a>CREATE EXTENSION IF NOT EXISTS pg_trgm;
+<a id="__codelineno-30-11" name="__codelineno-30-11" href="#__codelineno-30-11"></a>CREATE INDEX news_title_trgm_idx ON news USING gin (lower(title) gin_trgm_ops);
+<a id="__codelineno-30-12" name="__codelineno-30-12" href="#__codelineno-30-12"></a>EXPLAIN SELECT id FROM news WHERE lower(title) LIKE '%новина 777%';
+<a id="__codelineno-30-13" name="__codelineno-30-13" href="#__codelineno-30-13"></a>   -&gt;  Bitmap Index Scan on news_title_trgm_idx  (cost=0.00..86.06 rows=20 width=4)
+<a id="__codelineno-30-14" name="__codelineno-30-14" href="#__codelineno-30-14"></a>         Index Cond: (lower(title) ~~ '%новина 777%'::text)
+</code></pre></div>
+<ul>
+<li><strong>Індекс за виразом</strong> <code>lower(title)</code> працює, лише коли запит містить <strong>той самий вираз</strong>, і лише для <code>=</code> чи префікса — не для <code>%…%</code>.</li>
+<li><code>LIKE '%слово%'</code> (саме так шукає <code>icontains</code> у SQLAlchemy) прискорює <strong>триграмний</strong> GIN-індекс з розширення <code>pg_trgm</code>.</li>
+</ul>
+<p><strong>5. Ціна індексів:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>          name           |  size
+<a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>-------------------------+---------
+<a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a> news                    | 28 MB
+<a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a> news_url_key            | 14 MB
+<a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a> news_lower_title_idx    | 13 MB
+<a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a> news_title_trgm_idx     | 7480 kB
+<a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a> news_lang_published_idx | 6184 kB
+<a id="__codelineno-31-8" name="__codelineno-31-8" href="#__codelineno-31-8"></a> news_pkey               | 4408 kB
+<a id="__codelineno-31-9" name="__codelineno-31-9" href="#__codelineno-31-9"></a> news_source_id_idx      | 1368 kB
+</code></pre></div>
+<p>Індекси разом більші за саму таблицю, і кожен <code>INSERT</code>/<code>UPDATE</code> оновлює кожен з них. Індекс створюють під конкретний запит, який справді є в API, а не «на всякий випадок». На робочій таблиці — <code>CREATE INDEX CONCURRENTLY</code>, щоб не блокувати запис (<a href="../migrations/#concurrently">міграції</a>).</p>
+<h2 id="transactions">Транзакції<a class="headerlink" href="#transactions" title="Permanent link">&para;</a></h2>
+<p>Перевести кошти з фонду автору — дві зміни. Якщо програма впаде між ними, гроші зникнуть або задвояться. <strong>Транзакція</strong> — група команд, яка виконується повністю або ніяк.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">balances</span><span class="w"> </span><span class="p">(</span><span class="k">owner</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span><span class="w"> </span><span class="n">amount</span><span class="w"> </span><span class="nb">numeric</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">CHECK</span><span class="w"> </span><span class="p">(</span><span class="n">amount</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">));</span>
+<a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">balances</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">'фонд'</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="s1">'автор'</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>
+<a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a><span class="k">BEGIN</span><span class="p">;</span>
+<a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a><span class="k">UPDATE</span><span class="w"> </span><span class="n">balances</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">amount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">amount</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">300</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="k">owner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'фонд'</span><span class="p">;</span>
+<a id="__codelineno-32-6" name="__codelineno-32-6" href="#__codelineno-32-6"></a><span class="k">UPDATE</span><span class="w"> </span><span class="n">balances</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">amount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">amount</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">300</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="k">owner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'автор'</span><span class="p">;</span>
+<a id="__codelineno-32-7" name="__codelineno-32-7" href="#__codelineno-32-7"></a><span class="k">COMMIT</span><span class="p">;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a> owner | amount
+<a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a>-------+--------
+<a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a> автор | 300.00
+<a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a> фонд  | 700.00
+</code></pre></div>
+<p>Тепер 900 — більше, ніж лишилося у фонді:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a><span class="k">BEGIN</span><span class="p">;</span>
+<a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a><span class="k">UPDATE</span><span class="w"> </span><span class="n">balances</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">amount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">amount</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">900</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="k">owner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'автор'</span><span class="p">;</span>
+<a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a><span class="k">UPDATE</span><span class="w"> </span><span class="n">balances</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">amount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">amount</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">900</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="k">owner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'фонд'</span><span class="p">;</span>
+<a id="__codelineno-34-4" name="__codelineno-34-4" href="#__codelineno-34-4"></a><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">balances</span><span class="p">;</span>
+<a id="__codelineno-34-5" name="__codelineno-34-5" href="#__codelineno-34-5"></a><span class="k">ROLLBACK</span><span class="p">;</span>
+<a id="__codelineno-34-6" name="__codelineno-34-6" href="#__codelineno-34-6"></a><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">balances</span><span class="w"> </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">owner</span><span class="p">;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>BEGIN
+<a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a>UPDATE 1
+<a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a>ERROR:  new row for relation "balances" violates check constraint "balances_amount_check"
+<a id="__codelineno-35-4" name="__codelineno-35-4" href="#__codelineno-35-4"></a>DETAIL:  Failing row contains (фонд, -200.00).
+<a id="__codelineno-35-5" name="__codelineno-35-5" href="#__codelineno-35-5"></a>ERROR:  current transaction is aborted, commands ignored until end of transaction block
+<a id="__codelineno-35-6" name="__codelineno-35-6" href="#__codelineno-35-6"></a>ROLLBACK
+<a id="__codelineno-35-7" name="__codelineno-35-7" href="#__codelineno-35-7"></a> owner | amount
+<a id="__codelineno-35-8" name="__codelineno-35-8" href="#__codelineno-35-8"></a>-------+--------
+<a id="__codelineno-35-9" name="__codelineno-35-9" href="#__codelineno-35-9"></a> автор | 300.00
+<a id="__codelineno-35-10" name="__codelineno-35-10" href="#__codelineno-35-10"></a> фонд  | 700.00
+</code></pre></div>
+<ul>
+<li>Другий <code>UPDATE</code> порушив <code>CHECK</code>. Після помилки транзакція <strong>зламана</strong>: навіть <code>SELECT</code> у ній PostgreSQL не виконує, доки не буде <code>ROLLBACK</code>. У SQLAlchemy це <code>PendingRollbackError</code> (<a href="../transactions_and_uow/#broken-session">Транзакції й Unit of Work</a>).</li>
+<li>Перший <code>UPDATE</code> — +900 автору — скасовано разом з усім: баланси як до <code>BEGIN</code>.</li>
+<li><code>numeric(10, 2)</code> — точне десяткове число; у Python приходить як <code>Decimal</code>. Для грошей — не <code>float</code>.</li>
+</ul>
+<p>Властивості транзакцій скорочують як <strong>ACID</strong>:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Що гарантує</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Atomicity</strong></td>
+<td>усе або нічого</td>
+</tr>
+<tr>
+<td><strong>Consistency</strong></td>
+<td>після транзакції всі обмеження виконані</td>
+</tr>
+<tr>
+<td><strong>Isolation</strong></td>
+<td>паралельні транзакції не бачать незавершених змін одна одної</td>
+</tr>
+<tr>
+<td><strong>Durability</strong></td>
+<td>після <code>COMMIT</code> зміни переживуть навіть вимкнення сервера</td>
+</tr>
+</tbody>
+</table>
+<p>Без <code>BEGIN</code> кожна команда <code>psql</code> — окрема транзакція з негайним <code>COMMIT</code>. <strong>Ізоляція</strong> буває різного рівня: PostgreSQL за замовчуванням — <code>READ COMMITTED</code>, і два читання в одній транзакції можуть побачити різні дані. Рівні, втрачене оновлення, <code>SELECT … FOR UPDATE</code> і <code>ON CONFLICT</code> — на сторінці <a href="../transactions_and_uow/#isolation">Транзакції й Unit of Work</a>.</p>
+<h2 id="n-plus-one">N+1: сто один запит замість двох<a class="headerlink" href="#n-plus-one" title="Permanent link">&para;</a></h2>
+<p>Ендпоінт «джерела з їхніми новинами»: один запит за джерелами, а потім <strong>для кожного джерела</strong> — ще один за його новинами. N джерел — N+1 запит. Кожен окремо швидкий, тож у журналі нічого підозрілого, але разом вони — мережеві обміни з базою, і їх кількість росте з даними. <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/databases/n_plus_one.py"><code>examples/databases/n_plus_one.py</code></a>, 500 джерел × 4 новини:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>база: postgresql; 500 джерел × 4 новини
+<a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a>   awaitable_attrs у циклі      новин: 2000 | запитів:  501 |   292.9 мс
+<a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a>   selectinload                 новин: 2000 | запитів:    2 |    13.7 мс
+<a id="__codelineno-36-4" name="__codelineno-36-4" href="#__codelineno-36-4"></a>   joinedload                   новин: 2000 | запитів:    1 |    14.4 мс
+<a id="__codelineno-36-5" name="__codelineno-36-5" href="#__codelineno-36-5"></a>   GROUP BY (лише лічильники)   новин: 2000 | запитів:    1 |     1.3 мс
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>база: sqlite; 500 джерел × 4 новини
+<a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a>   awaitable_attrs у циклі      новин: 2000 | запитів:  501 |   433.6 мс
+<a id="__codelineno-37-3" name="__codelineno-37-3" href="#__codelineno-37-3"></a>   selectinload                 новин: 2000 | запитів:    2 |    15.2 мс
+<a id="__codelineno-37-4" name="__codelineno-37-4" href="#__codelineno-37-4"></a>   joinedload                   новин: 2000 | запитів:    1 |    15.5 мс
+<a id="__codelineno-37-5" name="__codelineno-37-5" href="#__codelineno-37-5"></a>   GROUP BY (лише лічильники)   новин: 2000 | запитів:    1 |     1.2 мс
+</code></pre></div>
+<ul>
+<li><strong>Той самий результат — у 20 разів повільніше</strong>, і це PostgreSQL на тому самому комп'ютері. Час між запусками коливається (у повторному запуску на PostgreSQL — 240,7 мс проти 12,2 мс), співвідношення — ні. З базою в іншому контейнері чи дата-центрі кожен запит додає ще мережеву затримку.</li>
+<li><strong>Розв'язків два:</strong> <code>JOIN</code> (усе одним запитом) або другий запит з <code>WHERE source_id IN (...)</code> для всіх джерел одразу. У SQLAlchemy це <code>joinedload</code> і <code>selectinload</code> — розбір на сторінці <a href="../sqlalchemy_async/#n-plus-one">SQLAlchemy 2 async</a>.</li>
+<li><strong>Якщо потрібні лише числа — <code>GROUP BY</code>.</strong> Не тягни 2000 рядків, щоб порахувати <code>len()</code>.</li>
+</ul>
+<h2 id="news-hub">У News Hub<a class="headerlink" href="#news-hub" title="Permanent link">&para;</a></h2>
+<p>Схема News Hub — таблиця <code>news</code> і з кроків 8–9 <code>sources</code> та <code>subscriptions</code> (<a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/news_hub/tables.py"><code>steps/12_ci_cd/news_hub/tables.py</code></a>). SQL з неї будує SQLAlchemy, і крок 3 показує цей SQL для кожного методу репозиторію (<a href="../../tutorials/03_sqlalchemy_alembic/repository/#sql">який SQL будує SQLAlchemy</a>).</p>
+<table>
+<thead>
+<tr>
+<th>Що зі сторінки</th>
+<th>Де в News Hub</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>UNIQUE (url)</code> — правило даних у базі</td>
+<td><code>url: Mapped[str] = mapped_column(String(500), unique=True)</code> (<a href="../../tutorials/03_sqlalchemy_alembic/engine_and_table/#table">крок 3</a>)</td>
+</tr>
+<tr>
+<td><code>UNIQUE</code> на парі стовпців</td>
+<td><code>UniqueConstraint("chat_id", "keyword")</code> у <code>SubscriptionRow</code></td>
+</tr>
+<tr>
+<td>індекс під фільтр</td>
+<td><code>index=True</code> на <code>source</code>, <code>lang</code>, <code>category</code>, з кроку 7 — <code>ai_category</code>, <code>sentiment</code></td>
+</tr>
+<tr>
+<td><code>GROUP BY</code> замість <code>Counter</code></td>
+<td><code>NewsRepository.stats()</code>; <code>NULL</code> (ще не аналізовані) відсікає <code>where(column.is_not(None))</code></td>
+</tr>
+<tr>
+<td><code>IS NULL</code></td>
+<td><code>find_unanalyzed</code>: <code>NewsRow.analyzed_at.is_(None)</code></td>
+</tr>
+<tr>
+<td><code>ORDER BY</code> для стабільних сторінок</td>
+<td><code>find</code>: <code>order_by(NewsRow.id).offset(skip).limit(limit)</code></td>
+</tr>
+<tr>
+<td><code>INSERT … ON CONFLICT … RETURNING</code></td>
+<td><code>add_many</code> / <code>insert_new</code> (<a href="../../tutorials/03_sqlalchemy_alembic/repository/#add-many">крок 3</a>)</td>
+</tr>
+<tr>
+<td>пошук підрядка без урахування регістру</td>
+<td><code>search</code>: <code>NewsRow.title.icontains(q, autoescape=True)</code></td>
+</tr>
+</tbody>
+</table>
+<p>Зовнішніх ключів у News Hub немає: <code>news.source</code> — рядок з назвою сайту, а не посилання на <code>sources.id</code>, тож <code>JOIN</code> і N+1 у його запитах не виникають. <code>search</code> будує <code>LIKE '%…%'</code>, якому, як показано вище, звичайний індекс не допомагає. На тисячах новин це непомітно; для великої таблиці — триграмний індекс.</p>
+<h2 id="mistakes">Типові помилки<a class="headerlink" href="#mistakes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Помилка</th>
+<th>Наслідок</th>
+<th>Як правильно</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>правило даних лише в Pydantic</td>
+<td>скрипт, міграція чи інший сервіс записують погані дані</td>
+<td><code>NOT NULL</code>, <code>UNIQUE</code>, <code>CHECK</code>, <code>REFERENCES</code> у схемі; Pydantic — для зрозумілої 422</td>
+</tr>
+<tr>
+<td><code>WHERE x = NULL</code></td>
+<td>завжди 0 рядків</td>
+<td><code>IS NULL</code>; у SQLAlchemy <code>.is_(None)</code></td>
+</tr>
+<tr>
+<td>немає <code>ORDER BY</code> у сторінковому запиті</td>
+<td>дублікати й пропуски між сторінками</td>
+<td><code>ORDER BY</code> з унікальним стовпцем наприкінці</td>
+</tr>
+<tr>
+<td>фільтр правої таблиці <code>LEFT JOIN</code> у <code>WHERE</code></td>
+<td>рядки без пари мовчки зникають</td>
+<td>умову в <code>ON</code></td>
+</tr>
+<tr>
+<td><code>count(*)</code> після <code>LEFT JOIN</code></td>
+<td>1 замість 0 для рядка без пари</td>
+<td><code>count(n.id)</code></td>
+</tr>
+<tr>
+<td><code>sum</code> по порожній групі</td>
+<td><code>NULL</code> у JSON замість 0</td>
+<td><code>coalesce(sum(...), 0)</code></td>
+</tr>
+<tr>
+<td>стовпець поза <code>GROUP BY</code></td>
+<td>помилка на PostgreSQL, довільне значення на SQLite</td>
+<td>агрегат або стовпець у <code>GROUP BY</code></td>
+</tr>
+<tr>
+<td>статистика в Python по всіх рядках</td>
+<td>пам'ять і час ростуть з таблицею</td>
+<td><code>GROUP BY</code> у базі</td>
+</tr>
+<tr>
+<td>немає індексу на зовнішньому ключі</td>
+<td><code>JOIN</code> і видалення батьківського рядка — повний перегляд</td>
+<td><code>index=True</code> на FK</td>
+</tr>
+<tr>
+<td>окремі індекси на <code>lang</code> і <code>published_at</code></td>
+<td>стрічка <code>WHERE lang ORDER BY published_at</code> все одно сортує</td>
+<td>складений індекс у порядку запиту</td>
+</tr>
+<tr>
+<td>індекс «на всякий випадок»</td>
+<td>повільніший запис, місце на диску</td>
+<td>індекс під запит, перевірений <code>EXPLAIN</code></td>
+</tr>
+<tr>
+<td><code>UPDATE</code>/<code>DELETE</code> без <code>WHERE</code></td>
+<td>змінено всі рядки</td>
+<td>спершу <code>SELECT</code> з тим самим <code>WHERE</code>; транзакція</td>
+</tr>
+<tr>
+<td>запит у циклі по результатах іншого запиту</td>
+<td>N+1</td>
+<td><code>JOIN</code>, <code>IN (...)</code>, <code>selectinload</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="debugging">Налагодження<a class="headerlink" href="#debugging" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Побачити SQL, який відправляє застосунок</strong>: <code>create_async_engine(url, echo=True)</code> або логер <code>sqlalchemy.engine</code> на рівні <code>INFO</code>. Порахувати запити на ендпоінт — подія <code>before_cursor_execute</code> (так робить <code>count_queries</code> у <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/databases/models.py"><code>examples/databases/models.py</code></a>). Сотня однакових <code>SELECT … WHERE source_id = …</code> — N+1.</li>
+<li><strong>Скомпілювати запит без бази</strong>: <code>print(stmt.compile(dialect=postgresql.dialect()))</code> — так крок 3 показує SQL репозиторію.</li>
+<li><strong>План</strong>: скопіюй запит у <code>psql</code> і виконай <code>EXPLAIN ANALYZE</code>. Шукай <code>Seq Scan</code> на великій таблиці, <code>Rows Removed by Filter</code>, <code>Sort</code> перед <code>Limit</code>. Після масового завантаження — <code>ANALYZE таблиця</code>, інакше планувальник рахує зі старої статистики.</li>
+<li><strong>Повільні запити на сервері</strong>: розширення <code>pg_stat_statements</code> або <code>log_min_duration_statement = 200</code> у налаштуваннях PostgreSQL.</li>
+<li><strong><code>psql</code></strong>: <code>\d news</code> — стовпці, індекси, обмеження, зовнішні ключі; <code>\di+</code> — індекси з розмірами.</li>
+</ul>
+<h2 id="security">Безпека<a class="headerlink" href="#security" title="Permanent link">&para;</a></h2>
+<p><strong>SQL-ін'єкція</strong> — текст від клієнта стає частиною SQL. <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/databases/injection_demo.py"><code>examples/databases/injection_demo.py</code></a>, однаково на SQLite і PostgreSQL:</p>
+<div class="highlight"><span class="filename">injection_demo.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a><span class="n">attack</span> <span class="o">=</span> <span class="s2">"x' OR '1'='1"</span>
+<a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a><span class="n">unsafe</span> <span class="o">=</span> <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">text</span><span class="p">(</span><span class="sa">f</span><span class="s2">"SELECT count(*) FROM news WHERE lang = '</span><span class="si">{</span><span class="n">attack</span><span class="si">}</span><span class="s2">'"</span><span class="p">))</span>
+<a id="__codelineno-38-3" name="__codelineno-38-3" href="#__codelineno-38-3"></a><span class="n">safe</span> <span class="o">=</span> <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">text</span><span class="p">(</span><span class="s2">"SELECT count(*) FROM news WHERE lang = :lang"</span><span class="p">),</span> <span class="p">{</span><span class="s2">"lang"</span><span class="p">:</span> <span class="n">attack</span><span class="p">})</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>--- 1. пошук за мовою з рядка запиту ?lang=
+<a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a>    f-рядок у text():          9 рядків (усі новини)
+<a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a>    text() з :lang:            0
+<a id="__codelineno-39-4" name="__codelineno-39-4" href="#__codelineno-39-4"></a>    select().where(...):       None
+<a id="__codelineno-39-5" name="__codelineno-39-5" href="#__codelineno-39-5"></a>--- 2. ?sort= : назву стовпця параметром не передаси
+<a id="__codelineno-39-6" name="__codelineno-39-6" href="#__codelineno-39-6"></a>    ORDER BY :col → виконалось, але сортує за константою, а не за стовпцем
+<a id="__codelineno-39-7" name="__codelineno-39-7" href="#__codelineno-39-7"></a>    sort='views'                      → [7, 3, 4]
+<a id="__codelineno-39-8" name="__codelineno-39-8" href="#__codelineno-39-8"></a>    sort='views; DROP TABLE news'     → 422: дозволено ['id', 'title', 'views']
+<a id="__codelineno-39-9" name="__codelineno-39-9" href="#__codelineno-39-9"></a>--- 3. ?q= : % і _ у LIKE — теж «код»
+<a id="__codelineno-39-10" name="__codelineno-39-10" href="#__codelineno-39-10"></a>    q='%'     icontains: 9 | icontains(autoescape=True): 0
+<a id="__codelineno-39-11" name="__codelineno-39-11" href="#__codelineno-39-11"></a>    q='_'     icontains: 9 | icontains(autoescape=True): 0
+<a id="__codelineno-39-12" name="__codelineno-39-12" href="#__codelineno-39-12"></a>    q='зміц'  icontains: 1 | icontains(autoescape=True): 1
+<a id="__codelineno-39-13" name="__codelineno-39-13" href="#__codelineno-39-13"></a>    SQL: SELECT news.id  FROM news  WHERE (news.title ILIKE '%' || '50/%' || '%' ESCAPE '/')
+</code></pre></div>
+<ul>
+<li><strong>Значення — лише параметрами.</strong> <code>x' OR '1'='1</code> закрило лапки й дописало умову, яка завжди істинна: запит повернув усі рядки. Замість <code>OR</code> може бути <code>; DROP TABLE</code>. <code>select().where(News.lang == x)</code> і <code>text("… :lang")</code> передають значення окремо від SQL — драйвер ніколи не вставляє його в текст запиту. f-рядок, <code>+</code> чи <code>.format()</code> у <code>text()</code> — ніколи, навіть «для швидкої перевірки».</li>
+<li><strong>Ідентифікатори параметрами не передаються.</strong> <code>ORDER BY :col</code> виконався без помилки, але сортує за рядком-константою <code>'views'</code>, тобто ніяк. Назва стовпця з <code>?sort=</code> — лише через <strong>білий список</strong> (<code>SORTABLE = {"id": News.id, ...}</code>) і 422 для решти.</li>
+<li><strong><code>%</code> і <code>_</code> від клієнта — частина шаблону <code>LIKE</code>.</strong> <code>?q=%</code> знайшов усі 9 новин; на великій таблиці це ще й повний перегляд на кожен запит. <code>icontains(q, autoescape=True)</code> екранує їх (<code>ESCAPE '/'</code>), і News Hub робить саме так у <code>search</code>.</li>
+<li><strong>Мінімальні права.</strong> Користувач бази, від якого працює API, не повинен бути власником схеми чи суперкористувачем: тоді навіть успішна ін'єкція не зробить <code>DROP TABLE</code>. Міграції — окремим користувачем з правами на DDL.</li>
+<li><strong>Тексти помилок бази — не для клієнта.</strong> <code>DETAIL: Key (url)=(...) already exists</code> розкриває дані й схему. Клієнту — <code>409</code> зі своїм повідомленням, повний текст — у журнал (<a href="../../01_http_and_rest/errors/">Помилки API</a>).</li>
+</ul>
+<h2 id="questions">Питання<a class="headerlink" href="#questions" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Чому <code>WHERE sentiment = NULL</code> не знаходить нічого?</li>
+<li>Чим <code>WHERE</code> відрізняється від <code>HAVING</code>? Чому в <code>WHERE</code> не можна написати <code>sum(views) &gt; 1500</code>?</li>
+<li>Звіт «усі джерела й кількість негативних новин» втратив джерела з нулем. Де помилка?</li>
+<li>Чому після <code>LEFT JOIN</code> потрібно <code>count(n.id)</code>, а не <code>count(*)</code>?</li>
+<li>Які стовпці мають індекс без <code>CREATE INDEX</code>, а який очевидний кандидат — ні?</li>
+<li>Для <code>WHERE lang = 'uk' ORDER BY published_at DESC LIMIT 20</code> який індекс потрібен і чому не два окремі?</li>
+<li>Що станеться з першим <code>UPDATE</code> транзакції, якщо другий порушить <code>CHECK</code>? Що буде з наступним <code>SELECT</code> у тій самій транзакції?</li>
+<li>Що таке N+1 і чим його прибрати, якщо потрібні рядки? А якщо потрібні лише кількості?</li>
+<li>Чому назву стовпця для <code>?sort=</code> не можна передати параметром, і як тоді захиститися від ін'єкції?</li>
+</ol>
+<details class="success">
+<summary>Відповіді</summary>
+<ol>
+<li>Порівняння з <code>NULL</code> дає <code>NULL</code>, а не <code>true</code>, і рядок відкидається. Для «немає значення» — <code>IS NULL</code>.</li>
+<li><code>WHERE</code> фільтрує рядки до групування, <code>HAVING</code> — групи після. На кроці <code>WHERE</code> груп ще немає, тож і сум по них теж.</li>
+<li>Умова на праву таблицю (<code>n.sentiment = 'negative'</code>) стоїть у <code>WHERE</code>. Для джерел без пари <code>sentiment</code> — <code>NULL</code>, рядок відкидається, і <code>LEFT JOIN</code> фактично стає <code>INNER JOIN</code>. Умову — в <code>ON</code>.</li>
+<li>Для рядка без пари <code>LEFT JOIN</code> дає один рядок з <code>NULL</code>; <code>count(*)</code> рахує його як 1, <code>count(n.id)</code> — лише не-<code>NULL</code>, тобто 0.</li>
+<li><code>PRIMARY KEY</code> і <code>UNIQUE</code>. Зовнішній ключ (<code>news.source_id</code>) індексу не отримує, а за ним роблять <code>JOIN</code> і перевіряють видалення батьківського рядка.</li>
+<li>Складений <code>(lang, published_at DESC)</code>: він уже впорядкований так, як просить запит, і база читає з нього рівно 20 записів. З двох окремих індексів база або відфільтрує за <code>lang</code> і сортуватиме все знайдене, або пройде весь <code>published_at</code>, відкидаючи інші мови.</li>
+<li>Буде скасований: транзакція або вся, або ніяк. Наступний <code>SELECT</code> PostgreSQL відхилить (<code>current transaction is aborted</code>), доки не буде <code>ROLLBACK</code>.</li>
+<li>Один запит за списком і ще по одному на кожен його елемент. Прибрати — <code>JOIN</code> або другий запит з <code>IN (...)</code> (<code>joinedload</code>/<code>selectinload</code>). Для кількостей — <code>GROUP BY</code> без завантаження рядків.</li>
+<li>Параметр — це завжди <strong>значення</strong>: <code>ORDER BY :col</code> сортує за константою. Назву стовпця беруть зі словника дозволених (білий список), а все інше — <code>422</code>.</li>
+</ol>
+</details>
+<h2 id="next">Що далі<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>
+<p><a href="../sqlalchemy_async/">SQLAlchemy 2 async</a> — як той самий SQL будується з Python: Core і ORM, сесія, ліниві зв'язки в async і <code>selectinload</code>/<code>joinedload</code> проти N+1.</p>
+<p><strong>Джерела:</strong> PostgreSQL — <a href="https://www.postgresql.org/docs/current/tutorial.html">Tutorial</a> (розділи «The SQL Language» і «Advanced Features»), <a href="https://www.postgresql.org/docs/current/ddl-constraints.html">Constraints</a>, <a href="https://www.postgresql.org/docs/current/queries.html">Queries</a> (<code>JOIN</code>, <code>GROUP BY</code>, <code>WITH</code>), <a href="https://www.postgresql.org/docs/current/indexes.html">Indexes</a> (зокрема «Multicolumn Indexes», «Indexes on Expressions»), <a href="https://www.postgresql.org/docs/current/using-explain.html">Using EXPLAIN</a>, <a href="https://www.postgresql.org/docs/current/pgtrgm.html">pg_trgm</a>, <a href="https://www.postgresql.org/docs/current/tutorial-transactions.html">Transactions</a>; SQLAlchemy — <a href="https://docs.sqlalchemy.org/en/20/tutorial/data_select.html">Using SELECT Statements</a>; <a href="https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html">OWASP — SQL Injection Prevention Cheat Sheet</a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Футер" >
+        
+          
+          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Назад: Огляд">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                Огляд
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../sqlalchemy_async/" class="md-footer__link md-footer__link--next" aria-label="Вперед: SQLAlchemy async">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                SQLAlchemy async
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.path", "navigation.prune", "navigation.footer", "toc.follow", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0456\u0439\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u0421\u043a\u043e\u043f\u0456\u044e\u0432\u0430\u0442\u0438 \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0429\u0435 1 \u0437\u0431\u0456\u0433 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.more.other": "\u0429\u0435 # \u0437\u0431\u0456\u0433\u0456\u0432 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.none": "\u0417\u0431\u0456\u0433\u0456\u0432 \u043d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0437\u0431\u0456\u0433", "search.result.other": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e # \u0437\u0431\u0456\u0433\u0456\u0432", "search.result.placeholder": "\u0420\u043e\u0437\u043f\u043e\u0447\u043d\u0456\u0442\u044c \u043f\u0438\u0441\u0430\u0442\u0438 \u0434\u043b\u044f \u043f\u043e\u0448\u0443\u043a\u0443", "search.result.term.missing": "\u041d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e \u0437\u0430\u043f\u0438\u0442\u0443", "select.version": "\u041e\u0431\u0440\u0430\u0442\u0438 \u0432\u0435\u0440\u0441\u0456\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

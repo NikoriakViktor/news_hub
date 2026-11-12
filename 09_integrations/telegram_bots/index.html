@@ -1,0 +1,5035 @@
+
+<!doctype html>
+<html lang="uk" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="FastAPI від типів і Pydantic до Docker, Compose і CI/CD — на прикладі новинного агрегатора">
+      
+      
+      
+        <link rel="canonical" href="https://nikoriakviktor.github.io/news_hub/09_integrations/telegram_bots/">
+      
+      
+        <link rel="prev" href="../llm_reliability/">
+      
+      
+        <link rel="next" href="../websockets/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Telegram-бот - News Hub — книга FastAPI</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#telegram-бот-bot-api-і-aiogram" class="md-skip">
+          Перейти до змісту
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Хедер">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-header__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            News Hub — книга FastAPI
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Telegram-бот
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Пошук" placeholder="Пошук" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Шукати">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистити" aria-label="Очистити" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Пошук розпочато
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Головна
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../00_getting_started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Як користуватися
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../01_http_and_rest/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Книга FastAPI
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorials/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Zero to Hero
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../deep_dive/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  News Hub Deep Dive
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../labs/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Практика
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Довідник
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../TEACHING_GUIDE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Викладачу
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Навігація" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-nav__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    News Hub — книга FastAPI
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Головна
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../00_getting_started/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Як користуватися
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Книга FastAPI
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Книга FastAPI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../01_http_and_rest/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина I. HTTP і дизайн REST API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1" id="__nav_3_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина I. HTTP і дизайн REST API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/http_anatomy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP-запит і відповідь
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/http_methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Методи HTTP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/status_codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Коди відповідей
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/rest_principles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Принципи REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/collections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Колекції і пагінація
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/versioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Версіонування API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Формат помилок
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/api_styles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Які бувають API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/http_clients/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP-клієнти
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/legacy_case/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Кейс: API v1 → v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/meteo_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архітектура meteo_api
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../02_typing_and_pydantic/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина II. Типи і Pydantic
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_2" id="__nav_3_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина II. Типи і Pydantic
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/type_hints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Анотації типів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/pydantic_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Моделі Pydantic 2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/strict_mode/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Режими lax і strict
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/validators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Валідатори і computed_field
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/special_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    URL, email і дати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/validation_error/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ValidationError
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pydantic-settings і .env
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/config_dict/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ConfigDict
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/trust_boundary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Межа довіри
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../03_fastapi_core/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина III. Ядро FastAPI
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_3" id="__nav_3_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина III. Ядро FastAPI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/what_is_fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Що таке FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/routes_and_validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Маршрути і валідація
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Залежності і lifespan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/openapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/fastapi_flask_django/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FastAPI, Flask і Django
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/fastapi_vs_drf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FastAPI і DRF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../04_async/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина IV. Async і конкурентність
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_4" id="__nav_3_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина IV. Async і конкурентність
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/concurrency_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Чекати чи рахувати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/asgi_vs_wsgi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ASGI і WSGI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/endpoint_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Три типи ендпоінтів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/blocking_code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Блокуючий код
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/concurrency_patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Паралельні запити
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../05_databases/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_5" id="__nav_3_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/sql_for_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQL для API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/sqlalchemy_async/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLAlchemy async
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/transactions_and_uow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Транзакції й Unit of Work
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/repository_pattern/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Патерн Repository
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/connection_pool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Пул з'єднань
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05_databases/migrations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Міграції Alembic
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../06_middleware_cache_jobs/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VI. Middleware, кеш і фонові задачі
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_6" id="__nav_3_6_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VI. Middleware, кеш і фонові задачі
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/middleware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Middleware
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/cors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CORS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/redis_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Redis для API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/caching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Стратегії кешу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/rate_limiting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rate limit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/background_jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фонові задачі й черги
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../07_testing/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VII. Тестування API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_7" id="__nav_3_7_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VII. Тестування API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/pytest_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Основи pytest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/fixtures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фікстури
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/test_doubles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Підміни: mock і fake
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/testing_fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Тестування FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/test_databases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Тести з базою даних
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Якість тестів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../08_security/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VIII. Безпека API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_8" id="__nav_3_8_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VIII. Безпека API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/passwords/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Паролі: хеш, сіль, вартість
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Автентифікація: сесії і JWT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/authorization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Авторизація: ролі, scopes, об'єкти
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/ssrf_and_outbound/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSRF і вихідні запити
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/webhooks_and_signatures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Webhook і підписи
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/secrets_and_headers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Секрети, заголовки, проксі
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/owasp_api_top10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OWASP API Top 10
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_9" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина IX. Інтеграції: AI, LLM, Telegram
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_9" id="__nav_3_9_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_9_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина IX. Інтеграції: AI, LLM, Telegram
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai_dev_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI-агент у проєкті
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../llm_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../llm_reliability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Надійність LLM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telegram-бот
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telegram-бот
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проблема
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ментальна модель
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bot-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bot API: виклики й події
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#polling-webhook" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Polling і webhook
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aiogram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        aiogram: Bot, Dispatcher, Router
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#middleware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Middleware: outer і inner
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fsm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FSM: діалог у кілька кроків
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#callbacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inline-кнопки і callback_query
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#formatting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Текст: HTML, екранування, 4096
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Помилки Bot API: 429, 403, 400
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webhook" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Webhook у FastAPI: секрет і повтори
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Тести бота
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#news-hub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        У News Hub
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Типові помилки
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Налагодження
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Безпека
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Питання
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../websockets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WebSocket у FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_10" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../10_docker_and_ci/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина X. Docker, Compose і CI/CD
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_10" id="__nav_3_10_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина X. Docker, Compose і CI/CD
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/docker_image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker-образ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/compose/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker Compose
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/production_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сервер у production
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/ci_cd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD на GitHub Actions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/microservices/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Мікросервіси: коли варто
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../tutorials/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zero to Hero
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../deep_dive/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    News Hub Deep Dive
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../labs/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Практика
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../reference/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Довідник
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TEACHING_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Викладачу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проблема
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ментальна модель
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bot-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bot API: виклики й події
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#polling-webhook" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Polling і webhook
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aiogram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        aiogram: Bot, Dispatcher, Router
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#middleware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Middleware: outer і inner
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fsm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FSM: діалог у кілька кроків
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#callbacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inline-кнопки і callback_query
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#formatting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Текст: HTML, екранування, 4096
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Помилки Bot API: 429, 403, 400
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webhook" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Webhook у FastAPI: секрет і повтори
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Тести бота
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#news-hub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        У News Hub
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Типові помилки
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Налагодження
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Безпека
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Питання
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Навігація" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Головна
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../../01_http_and_rest/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Книга FastAPI
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Частина IX. Інтеграції: AI, LLM, Telegram
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="telegram-бот-bot-api-і-aiogram">Telegram-бот: Bot API і aiogram<a class="headerlink" href="#telegram-бот-bot-api-і-aiogram" title="Permanent link">&para;</a></h1>
+<h2 id="problem">Проблема<a class="headerlink" href="#problem" title="Permanent link">&para;</a></h2>
+<p>Telegram-бот — ще один клієнт твого застосунку, але з незвичною схемою. Не користувач приходить на твою адресу, а <strong>Telegram</strong> доставляє тобі події (повідомлення, натискання кнопок), і ти відповідаєш викликами <strong>його</strong> API. Звідси питання, яких немає у звичайного REST:</p>
+<ul>
+<li>як отримувати події: питати Telegram самому (polling) чи приймати його <code>POST</code> (webhook);</li>
+<li>як не обробити ту саму подію двічі, коли Telegram повторює доставку;</li>
+<li>як відповісти текстом з розміткою, якщо ім'я користувача містить <code>&lt;</code> чи <code>&amp;</code>;</li>
+<li>що робити з <code>429</code> («забагато повідомлень») і <code>403</code> («користувач заблокував бота»);</li>
+<li>як бути певним, що <code>POST</code> на твій webhook надіслав Telegram, а не будь-хто.</li>
+</ul>
+<p><a href="../../tutorials/09_telegram_bot/">Крок 9</a> будує бота News Hub на aiogram 3 з двійником Bot API для тестів. Ця сторінка — Bot API і aiogram загалом: що звідки береться і де межа між Telegram, бібліотекою й твоїм кодом.</p>
+<h2 id="mental-model">Ментальна модель<a class="headerlink" href="#mental-model" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>sequenceDiagram
+    participant U as користувач
+    participant T as Telegram
+    participant F as FastAPI /telegram/webhook
+    participant D as aiogram Dispatcher
+    participant H as handler
+
+    U-&gt;&gt;T: «/subscribe бюджет»
+    T-&gt;&gt;F: POST Update (update_id 41)&lt;br&gt;X-Telegram-Bot-Api-Secret-Token
+    F-&gt;&gt;F: секрет? update_id уже був?
+    F--&gt;&gt;T: 200 одразу
+    F-&gt;&gt;D: feed_update у фоні
+    D-&gt;&gt;D: outer middleware → фільтри → inner middleware
+    D-&gt;&gt;H: handler(message, ...)
+    H-&gt;&gt;T: sendMessage(chat_id, text, parse_mode=HTML)
+    T--&gt;&gt;H: {"ok": true, "result": Message}
+    T-&gt;&gt;U: повідомлення від бота</code></pre>
+<p>Три частини, три відповідальності:</p>
+<table>
+<thead>
+<tr>
+<th>Частина</th>
+<th>Що робить</th>
+<th>Що від неї залежить</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Bot API</strong> (<code>api.telegram.org/bot&lt;TOKEN&gt;/&lt;метод&gt;</code>)</td>
+<td>приймає виклики бота, доставляє <code>Update</code></td>
+<td>формат, ліміти, коди помилок</td>
+</tr>
+<tr>
+<td><strong>aiogram</strong></td>
+<td><code>Bot</code> — виклики методів; <code>Dispatcher</code> і <code>Router</code> — доставка <code>Update</code> у handler</td>
+<td>фільтри, middleware, FSM, винятки</td>
+</tr>
+<tr>
+<td><strong>твій код</strong></td>
+<td>handlers, перевірка webhook, форматування, розсилка</td>
+<td>бізнес-правила, безпека</td>
+</tr>
+</tbody>
+</table>
+<p>Приклади сторінки — <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/integrations/telegram_demo.py"><code>examples/integrations/telegram_demo.py</code></a>. Telegram там не викликається: <code>FakeTelegram</code> — сесія aiogram, яка замість HTTP-запиту записує виклик методу й повертає JSON у форматі Bot API. Перетворення цього JSON на результат чи виняток робить сам aiogram (<code>BaseSession.check_response</code>), тож поведінка бібліотеки справжня, а тексти помилок задає фейк.</p>
+<div class="highlight"><span class="filename">telegram_demo.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">FakeTelegram</span><span class="p">(</span><span class="n">BaseSession</span><span class="p">):</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">make_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bot</span><span class="p">:</span> <span class="n">Bot</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        <span class="n">name</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">__api_method__</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        <span class="c1"># як справжня сесія: Default(parse_mode) → значення з DefaultBotProperties, None — не надсилається</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_value</span><span class="p">(</span><span class="n">method</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">warnings</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">bot</span><span class="o">=</span><span class="n">bot</span><span class="p">,</span> <span class="n">files</span><span class="o">=</span><span class="p">{},</span> <span class="n">_dumps_json</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">calls</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">params</span><span class="p">))</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">:</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>            <span class="n">body</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)}</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_response</span><span class="p">(</span><span class="n">bot</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">body</span><span class="p">[</span><span class="s2">"error_code"</span><span class="p">],</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">body</span><span class="p">))</span><span class="o">.</span><span class="n">result</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        <span class="o">...</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_response</span><span class="p">(</span><span class="n">bot</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">:</span> <span class="n">result</span><span class="p">}))</span><span class="o">.</span><span class="n">result</span>
+</code></pre></div>
+<p>Локальний двійник Bot API як окремий HTTP-сервер (з правилами HTML і ліміту 4096) — у тестах News Hub, <a href="../../tutorials/09_telegram_bot/bot_structure/#twin">крок 9</a>.</p>
+<h2 id="bot-api">Bot API: виклики й події<a class="headerlink" href="#bot-api" title="Permanent link">&para;</a></h2>
+<p>Кожен виклик — <code>POST https://api.telegram.org/bot&lt;TOKEN&gt;/&lt;метод&gt;</code>; відповідь — завжди JSON:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>{"ok": true, "result": …}
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>{"ok": false, "error_code": 429, "description": "Too Many Requests: retry after 3", "parameters": {"retry_after": 3}}
+</code></pre></div>
+<p><strong><code>Update</code></strong> — подія для бота. У кожного є <code>update_id</code>, а з необов'язкових полів присутнє <strong>рівно одне</strong>: <code>message</code>, <code>edited_message</code>, <code>callback_query</code> тощо. <code>update_id</code> ростуть послідовно; документація прямо радить використовувати їх, щоб ігнорувати повторні доставки.</p>
+<p>Токен бота — у шляху запиту. Тому адреса з токеном — секрет: вона не повинна потрапити в журнал доступу проксі чи в текст винятку.</p>
+<h2 id="polling-webhook">Polling і webhook<a class="headerlink" href="#polling-webhook" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Long polling (<code>getUpdates</code>)</th>
+<th>Webhook (<code>setWebhook</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>хто починає</td>
+<td>бот: «є нові?»</td>
+<td>Telegram: <code>POST</code> на твою адресу</td>
+</tr>
+<tr>
+<td>що потрібно</td>
+<td>лише вихідний інтернет</td>
+<td>публічна <code>https://</code>-адреса; порти 443, 80, 88 або 8443</td>
+</tr>
+<tr>
+<td>підтвердження</td>
+<td><code>offset</code> = останній <code>update_id</code> + 1</td>
+<td>відповідь <code>2xx</code></td>
+</tr>
+<tr>
+<td>якщо бот не відповів</td>
+<td>update чекає наступного <code>getUpdates</code></td>
+<td>Telegram повторює запит і після кількох спроб здається</td>
+</tr>
+<tr>
+<td>одночасно</td>
+<td>ні: поки webhook встановлено, <code>getUpdates</code> не працює</td>
+<td></td>
+</tr>
+<tr>
+<td>для чого</td>
+<td>розробка; бот окремим процесом</td>
+<td>бот — частина вебзастосунку</td>
+</tr>
+</tbody>
+</table>
+<p>Обидва способи зберігають непрочитані update на сервері Telegram <strong>не довше 24 годин</strong>.</p>
+<p><strong>Як працює <code>offset</code>.</strong> <code>getUpdates</code> повертає update, починаючи з найстарішого непідтвердженого. Update вважається підтвердженим, щойно <code>getUpdates</code> викликано з <code>offset</code>, більшим за його <code>update_id</code>. <code>timeout</code> — скільки секунд Telegram тримає запит, якщо нового немає (long polling); за замовчуванням <code>0</code> — звичайне опитування, лише для тестів. aiogram робить усе це сам: <code>dp.start_polling(bot)</code> (у 3.31 — <code>polling_timeout=10</code> секунд, повтори з backoff при збоях мережі).</p>
+<p><strong>Webhook і повтори.</strong> Telegram вважає доставку невдалою, якщо відповідь не <code>2xx</code> або не прийшла вчасно, — і надсилає той самий update ще раз. Звідси два правила: відповідай <code>200</code> <strong>одразу</strong>, а обробляй після відповіді; і не обробляй той самий <code>update_id</code> двічі.</p>
+<p><code>allowed_updates</code> (у <code>setWebhook</code> і <code>getUpdates</code>) — які типи update надсилати. Не вказав <code>callback_query</code> — натискання кнопок не дійдуть до бота, хоч handler і написано.</p>
+<p>Як News Hub вибирає режим за змінними середовища і чому <code>delete_webhook()</code> — перше, що робить polling, — <a href="../../tutorials/09_telegram_bot/polling_webhook/#modes">крок 9</a>.</p>
+<h2 id="aiogram">aiogram: <code>Bot</code>, <code>Dispatcher</code>, <code>Router</code><a class="headerlink" href="#aiogram" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Об'єкт</th>
+<th>Що це</th>
+<th>Скільки</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Bot</code></td>
+<td>клієнт Bot API: токен, HTTP-сесія, типові налаштування (<code>parse_mode</code>)</td>
+<td>один на токен</td>
+</tr>
+<tr>
+<td><code>Dispatcher</code></td>
+<td>приймає <code>Update</code>, проганяє через middleware, шукає handler; кореневий <code>Router</code></td>
+<td>один на процес (на застосунок)</td>
+</tr>
+<tr>
+<td><code>Router</code></td>
+<td>група handlers з фільтрами; підключається до диспетчера чи іншого роутера</td>
+<td>скільки завгодно</td>
+</tr>
+</tbody>
+</table>
+<p>Handler — функція з фільтрами. aiogram перевіряє handlers <strong>згори донизу</strong> і викликає перший, чиї фільтри пройшли:</p>
+<div class="highlight"><span class="filename">telegram_demo.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">build_router</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Router</span><span class="p">:</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="sd">"""Новий Router на кожен виклик: один Router можна підключити лише до одного Dispatcher."""</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">router</span> <span class="o">=</span> <span class="n">Router</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"demo"</span><span class="p">)</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="nd">@router</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="n">CommandStart</span><span class="p">())</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="n">Message</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="nd">@router</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="n">Command</span><span class="p">(</span><span class="s2">"subscribe"</span><span class="p">))</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">subscribe</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="n">Message</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="n">CommandObject</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">FSMContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="nd">@router</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="n">Subscribe</span><span class="o">.</span><span class="n">waiting_word</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">got_word</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="n">Message</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">FSMContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    <span class="nd">@router</span><span class="o">.</span><span class="n">callback_query</span><span class="p">(</span><span class="n">Unsubscribe</span><span class="o">.</span><span class="n">filter</span><span class="p">())</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">unsubscribe</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="n">CallbackQuery</span><span class="p">,</span> <span class="n">callback_data</span><span class="p">:</span> <span class="n">Unsubscribe</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    <span class="nd">@router</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"/"</span><span class="p">))</span>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">unknown_command</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="n">Message</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>      <span class="c1"># останнім: «будь-яка команда»</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    <span class="k">return</span> <span class="n">router</span>
+</code></pre></div>
+<ul>
+<li><strong>Фільтри</strong> — <code>CommandStart()</code>, <code>Command("subscribe")</code>, стан FSM, «магічний» <code>F</code> (<code>F.text</code>, <code>F.text.startswith("/")</code>, <code>F.chat.type == "private"</code>).</li>
+<li><strong>Параметри handler</strong> — не з позиції, а за назвою: <code>message</code>, <code>command</code> (аргументи команди), <code>state</code> (FSM), <code>callback_data</code> (розібраний <code>CallbackData</code>) і все, що middleware поклало в <code>data</code>. Те саме, що <code>Depends</code> у FastAPI, але за іменем.</li>
+<li><strong>«Будь-що» — останнім.</strong> Handler <code>F.text</code> перед <code>Command(...)</code> перехопить і команди.</li>
+</ul>
+<h2 id="middleware">Middleware: outer і inner<a class="headerlink" href="#middleware" title="Permanent link">&para;</a></h2>
+<p>Middleware в aiogram — функція навколо handler, як у FastAPI. Різниця — <strong>коли</strong> вона спрацьовує:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>--- 2. порядок: outer middleware → фільтри → inner middleware → handler
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>   'просто текст'                     ['outer']
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>   '/weather'                         ['outer', 'inner', 'handler unknown_command']
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>   '/subscribe'                       ['outer', 'inner', 'handler subscribe']
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>   'просто текст'                     ['outer', 'inner', 'handler got_word']
+</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    subgraph U1["1. «просто текст», стану немає"]
+        direction LR
+        a1["outer"] --&gt; a2{"фільтри: жоден&lt;br&gt;handler не підійшов"} --&gt; a3["inner не викликано&lt;br&gt;відповіді немає"]
+    end
+    subgraph U2["2. «/weather»"]
+        direction LR
+        b1["outer"] --&gt; b2{"перший збіг:&lt;br&gt;F.text.startswith('/')"} --&gt; b3["inner"] --&gt; b4["unknown_command"]
+    end
+    subgraph U3["3. «/subscribe» без слова"]
+        direction LR
+        c1["outer → inner"] --&gt; c2["subscribe: set_state&lt;br&gt;waiting_word"]
+    end
+    subgraph U4["4. «просто текст» у стані waiting_word"]
+        direction LR
+        d1["outer"] --&gt; d2{"фільтр стану&lt;br&gt;пройшов"} --&gt; d3["inner → got_word"]
+    end
+    U1 --&gt; U2 --&gt; U3 --&gt; U4
+
+    class a1,b1,c1,d1 step
+    class a2,b2,d2 decision
+    class a3 warning
+    class b3,b4,c2,d3 success</code></pre>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>dp.message.outer_middleware(...)</code></th>
+<th><code>dp.message.middleware(...)</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>коли</td>
+<td>для <strong>кожного</strong> повідомлення, до фільтрів</td>
+<td>лише коли handler знайдено, перед ним</td>
+</tr>
+<tr>
+<td>для чого</td>
+<td>rate limit, журнал, відкинути все від заблокованих</td>
+<td>сесія бази, залежності для handler</td>
+</tr>
+<tr>
+<td>ціна</td>
+<td>працює й для повідомлень, які ніхто не обробить</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>Те саме повідомлення «просто текст» спершу не обробив ніхто (лише <code>outer</code>), а після <code>/subscribe</code> — обробив <code>got_word</code>: стан FSM змінив, які фільтри проходять. Як News Hub кладе в <code>data</code> свою сесію бази на кожен update і чому rate limit — саме <code>outer</code> — <a href="../../tutorials/09_telegram_bot/bot_structure/#middlewares">крок 9</a>.</p>
+<h2 id="fsm">FSM: діалог у кілька кроків<a class="headerlink" href="#fsm" title="Permanent link">&para;</a></h2>
+<p>Команда без аргументу («/subscribe» — а яке слово?) — це діалог: бот питає, наступне повідомлення — відповідь. Між двома update треба пам'ятати, на якому кроці користувач. Це <strong>скінченний автомат</strong> (FSM): стан на кожну пару «чат + користувач».</p>
+<div class="highlight"><span class="filename">telegram_demo.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Subscribe</span><span class="p">(</span><span class="n">StatesGroup</span><span class="p">):</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">waiting_word</span> <span class="o">=</span> <span class="n">State</span><span class="p">()</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="k">await</span> <span class="n">state</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">Subscribe</span><span class="o">.</span><span class="n">waiting_word</span><span class="p">)</span>       <span class="c1"># у handler /subscribe</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="o">...</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="k">await</span> <span class="n">state</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>                                 <span class="c1"># у got_word, після збереження</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>--- 3. FSM: /subscribe без слова → стан → наступне повідомлення
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>   стан після /subscribe              Subscribe:waiting_word
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>   стан після «Бюджет»                None
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>   підписки 3003                      {'бюджет'}
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>   callback_data кнопки               unsub:бюджет
+</code></pre></div>
+<ul>
+<li><strong>Сховище стану</strong> — за замовчуванням <code>MemoryStorage</code>, у пам'яті процесу. Перезапуск — і всі діалоги забуто; два воркери — кожен зі своїм станом. На сервері — <code>RedisStorage</code> з <code>aiogram.fsm.storage.redis</code>.</li>
+<li><strong>Стан — на чат.</strong> Тест <code>test_fsm_state_is_per_chat</code>: інший чат зі словом «ціни» не потрапляє в <code>got_word</code>.</li>
+<li><strong>Вихід з діалогу.</strong> Користувач може передумати й надіслати <code>/news</code>. Без <code>state.clear()</code> на інших командах (або окремої <code>/cancel</code>) він застрягне.</li>
+</ul>
+<p>У News Hub FSM немає: <code>/subscribe</code> приймає слово лише аргументом команди.</p>
+<h2 id="callbacks">Inline-кнопки і <code>callback_query</code><a class="headerlink" href="#callbacks" title="Permanent link">&para;</a></h2>
+<p>Кнопка під повідомленням не надсилає текст — натискання приходить окремим update <code>callback_query</code> з <code>callback_data</code>, яку задав бот. aiogram дає фабрику з префіксом і типізованими полями:</p>
+<div class="highlight"><span class="filename">telegram_demo.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Unsubscribe</span><span class="p">(</span><span class="n">CallbackData</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"unsub"</span><span class="p">):</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="n">word</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">InlineKeyboardButton</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">"Відписатися"</span><span class="p">,</span> <span class="n">callback_data</span><span class="o">=</span><span class="n">Unsubscribe</span><span class="p">(</span><span class="n">word</span><span class="o">=</span><span class="n">word</span><span class="o">.</span><span class="n">casefold</span><span class="p">())</span><span class="o">.</span><span class="n">pack</span><span class="p">())</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="nd">@router</span><span class="o">.</span><span class="n">callback_query</span><span class="p">(</span><span class="n">Unsubscribe</span><span class="o">.</span><span class="n">filter</span><span class="p">())</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">unsubscribe</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="n">CallbackQuery</span><span class="p">,</span> <span class="n">callback_data</span><span class="p">:</span> <span class="n">Unsubscribe</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    <span class="n">SUBSCRIPTIONS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">query</span><span class="o">.</span><span class="n">from_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">callback_data</span><span class="o">.</span><span class="n">word</span><span class="p">)</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    <span class="k">await</span> <span class="n">query</span><span class="o">.</span><span class="n">answer</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Відписано від «</span><span class="si">{</span><span class="n">callback_data</span><span class="o">.</span><span class="n">word</span><span class="si">}</span><span class="s2">»"</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>--- 4. натискання inline-кнопки → callback_query
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>   handler                            ['handler unsubscribe']
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>   виклик Bot API                     ('answerCallbackQuery', {'callback_query_id': 'cb8', 'text': 'Відписано від «бюджет»'})
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>   підписки 3003                      set()
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>   callback_data &gt; 64 байтів          Resulted callback data is too long! len(…
+</code></pre></div>
+<ul>
+<li><strong><code>callback_data</code> — 1–64 байти.</strong> Кирилиця — два байти на літеру в UTF-8: «unsub:» + 40 літер «б» — це 86 байтів, і <code>pack()</code> кидає <code>ValueError</code> ще до виклику Telegram. Довгі дані — в базу, у кнопку — їхній id.</li>
+<li><strong><code>callback_data</code> приходить від клієнта</strong> — це вхідні дані, як тіло запиту. Перевіряй, що чат, з якого натиснули, має право на цю дію: <code>query.from_user.id</code>, а не id з <code>callback_data</code>.</li>
+<li><strong><code>answer()</code> обов'язковий.</strong> Без <code>answerCallbackQuery</code> клієнт Telegram показує на кнопці годинник.</li>
+<li><code>callback_query</code> має бути в <code>allowed_updates</code>.</li>
+</ul>
+<h2 id="formatting">Текст: HTML, екранування, 4096<a class="headerlink" href="#formatting" title="Permanent link">&para;</a></h2>
+<p><code>parse_mode=HTML</code> дозволяє лише теги з документації (<code>&lt;b&gt;</code>, <code>&lt;i&gt;</code>, <code>&lt;a href&gt;</code>, <code>&lt;code&gt;</code>, <code>&lt;pre&gt;</code>, <code>&lt;blockquote&gt;</code>…), а <strong>всі</strong> <code>&lt;</code>, <code>&gt;</code> і <code>&amp;</code> поза тегом мають бути замінені на <code>&amp;lt;</code>, <code>&amp;gt;</code>, <code>&amp;amp;</code>. Інакше Telegram відхиляє повідомлення з <code>400 can't parse entities</code> — і бот мовчить. Два способи:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>--- 1. ім'я з &lt; і &amp;: html.escape або aiogram.utils.formatting
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>   sendMessage                        'Привіт, &lt;b&gt;&amp;lt;Олена &amp;amp; Co&amp;gt;&lt;/b&gt;!' parse_mode=HTML
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>   sendMessage                        'Привіт, &lt;Олена &amp; Co&gt;!' entities=[('bold', 8, 12)]
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>html.escape</code> + <code>parse_mode=HTML</code></th>
+<th><code>aiogram.utils.formatting</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>як</td>
+<td><code>f"Привіт, &lt;b&gt;{html.escape(name, quote=False)}&lt;/b&gt;!"</code></td>
+<td><code>Text("Привіт, ", Bold(name), "!").as_kwargs()</code></td>
+</tr>
+<tr>
+<td>що йде в Telegram</td>
+<td>розмітка в тексті</td>
+<td>чистий текст + <code>entities</code> (зміщення й довжини)</td>
+</tr>
+<tr>
+<td>ризик</td>
+<td>забув <code>escape</code> в одному місці — <code>400</code></td>
+<td>розмітки в тексті немає, нічого екранувати</td>
+</tr>
+<tr>
+<td>коли</td>
+<td>шаблони, вже готовий HTML</td>
+<td>текст, складений з чужих даних</td>
+</tr>
+</tbody>
+</table>
+<p>Обмеження тексту — <strong>1–4096 символів після розбору розмітки</strong>. Довгий список ріжуть на частини між рядками, а не кожні N символів: розріз посеред <code>&lt;b&gt;…&lt;/b&gt;</code> чи <code>&amp;amp;</code> дає дві невалідні частини. Як це зроблено в News Hub (<code>esc</code>, <code>link</code>, <code>split_message</code>) — <a href="../../tutorials/09_telegram_bot/html_replies/">крок 9</a>.</p>
+<h2 id="errors">Помилки Bot API: 429, 403, 400<a class="headerlink" href="#errors" title="Permanent link">&para;</a></h2>
+<p>aiogram перетворює відповідь <code>{"ok": false, …}</code> на виняток за кодом:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>--- 5. помилки Bot API → винятки aiogram
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>   429                                TelegramRetryAfter, retry_after=3
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>   403                                TelegramForbiddenError: Forbidden: bot was blocked by the user
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>   400                                TelegramBadRequest: Bad Request: can't parse entities
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Код</th>
+<th>Виняток aiogram</th>
+<th>Що означає</th>
+<th>Дія</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>429</code></td>
+<td><code>TelegramRetryAfter</code> (<code>.retry_after</code>)</td>
+<td>flood control</td>
+<td>почекати <code>retry_after</code> секунд і повторити</td>
+</tr>
+<tr>
+<td><code>403</code></td>
+<td><code>TelegramForbiddenError</code></td>
+<td>бот заблокований, вилучений з групи</td>
+<td>більше не писати в цей чат: прибрати підписки</td>
+</tr>
+<tr>
+<td><code>400</code></td>
+<td><code>TelegramBadRequest</code></td>
+<td>невірний запит: розмітка, довжина, чат</td>
+<td>виправити код; повтор не допоможе</td>
+</tr>
+<tr>
+<td><code>401</code></td>
+<td><code>TelegramUnauthorizedError</code></td>
+<td>невірний токен</td>
+<td>зупинити бота, перевірити <code>BOT_TOKEN</code></td>
+</tr>
+<tr>
+<td><code>409</code></td>
+<td><code>TelegramConflictError</code></td>
+<td><code>getUpdates</code> при встановленому webhook</td>
+<td><code>delete_webhook()</code> перед polling</td>
+</tr>
+<tr>
+<td><code>5xx</code></td>
+<td><code>TelegramServerError</code></td>
+<td>збій Telegram</td>
+<td>повтор з backoff</td>
+</tr>
+</tbody>
+</table>
+<p><code>TelegramRetryAfter</code> перевіряється <strong>першим</strong>: aiogram дивиться на <code>parameters.retry_after</code> раніше за код. Ліміти, після яких приходить <code>429</code>, за <a href="https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this">FAQ Telegram</a>:</p>
+<ul>
+<li>в одному чаті — не частіше за одне повідомлення на секунду (короткі сплески можливі);</li>
+<li>у групі — не більше 20 повідомлень на хвилину;</li>
+<li>розсилка — не більше близько 30 повідомлень на секунду (більше — лише з платними розсилками).</li>
+</ul>
+<p>Розсилка підписникам з паузою, <code>retry_after</code> і прибиранням чатів після <code>403</code> — <a href="../../tutorials/09_telegram_bot/subscriptions_notify/#notify">крок 9</a>.</p>
+<h2 id="webhook">Webhook у FastAPI: секрет і повтори<a class="headerlink" href="#webhook" title="Permanent link">&para;</a></h2>
+<p>Адреса webhook публічна: <code>POST</code> на неї може надіслати будь-хто. <code>setWebhook(secret_token=…)</code> змушує Telegram додавати заголовок <code>X-Telegram-Bot-Api-Secret-Token</code> у кожен запит (1–256 символів <code>A-Z a-z 0-9 _ -</code>). Перевірка — перше, що робить endpoint:</p>
+<div class="highlight"><span class="filename">telegram_demo.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/telegram/webhook"</span><span class="p">)</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">webhook</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">background</span><span class="p">:</span> <span class="n">BackgroundTasks</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="n">got</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"X-Telegram-Bot-Api-Secret-Token"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">hmac</span><span class="o">.</span><span class="n">compare_digest</span><span class="p">(</span><span class="n">got</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span> <span class="n">SECRET</span><span class="o">.</span><span class="n">encode</span><span class="p">()):</span>        <span class="c1"># порівняння за сталий час</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="mi">401</span><span class="p">,</span> <span class="s2">"неправильний секрет"</span><span class="p">)</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>        <span class="n">update</span> <span class="o">=</span> <span class="n">Update</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="k">await</span> <span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="p">(),</span> <span class="n">context</span><span class="o">=</span><span class="p">{</span><span class="s2">"bot"</span><span class="p">:</span> <span class="n">bot</span><span class="p">})</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">"це не update"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>    <span class="k">if</span> <span class="n">update</span><span class="o">.</span><span class="n">update_id</span> <span class="ow">in</span> <span class="n">SEEN</span><span class="p">:</span>                                     <span class="c1"># Telegram повторює доставку</span>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>        <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>    <span class="n">SEEN</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">update</span><span class="o">.</span><span class="n">update_id</span><span class="p">)</span>
+<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>    <span class="n">background</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">dp</span><span class="o">.</span><span class="n">feed_update</span><span class="p">,</span> <span class="n">bot</span><span class="p">,</span> <span class="n">update</span><span class="p">)</span>                 <span class="c1"># 200 одразу, обробка — після</span>
+<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>    <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>--- 6. webhook: секрет, повтор того самого update, обробка після відповіді
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>   без секрету                        401 {'detail': 'неправильний секрет'}
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>   чужий секрет                       401 {'detail': 'неправильний секрет'}
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>   правильний                         200 {'ok': True}
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>   той самий update_id                200 {'ok': True}
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>   не update                          400 {'detail': 'це не update'}
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>   sendMessage у чат 4004             1
+</code></pre></div>
+<ul>
+<li><strong>Порядок: секрет → розбір тіла.</strong> Чужий запит не повинен навіть потрапити в парсер.</li>
+<li><strong><code>hmac.compare_digest</code></strong>, а не <code>==</code>: час порівняння не підказує, скільки перших символів збіглося.</li>
+<li><strong>Повтор того самого <code>update_id</code> — <code>200</code>, а не помилка</strong>: Telegram має перестати повторювати. Користувач отримав одну відповідь, а не дві.</li>
+<li><strong><code>SEEN</code> у пам'яті — лише для прикладу.</strong> З кількома воркерами чи після перезапуску — <code>SET NX</code> у Redis з TTL (update живуть на сервері Telegram до 24 годин).</li>
+<li><strong><code>BackgroundTasks</code></strong> — обробка після відповіді. Якщо handler падає, Telegram про це не дізнається і не повторить — помилку видно лише в журналі.</li>
+</ul>
+<p>Ця сама схема — секрет, <code>401</code>, <code>400</code>, обробка у фоні — у <a href="../../tutorials/09_telegram_bot/polling_webhook/#webhook">кроці 9</a>, а загальні правила для будь-якого webhook (підпис, захист від повтору, швидка відповідь) — у <a href="../../01_http_and_rest/api_styles/#webhook">Які бувають API: webhook</a>.</p>
+<h2 id="tests">Тести бота<a class="headerlink" href="#tests" title="Permanent link">&para;</a></h2>
+<p>Update — це словник; відповідь бота — запис у <code>FakeTelegram.calls</code>. Тест проганяє update через справжній <code>Dispatcher</code>:</p>
+<div class="highlight"><span class="filename">test_telegram.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">asyncio</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_user_name_is_escaped</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="n">bot</span><span class="p">,</span> <span class="n">dp</span><span class="p">,</span> <span class="n">session</span> <span class="o">=</span> <span class="n">build</span><span class="p">()</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>    <span class="k">await</span> <span class="n">feed</span><span class="p">(</span><span class="n">dp</span><span class="p">,</span> <span class="n">bot</span><span class="p">,</span> <span class="n">message_update</span><span class="p">(</span><span class="s2">"/start"</span><span class="p">,</span> <span class="n">first_name</span><span class="o">=</span><span class="s2">"&lt;script&gt;"</span><span class="p">))</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>    <span class="k">assert</span> <span class="n">session</span><span class="o">.</span><span class="n">calls</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="s2">"text"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"Привіт, &lt;b&gt;&amp;lt;script&amp;gt;&lt;/b&gt;!"</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">asyncio</span>
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_forbidden_is_an_exception_not_a_silent_failure</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>    <span class="n">bot</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">session</span> <span class="o">=</span> <span class="n">build</span><span class="p">()</span>
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>    <span class="n">session</span><span class="o">.</span><span class="n">errors</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">"error_code"</span><span class="p">:</span> <span class="mi">403</span><span class="p">,</span> <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Forbidden: bot was blocked by the user"</span><span class="p">}]</span>
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>    <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="n">TelegramForbiddenError</span><span class="p">):</span>
+<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>        <span class="k">await</span> <span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">)</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Підхід</th>
+<th>Що перевіряє</th>
+<th>Чого не перевіряє</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>підмінена сесія (<code>FakeTelegram</code>)</td>
+<td>handlers, фільтри, middleware, FSM, обробку винятків aiogram</td>
+<td>HTTP-рівень: як aiogram кодує запит, тексти помилок Telegram</td>
+</tr>
+<tr>
+<td>двійник Bot API як HTTP-сервер (<a href="../../tutorials/09_telegram_bot/bot_structure/#twin">крок 9</a>)</td>
+<td>ще й справжній HTTP aiogram, webhook наживо, правила HTML і 4096</td>
+<td>що Telegram поводиться так само, як двійник</td>
+</tr>
+<tr>
+<td>справжній бот з тестовим токеном</td>
+<td>усе</td>
+<td>автоматично в CI — ні: мережа, ліміти, токен</td>
+</tr>
+</tbody>
+</table>
+<h2 id="news-hub">У News Hub<a class="headerlink" href="#news-hub" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Ідея сторінки</th>
+<th>Де в коді</th>
+<th>Розбір</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Bot</code>, <code>Dispatcher</code>, роутер з функції</td>
+<td><code>bot/factory.py</code>, <code>handlers.build_router()</code></td>
+<td><a href="../../tutorials/09_telegram_bot/bot_structure/#parts">крок 9</a></td>
+</tr>
+<tr>
+<td>outer — rate limit, inner — сесія бази</td>
+<td><code>bot/middlewares.py</code></td>
+<td><a href="../../tutorials/09_telegram_bot/bot_structure/#middlewares">крок 9</a></td>
+</tr>
+<tr>
+<td>адміни бота й ліміт <code>/scrape</code></td>
+<td><code>security.py</code> (<code>AdminSettings.telegram_ids</code>), <code>handlers.cmd_scrape</code> (<code>LIMITS["scrape"]</code>)</td>
+<td><a href="../../tutorials/09_telegram_bot/bot_structure/#admin">крок 9</a></td>
+</tr>
+<tr>
+<td>HTML: <code>esc</code>, <code>link</code>, розріз за рядками</td>
+<td><code>bot/formatting.py</code></td>
+<td><a href="../../tutorials/09_telegram_bot/html_replies/">крок 9</a></td>
+</tr>
+<tr>
+<td><code>429</code> → <code>retry_after</code>, <code>403</code> → прибрати підписки</td>
+<td><code>notify.py</code></td>
+<td><a href="../../tutorials/09_telegram_bot/subscriptions_notify/#notify">крок 9</a></td>
+</tr>
+<tr>
+<td>polling для розробки, webhook у FastAPI</td>
+<td><code>bot/__main__.py</code>, <code>POST /api/telegram/webhook</code></td>
+<td><a href="../../tutorials/09_telegram_bot/polling_webhook/">крок 9</a></td>
+</tr>
+<tr>
+<td>секрет: 32–256 символів, <code>verify_secret_token</code></td>
+<td><code>bot/settings.py</code>, <code>api.py</code></td>
+<td><a href="../../tutorials/09_telegram_bot/polling_webhook/#settings">крок 9</a></td>
+</tr>
+<tr>
+<td>двійник Bot API</td>
+<td><code>tests/telegram_twin.py</code></td>
+<td><a href="../../tutorials/09_telegram_bot/bot_structure/#twin">крок 9</a></td>
+</tr>
+</tbody>
+</table>
+<p>Чого в News Hub немає і чому: FSM — <code>/subscribe</code> бере слово аргументом; inline-кнопки — завдання в <a href="../../tutorials/09_telegram_bot/checkpoint/#unsubscribe-button">контрольній точці кроку 9</a>; журналу <code>update_id</code> — повторна доставка <code>/subscribe</code> нічого не зламає (<code>on_conflict_do_nothing</code> на парі чат + слово), а повторна <code>/news</code> лише надішле стрічку ще раз; реєстрація webhook передає <code>allowed_updates=["message"]</code>.</p>
+<h2 id="mistakes">Типові помилки<a class="headerlink" href="#mistakes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Помилка</th>
+<th>Наслідок</th>
+<th>Як правильно</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ім'я чи заголовок у HTML без екранування</td>
+<td><code>400 can't parse entities</code>, бот мовчить</td>
+<td><code>html.escape</code> або <code>aiogram.utils.formatting</code></td>
+</tr>
+<tr>
+<td>розріз довгого тексту кожні 4096 символів</td>
+<td>невалідний HTML у частинах</td>
+<td>різати між рядками</td>
+</tr>
+<tr>
+<td><code>getUpdates</code> при встановленому webhook</td>
+<td><code>409 Conflict</code></td>
+<td><code>delete_webhook()</code> перед polling</td>
+</tr>
+<tr>
+<td>довга обробка до відповіді webhook</td>
+<td>Telegram повторює update</td>
+<td><code>200</code> одразу, обробка у фоні</td>
+</tr>
+<tr>
+<td>той самий <code>update_id</code> обробляється двічі</td>
+<td>дві відповіді, подвійна підписка</td>
+<td>журнал <code>update_id</code> або ідемпотентні handlers</td>
+</tr>
+<tr>
+<td>webhook без <code>secret_token</code></td>
+<td>будь-хто надсилає «update»</td>
+<td>секрет + <code>hmac.compare_digest</code></td>
+</tr>
+<tr>
+<td><code>except Exception</code> при розсилці</td>
+<td><code>403</code>-чати отримують спроби вічно, <code>429</code> губить повідомлення</td>
+<td><code>TelegramForbiddenError</code>, <code>TelegramRetryAfter</code> окремо</td>
+</tr>
+<tr>
+<td><code>F.text</code> вище за <code>Command(...)</code></td>
+<td>команди перехоплює «будь-який текст»</td>
+<td>загальні handlers — останніми</td>
+</tr>
+<tr>
+<td><code>MemoryStorage</code> FSM на сервері з кількома воркерами</td>
+<td>стан діалогу губиться</td>
+<td><code>RedisStorage</code></td>
+</tr>
+<tr>
+<td><code>callback_data</code> з довгим текстом</td>
+<td><code>ValueError</code> при <code>pack()</code></td>
+<td>у кнопку — id, дані — в базу</td>
+</tr>
+<tr>
+<td>забули <code>callback_query</code> в <code>allowed_updates</code></td>
+<td>кнопки «не працюють»</td>
+<td>перелічити всі потрібні типи</td>
+</tr>
+<tr>
+<td>один <code>Router</code> у двох <code>Dispatcher</code></td>
+<td>помилка aiogram при підключенні</td>
+<td>роутер з функції</td>
+</tr>
+</tbody>
+</table>
+<h2 id="debugging">Налагодження<a class="headerlink" href="#debugging" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Бот мовчить?</strong> У журналі шукай <code>TelegramBadRequest</code>: найчастіше — розмітка (<code>can't parse entities</code>) або текст понад 4096 символів.</li>
+<li><strong>Webhook не доходить?</strong> <code>getWebhookInfo</code> показує адресу, кількість update, що чекають (<code>pending_update_count</code>), і останню помилку доставки (<code>last_error_message</code>).</li>
+<li><strong>Чи дійшов update до handler?</strong> Outer middleware з журналом показує кожне повідомлення; якщо outer бачить, а handler — ні, не підійшов жоден фільтр (або спрацював інший, вищий).</li>
+<li><strong>Стан FSM?</strong> <code>dp.fsm.get_context(bot, chat_id=…, user_id=…).get_state()</code>.</li>
+<li><strong>Локально без публічної адреси</strong> — polling; для webhook — тунель або двійник (<a href="../../tutorials/09_telegram_bot/polling_webhook/#webhook-run">крок 9</a>).</li>
+</ul>
+<h2 id="security">Безпека<a class="headerlink" href="#security" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Токен бота — секрет.</strong> Він у шляху кожного запиту: стеж, щоб URL з токеном не потрапив у журнал. Витік — перевипусти токен у @BotFather.</li>
+<li><strong>Webhook — вхідні дані з інтернету:</strong> секрет у заголовку, <code>hmac.compare_digest</code>, розбір через модель.</li>
+<li><strong>Усе від користувача — недовірене:</strong> текст, ім'я, <code>callback_data</code>. Екранування на виході, перевірка прав на кожну дію.</li>
+<li><strong>Бот — ще один вхід у застосунок.</strong> Правила «хто може змінювати» з API діють і тут — і записані в одному місці. У News Hub <code>/scrape</code> дозволено лише id з <code>BOT_ADMIN_IDS</code>. Цей список — частина тих самих <code>AdminSettings</code>, що й адмін API (<code>telegram_ids</code> у <code>security.py</code>): без <code>JWT_SECRET</code> і <code>ADMIN_PASSWORD_HASH</code> адміна немає й у боті. <code>BOT_ADMIN_IDS</code>, заданий без них, або нечисловий id зупиняють старт з <code>RuntimeError</code> (<a href="../../tutorials/09_telegram_bot/bot_structure/#admin">крок 9</a>, <a href="../../08_security/authorization/#news-hub-two-entries">було → стало</a>).</li>
+<li><strong>Rate limit на користувача</strong> — бот, що на кожне повідомлення викликає LLM, — це рахунок, який хтось інший може збільшити. Дорогі дії обмежують так само, як в API, а не лише загальним лімітом повідомлень. У News Hub загальний outer-ліміт — 20 повідомлень на хвилину, а <code>/scrape</code> додатково бере межу збору з <code>LIMITS["scrape"]</code> — ту саму, що й <code>POST /api/scrape*</code>. Лічильник — <code>rate:scrape:tg&lt;id&gt;</code>, понад межу бот відповідає «Забагато зборів: N за W с; спробуй через T с.».</li>
+</ul>
+<h2 id="questions">Питання<a class="headerlink" href="#questions" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Чим long polling відрізняється від звичайного опитування? Що задає <code>timeout</code> у <code>getUpdates</code>?</li>
+<li>Як Telegram дізнається, що update оброблено, у polling і у webhook?</li>
+<li>Чому webhook має відповідати <code>200</code> до обробки і що буде, якщо handler упаде після відповіді?</li>
+<li>Чим outer middleware відрізняється від inner? Куди поставити rate limit і чому?</li>
+<li>Чому <code>F.text</code> над <code>Command("news")</code> ламає команди?</li>
+<li>Де зберігається стан FSM за замовчуванням і чим це погано на сервері?</li>
+<li>Чому <code>callback_data</code> не можна довіряти і скільки в неї вміщається?</li>
+<li>У чому різниця між <code>html.escape</code> + <code>parse_mode=HTML</code> і <code>aiogram.utils.formatting</code>?</li>
+<li>Що робити з <code>TelegramRetryAfter</code>, а що — з <code>TelegramForbiddenError</code> під час розсилки?</li>
+<li>Навіщо <code>hmac.compare_digest</code> для секрету webhook?</li>
+</ol>
+<details class="success">
+<summary>Відповіді</summary>
+<ol>
+<li>Long polling тримає запит відкритим, доки не з'явиться update або не мине <code>timeout</code> секунд; звичайне опитування (<code>timeout=0</code>) відповідає одразу, і доводиться питати знову й знову.</li>
+<li>Polling — наступний <code>getUpdates</code> з <code>offset</code>, більшим за <code>update_id</code>. Webhook — відповідь <code>2xx</code>.</li>
+<li>Інакше Telegram вирішить, що доставка не вдалась, і повторить update. Падіння після відповіді Telegram не побачить і не повторить — помилку видно лише в журналі.</li>
+<li>Outer — для кожного update до фільтрів; inner — лише коли handler знайдено. Rate limit — в outer: рахувати треба й повідомлення, які ніхто не обробить.</li>
+<li>aiogram перевіряє handlers згори донизу; <code>/news</code> — теж текст, тож його перехопить перший handler.</li>
+<li><code>MemoryStorage</code> — у пам'яті процесу: перезапуск усе забуває, кожен воркер має свій стан. На сервері — <code>RedisStorage</code>.</li>
+<li>Її надсилає клієнт — це вхідні дані, які можна підробити. 1–64 байти; кирилиця — два байти на літеру.</li>
+<li>Перше — розмітка в тексті, і кожне чуже значення треба екранувати. Друге — чистий текст і <code>entities</code> зі зміщеннями: екранувати нічого.</li>
+<li><code>TelegramRetryAfter</code> — почекати <code>retry_after</code> секунд і повторити. <code>TelegramForbiddenError</code> — прибрати підписки чату й більше туди не писати.</li>
+<li>Звичайне <code>==</code> закінчується на першому розбіжному символі; за часом відповіді можна підбирати секрет посимвольно.</li>
+</ol>
+</details>
+<h2 id="next">Що далі<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>
+<p><a href="../websockets/">WebSocket у FastAPI</a> — коли клієнт не Telegram, а браузер, і з'єднання тримається годинами. На практиці — <a href="../../tutorials/09_telegram_bot/">крок 9</a>.</p>
+<p><strong>Джерела:</strong> Telegram — <a href="https://core.telegram.org/bots/api">Bot API</a> (<a href="https://core.telegram.org/bots/api#getupdates">getUpdates</a>, <a href="https://core.telegram.org/bots/api#setwebhook">setWebhook</a>, <a href="https://core.telegram.org/bots/api#update">Update</a>, <a href="https://core.telegram.org/bots/api#html-style">HTML style</a>, <a href="https://core.telegram.org/bots/api#making-requests">Making requests</a>), <a href="https://core.telegram.org/bots/faq">Bots FAQ</a>, <a href="https://core.telegram.org/bots/webhooks">Marvin's Marvellous Guide to All Things Webhook</a>; aiogram 3 — <a href="https://docs.aiogram.dev/en/latest/dispatcher/dispatcher.html">Dispatcher</a>, <a href="https://docs.aiogram.dev/en/latest/dispatcher/router.html">Router</a>, <a href="https://docs.aiogram.dev/en/latest/dispatcher/middlewares.html">Middlewares</a>, <a href="https://docs.aiogram.dev/en/latest/dispatcher/finite_state_machine/index.html">Finite State Machine</a>, <a href="https://docs.aiogram.dev/en/latest/dispatcher/filters/callback_data.html">Callback Data Factory</a>, <a href="https://docs.aiogram.dev/en/latest/utils/formatting.html">Formatting</a>; Python — <a href="https://docs.python.org/3/library/hmac.html#hmac.compare_digest"><code>hmac.compare_digest</code></a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Футер" >
+        
+          
+          <a href="../llm_reliability/" class="md-footer__link md-footer__link--prev" aria-label="Назад: Надійність LLM">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                Надійність LLM
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../websockets/" class="md-footer__link md-footer__link--next" aria-label="Вперед: WebSocket у FastAPI">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                WebSocket у FastAPI
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.path", "navigation.prune", "navigation.footer", "toc.follow", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0456\u0439\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u0421\u043a\u043e\u043f\u0456\u044e\u0432\u0430\u0442\u0438 \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0429\u0435 1 \u0437\u0431\u0456\u0433 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.more.other": "\u0429\u0435 # \u0437\u0431\u0456\u0433\u0456\u0432 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.none": "\u0417\u0431\u0456\u0433\u0456\u0432 \u043d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0437\u0431\u0456\u0433", "search.result.other": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e # \u0437\u0431\u0456\u0433\u0456\u0432", "search.result.placeholder": "\u0420\u043e\u0437\u043f\u043e\u0447\u043d\u0456\u0442\u044c \u043f\u0438\u0441\u0430\u0442\u0438 \u0434\u043b\u044f \u043f\u043e\u0448\u0443\u043a\u0443", "search.result.term.missing": "\u041d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e \u0437\u0430\u043f\u0438\u0442\u0443", "select.version": "\u041e\u0431\u0440\u0430\u0442\u0438 \u0432\u0435\u0440\u0441\u0456\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

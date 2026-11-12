@@ -2869,10 +2869,27 @@
   <a href="#change" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Стало: підпис HMAC, час і захист від повтору
+        Стало: підпис HMAC, час і id доставки
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Стало: підпис HMAC, час і id доставки">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#replay-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Було: ключ повтору — підпис
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3993,6 +4010,18 @@
           
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -4052,6 +4081,24 @@
           
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -4109,6 +4156,24 @@
       
         
           
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
         
       
     
@@ -4236,10 +4301,27 @@
   <a href="#change" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Стало: підпис HMAC, час і захист від повтору
+        Стало: підпис HMAC, час і id доставки
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Стало: підпис HMAC, час і id доставки">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#replay-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Було: ключ повтору — підпис
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -4380,7 +4462,7 @@
 </blockquote>
 <h2 id="task">Задача<a class="headerlink" href="#task" title="Permanent link">&para;</a></h2>
 <p><code>POST /api/webhooks/scrape</code> — зовнішній планувальник (cron на іншому сервері, GitHub Actions за розкладом) запускає збір новин. Тіло — як у <code>POST /api/scrape/jobs</code>, відповідь — <code>202</code> з <code>job_id</code>, збір іде у фоні.</p>
-<p>JWT планувальнику не видаємо: токен живе 30 хвилин, а cron працює роками. Натомість обидві сторони знають <strong>спільний секрет</strong> <code>WEBHOOK_SECRET</code>. Адреса публічна, тож справжній запит треба відрізнити від підробленого, зміненого і повтореного.</p>
+<p>JWT планувальнику не видаємо: токен живе 30 хвилин, а cron працює роками. Натомість обидві сторони знають <strong>спільний секрет</strong> <code>WEBHOOK_SECRET</code>. Адреса публічна, тож справжній запит треба відрізнити від підробленого, зміненого і повтореного. І ще одне: відправник сам повторює доставку, якщо не дочекався відповіді (збій мережі, тайм-аут), — і повтор не має запускати збір удруге.</p>
 <h2 id="old">Було: секрет у шляху і в заголовку<a class="headerlink" href="#old" title="Permanent link">&para;</a></h2>
 <p>Основа — webhook Telegram зі стартового шаблону бекенду:</p>
 <div class="highlight"><span class="filename">backend/api/webhook.py (стартовий шаблон)</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">WEBHOOK_PATH</span><span class="p">)</span>                       <span class="c1"># "/webhook/{WEBHOOK_SECRET}"</span>
@@ -4401,41 +4483,54 @@
 </li>
 <li><strong><code>!=</code></strong> порівнює до першої розбіжності, тож за часом відповіді секрет можна підбирати по символу.</li>
 </ol>
-<h2 id="change">Стало: підпис HMAC, час і захист від повтору<a class="headerlink" href="#change" title="Permanent link">&para;</a></h2>
-<p>Секрет не передається зовсім. Відправник рахує <strong>підпис</strong> від часу й тіла:</p>
+<h2 id="change">Стало: підпис HMAC, час і id доставки<a class="headerlink" href="#change" title="Permanent link">&para;</a></h2>
+<p>Секрет не передається зовсім. Відправник дає кожній події <strong>id доставки</strong> і рахує <strong>підпис</strong> від часу, id і тіла:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>X-Webhook-Timestamp: &lt;unix-час&gt;
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>X-Webhook-Signature: sha256=&lt;hex HMAC-SHA256(WEBHOOK_SECRET, "&lt;час&gt;." + тіло)&gt;
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>X-Webhook-Delivery: &lt;id події, 8–64 символи A-Z a-z 0-9 _ -&gt;     ← uuid4().hex
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>X-Webhook-Signature: sha256=&lt;hex HMAC-SHA256(WEBHOOK_SECRET, "&lt;час&gt;.&lt;id&gt;." + тіло)&gt;
 </code></pre></div>
+<p>Так роблять GitHub (<code>X-GitHub-Delivery</code>) і Stripe: одна подія — один id, а повтор тієї самої події має той самий id, навіть якщо його підписано заново.</p>
 <div class="highlight"><span class="filename">news_hub/webhooks.py</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">SIGNATURE_HEADER</span> <span class="o">=</span> <span class="s2">"X-Webhook-Signature"</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">TIMESTAMP_HEADER</span> <span class="o">=</span> <span class="s2">"X-Webhook-Timestamp"</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">TOLERANCE_SECONDS</span> <span class="o">=</span> <span class="mi">300</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">MIN_SECRET_LENGTH</span> <span class="o">=</span> <span class="mi">32</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="k">def</span><span class="w"> </span><span class="nf">sign</span><span class="p">(</span><span class="n">secret</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">body</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="sd">"""Те, що рахує відправник: sha256=&lt;hex&gt;."""</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">digest</span> <span class="o">=</span> <span class="n">hmac</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">secret</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">timestamp</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span> <span class="o">+</span> <span class="sa">b</span><span class="s2">"."</span> <span class="o">+</span> <span class="n">body</span><span class="p">,</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="k">return</span> <span class="sa">f</span><span class="s2">"sha256=</span><span class="si">{</span><span class="n">digest</span><span class="si">}</span><span class="s2">"</span>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify_signature</span><span class="p">(</span><span class="n">secret</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">headers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">body</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">now</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">    </span><span class="sd">"""Перевіряє час і підпис; повертає підпис (для захисту від повтору). WebhookRejected — ні."""</span>
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    <span class="n">signature</span><span class="p">,</span> <span class="n">timestamp</span> <span class="o">=</span> <span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SIGNATURE_HEADER</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span> <span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">TIMESTAMP_HEADER</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">signature</span> <span class="ow">or</span> <span class="ow">not</span> <span class="p">(</span><span class="n">timestamp</span><span class="o">.</span><span class="n">isascii</span><span class="p">()</span> <span class="ow">and</span> <span class="n">timestamp</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()):</span>   <span class="c1"># "²".isdigit() — True, int("²") — ValueError</span>
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>        <span class="k">raise</span> <span class="n">WebhookRejected</span><span class="p">(</span><span class="sa">f</span><span class="s2">"потрібні заголовки </span><span class="si">{</span><span class="n">SIGNATURE_HEADER</span><span class="si">}</span><span class="s2"> і </span><span class="si">{</span><span class="n">TIMESTAMP_HEADER</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    <span class="n">now</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="k">if</span> <span class="n">now</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">now</span>
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">now</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">timestamp</span><span class="p">))</span> <span class="o">&gt;</span> <span class="n">TOLERANCE_SECONDS</span><span class="p">:</span>
-<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>        <span class="k">raise</span> <span class="n">WebhookRejected</span><span class="p">(</span><span class="sa">f</span><span class="s2">"запит старший за </span><span class="si">{</span><span class="n">TOLERANCE_SECONDS</span><span class="si">}</span><span class="s2"> с (або годинник відправника не той)"</span><span class="p">)</span>
-<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">hmac</span><span class="o">.</span><span class="n">compare_digest</span><span class="p">(</span><span class="n">signature</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span> <span class="n">sign</span><span class="p">(</span><span class="n">secret</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">timestamp</span><span class="p">),</span> <span class="n">body</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">()):</span>
-<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>        <span class="k">raise</span> <span class="n">WebhookRejected</span><span class="p">(</span><span class="s2">"підпис не збігається"</span><span class="p">)</span>
-<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>    <span class="k">return</span> <span class="n">signature</span>
-<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>
-<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>
-<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">remember_delivery</span><span class="p">(</span><span class="n">redis</span><span class="p">:</span> <span class="n">Redis</span><span class="p">,</span> <span class="n">signature</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a><span class="w">    </span><span class="sd">"""Той самий підпис удруге за вікно — повтор. Ключ живе вдвічі довше за вікно часу."""</span>
-<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>    <span class="n">fresh</span> <span class="o">=</span> <span class="k">await</span> <span class="n">redis</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="sa">f</span><span class="s2">"webhook:seen:</span><span class="si">{</span><span class="n">signature</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ex</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="n">TOLERANCE_SECONDS</span><span class="p">)</span>
-<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">fresh</span><span class="p">:</span>
-<a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>        <span class="k">raise</span> <span class="n">WebhookRejected</span><span class="p">(</span><span class="s2">"цей запит уже отримано (повтор)"</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">409</span><span class="p">)</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">DELIVERY_HEADER</span> <span class="o">=</span> <span class="s2">"X-Webhook-Delivery"</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">DELIVERY_ID</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[A-Za-z0-9_-]{8,64}"</span><span class="p">)</span>       <span class="c1"># uuid4().hex, secrets.token_urlsafe(16), …</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">TOLERANCE_SECONDS</span> <span class="o">=</span> <span class="mi">300</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">MIN_SECRET_LENGTH</span> <span class="o">=</span> <span class="mi">32</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="k">def</span><span class="w"> </span><span class="nf">sign</span><span class="p">(</span><span class="n">secret</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">delivery</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">body</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">    </span><span class="sd">"""Те, що рахує відправник: sha256=&lt;hex&gt;."""</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">timestamp</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">delivery</span><span class="si">}</span><span class="s2">."</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span> <span class="o">+</span> <span class="n">body</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    <span class="k">return</span> <span class="s2">"sha256="</span> <span class="o">+</span> <span class="n">hmac</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">secret</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify_signature</span><span class="p">(</span><span class="n">secret</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">headers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">body</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">now</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">    </span><span class="sd">"""Перевіряє час, id і підпис; повертає id доставки (для захисту від повтору). WebhookRejected — ні."""</span>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>    <span class="n">signature</span><span class="p">,</span> <span class="n">timestamp</span> <span class="o">=</span> <span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SIGNATURE_HEADER</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span> <span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">TIMESTAMP_HEADER</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    <span class="n">delivery</span> <span class="o">=</span> <span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">DELIVERY_HEADER</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">signature</span> <span class="ow">or</span> <span class="ow">not</span> <span class="p">(</span><span class="n">timestamp</span><span class="o">.</span><span class="n">isascii</span><span class="p">()</span> <span class="ow">and</span> <span class="n">timestamp</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()):</span>   <span class="c1"># "²".isdigit() — True, int("²") — ValueError</span>
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>        <span class="k">raise</span> <span class="n">WebhookRejected</span><span class="p">(</span><span class="sa">f</span><span class="s2">"потрібні заголовки </span><span class="si">{</span><span class="n">SIGNATURE_HEADER</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">TIMESTAMP_HEADER</span><span class="si">}</span><span class="s2"> і </span><span class="si">{</span><span class="n">DELIVERY_HEADER</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">DELIVERY_ID</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">delivery</span><span class="p">):</span>
+<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>        <span class="k">raise</span> <span class="n">WebhookRejected</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">DELIVERY_HEADER</span><span class="si">}</span><span class="s2">: 8–64 символи A-Z a-z 0-9 _ -"</span><span class="p">)</span>
+<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>    <span class="n">now</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="k">if</span> <span class="n">now</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">now</span>
+<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">now</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">timestamp</span><span class="p">))</span> <span class="o">&gt;</span> <span class="n">TOLERANCE_SECONDS</span><span class="p">:</span>
+<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>        <span class="k">raise</span> <span class="n">WebhookRejected</span><span class="p">(</span><span class="sa">f</span><span class="s2">"запит старший за </span><span class="si">{</span><span class="n">TOLERANCE_SECONDS</span><span class="si">}</span><span class="s2"> с (або годинник відправника не той)"</span><span class="p">)</span>
+<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">hmac</span><span class="o">.</span><span class="n">compare_digest</span><span class="p">(</span><span class="n">signature</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span> <span class="n">sign</span><span class="p">(</span><span class="n">secret</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">timestamp</span><span class="p">),</span> <span class="n">delivery</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">()):</span>
+<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>        <span class="k">raise</span> <span class="n">WebhookRejected</span><span class="p">(</span><span class="s2">"підпис не збігається"</span><span class="p">)</span>
+<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>    <span class="k">return</span> <span class="n">delivery</span>
+<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>
+<a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>
+<a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">claim_delivery</span><span class="p">(</span><span class="n">redis</span><span class="p">:</span> <span class="n">Redis</span><span class="p">,</span> <span class="n">delivery</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a><span class="w">    </span><span class="sd">"""None — доставка нова, тепер вона за job_id. Інакше — job_id, з яким її вже прийняли.</span>
+<a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>
+<a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a><span class="sd">    SET NX — атомарно: з двох одночасних однакових доставок збір запустить лише одна. Ключ живе вдвічі</span>
+<a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a><span class="sd">    довше за вікно часу: пізніший повтор відкине вже перевірка часу.</span>
+<a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a><span class="sd">    """</span>
+<a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a>    <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"webhook:delivery:</span><span class="si">{</span><span class="n">delivery</span><span class="si">}</span><span class="s2">"</span>
+<a id="__codelineno-3-38" name="__codelineno-3-38" href="#__codelineno-3-38"></a>    <span class="k">if</span> <span class="k">await</span> <span class="n">redis</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ex</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="n">TOLERANCE_SECONDS</span><span class="p">):</span>
+<a id="__codelineno-3-39" name="__codelineno-3-39" href="#__codelineno-3-39"></a>        <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-3-40" name="__codelineno-3-40" href="#__codelineno-3-40"></a>    <span class="n">existing</span> <span class="o">=</span> <span class="k">await</span> <span class="n">redis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+<a id="__codelineno-3-41" name="__codelineno-3-41" href="#__codelineno-3-41"></a>    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span> <span class="k">if</span> <span class="n">existing</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>      <span class="c1"># ключ щойно зник — вважаємо доставку новою</span>
 </code></pre></div>
 <p>Чому не просто <code>timestamp.isdigit()</code>: для Unicode «цифрами» є й <code>²</code>, <code>³</code>, <code>①</code>, а <code>int("²")</code> падає з <code>ValueError</code>. Перша версія кроку мала саме <code>isdigit()</code>, і заголовок <code>X-Webhook-Timestamp: ²</code> (байт <code>\xb2</code>, сирим HTTP-запитом) давав <strong><code>500</code> без жодної автентифікації</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>old: HTTP/1.1 500 Internal Server Error
@@ -4465,8 +4560,8 @@
 <td>перехоплений запит можна повторити завтра</td>
 </tr>
 <tr>
-<td><strong><code>SET NX</code></strong> на підпис, ключ живе 600 с</td>
-<td>усередині 5 хвилин той самий запит можна повторити багато разів</td>
+<td><strong>id доставки</strong> в підписі + <strong><code>SET NX</code></strong> на id, ключ живе 600 с</td>
+<td>усередині 5 хвилин ту саму подію можна запустити багато разів — і чужим перехопленим запитом, і власним повтором відправника</td>
 </tr>
 <tr>
 <td><code>hmac.compare_digest</code></td>
@@ -4478,96 +4573,142 @@
 </tr>
 </tbody>
 </table>
-<p><code>SET NX</code> і час потрібні разом. <code>SET NX</code> без часу мусив би пам'ятати підписи вічно. Час без <code>SET NX</code> дозволяє повторити запит багато разів за 5 хвилин. Разом: старе відкидає час, свіже повторення — Redis, а ключі живуть лише 10 хвилин (вдвічі довше за вікно, бо вікно — в обидва боки від «зараз»).</p>
+<p><code>SET NX</code> і час потрібні разом. <code>SET NX</code> без часу мусив би пам'ятати id вічно. Час без <code>SET NX</code> дозволяє повторити запит багато разів за 5 хвилин. Разом: старе відкидає час, свіже повторення — Redis, а ключі живуть лише 10 хвилин (вдвічі довше за вікно, бо вікно — в обидва боки від «зараз»).</p>
+<h3 id="replay-key">Було: ключ повтору — підпис<a class="headerlink" href="#replay-key" title="Permanent link">&para;</a></h3>
+<p>Перша версія кроку підписувала лише час і тіло, а ключем повтору був сам <strong>підпис</strong> (<code>SET webhook:seen:&lt;підпис&gt; NX</code>, повтор → <code>409</code>). Чужий перехоплений запит це зупиняло. Але відправник, що повторює доставку після тайм-ауту, підписує її <strong>заново</strong> — з новим часом, отже з новим підписом. Для сервера це нова доставка, і збір запускається вдруге. Стара версія кроку, та сама подія двічі з різницею 30 с:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>перша спроба      → 202 job_id=8c560531a69d
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>повтор через 30 с → 202 job_id=5ca350033615
+</code></pre></div>
+<p>Два завдання на одну подію. А якби повтор пішов з тим самим підписом, відправник отримав би <code>409</code> — помилку на подію, яку сервер насправді прийняв, і став би повторювати далі.</p>
+<p>Тепер ключ — id доставки, і повтор відповідає <strong><code>200</code> з тим самим завданням</strong>: відправник бачить успіх і зупиняється, а збір іде один. <code>409</code> лишився лише для рідкісної гонки: дві однакові доставки одночасно, і друга прийшла, поки перша ще не створила завдання (<code>ця доставка ще обробляється</code>).</p>
 <h2 id="endpoint">Ендпоінт: спершу підпис, потім JSON<a class="headerlink" href="#endpoint" title="Permanent link">&para;</a></h2>
-<div class="highlight"><span class="filename">news_hub/api.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_webhook_secret</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">secret</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">webhook_secret</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="k">if</span> <span class="n">secret</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_503_SERVICE_UNAVAILABLE</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"webhook вимкнено: задай WEBHOOK_SECRET"</span><span class="p">)</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="k">return</span> <span class="n">secret</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/api/webhooks/scrape"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">JobStatus</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_202_ACCEPTED</span><span class="p">,</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>          <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"webhooks"</span><span class="p">],</span> <span class="n">summary</span><span class="o">=</span><span class="s2">"Збір за підписаним запитом"</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">scrape_webhook</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">background</span><span class="p">:</span> <span class="n">BackgroundTasks</span><span class="p">,</span> <span class="n">redis</span><span class="p">:</span> <span class="n">RedisDep</span><span class="p">,</span> <span class="n">scrapers</span><span class="p">:</span> <span class="n">ScrapersDep</span><span class="p">,</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>                         <span class="n">secret</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_webhook_secret</span><span class="p">)],</span>
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>                         <span class="n">session_factory</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">async_sessionmaker</span><span class="p">[</span><span class="n">AsyncSession</span><span class="p">],</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_session_factory</span><span class="p">)],</span>
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>                         <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JobStatus</span><span class="p">:</span>
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">    </span><span class="sd">"""Тіло — як у POST /api/scrape/jobs. Спершу підпис сирих байтів, лише потім розбір JSON."""</span>
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>    <span class="n">body</span> <span class="o">=</span> <span class="k">await</span> <span class="n">request</span><span class="o">.</span><span class="n">body</span><span class="p">()</span>
-<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>    <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>        <span class="n">signature</span> <span class="o">=</span> <span class="n">verify_signature</span><span class="p">(</span><span class="n">secret</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
-<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>        <span class="k">await</span> <span class="n">remember_delivery</span><span class="p">(</span><span class="n">redis</span><span class="p">,</span> <span class="n">signature</span><span class="p">)</span>
-<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>    <span class="k">except</span> <span class="n">WebhookRejected</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
-<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">error</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">))</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
-<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>    <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>        <span class="n">scrape_request</span> <span class="o">=</span> <span class="n">ScrapeRequest</span><span class="o">.</span><span class="n">model_validate_json</span><span class="p">(</span><span class="n">body</span> <span class="ow">or</span> <span class="sa">b</span><span class="s2">"</span><span class="si">{}</span><span class="s2">"</span><span class="p">)</span>
-<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>    <span class="k">except</span> <span class="n">ValidationError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>         <span class="c1"># include_input=False: сирі bytes у відповідь JSON не серіалізуються</span>
-<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="mi">422</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="n">error</span><span class="o">.</span><span class="n">errors</span><span class="p">(</span><span class="n">include_url</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_context</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>                                                      <span class="n">include_input</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
-<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>    <span class="n">job</span> <span class="o">=</span> <span class="k">await</span> <span class="n">JobStore</span><span class="p">(</span><span class="n">redis</span><span class="p">)</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">scrape_request</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">scrape_request</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span>
-<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a>    <span class="n">background</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">run_scrape_job</span><span class="p">,</span> <span class="n">job</span><span class="o">.</span><span class="n">job_id</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">collect</span><span class="p">(</span><span class="n">scrape_request</span><span class="p">,</span> <span class="n">scrapers</span><span class="p">),</span> <span class="n">redis</span><span class="p">,</span> <span class="n">session_factory</span><span class="p">)</span>
-<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a>    <span class="k">return</span> <span class="n">job</span>
+<div class="highlight"><span class="filename">news_hub/api.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_webhook_secret</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="n">secret</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">webhook_secret</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="k">if</span> <span class="n">secret</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_503_SERVICE_UNAVAILABLE</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"webhook вимкнено: задай WEBHOOK_SECRET"</span><span class="p">)</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="k">return</span> <span class="n">secret</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/api/webhooks/scrape"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">JobStatus</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_202_ACCEPTED</span><span class="p">,</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>          <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"webhooks"</span><span class="p">],</span> <span class="n">summary</span><span class="o">=</span><span class="s2">"Збір за підписаним запитом"</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">scrape_webhook</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">,</span> <span class="n">background</span><span class="p">:</span> <span class="n">BackgroundTasks</span><span class="p">,</span> <span class="n">redis</span><span class="p">:</span> <span class="n">RedisDep</span><span class="p">,</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>                         <span class="n">scrapers</span><span class="p">:</span> <span class="n">ScrapersDep</span><span class="p">,</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>                         <span class="n">secret</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_webhook_secret</span><span class="p">)],</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>                         <span class="n">session_factory</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">async_sessionmaker</span><span class="p">[</span><span class="n">AsyncSession</span><span class="p">],</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_session_factory</span><span class="p">)],</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>                         <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JobStatus</span><span class="p">:</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">    </span><span class="sd">"""Тіло — як у POST /api/scrape/jobs. Спершу підпис сирих байтів, лише потім розбір JSON."""</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>    <span class="n">body</span> <span class="o">=</span> <span class="k">await</span> <span class="n">request</span><span class="o">.</span><span class="n">body</span><span class="p">()</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>        <span class="n">delivery</span> <span class="o">=</span> <span class="n">verify_signature</span><span class="p">(</span><span class="n">secret</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>    <span class="k">except</span> <span class="n">WebhookRejected</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">error</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">))</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a>        <span class="n">scrape_request</span> <span class="o">=</span> <span class="n">ScrapeRequest</span><span class="o">.</span><span class="n">model_validate_json</span><span class="p">(</span><span class="n">body</span> <span class="ow">or</span> <span class="sa">b</span><span class="s2">"</span><span class="si">{}</span><span class="s2">"</span><span class="p">)</span>
+<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>    <span class="k">except</span> <span class="n">ValidationError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>         <span class="c1"># include_input=False: сирі bytes у відповідь JSON не серіалізуються</span>
+<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a>        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="mi">422</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="n">error</span><span class="o">.</span><span class="n">errors</span><span class="p">(</span><span class="n">include_url</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_context</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a>                                                      <span class="n">include_input</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+<a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a>    <span class="n">store</span><span class="p">,</span> <span class="n">job_id</span> <span class="o">=</span> <span class="n">JobStore</span><span class="p">(</span><span class="n">redis</span><span class="p">),</span> <span class="n">new_job_id</span><span class="p">()</span>
+<a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a>    <span class="k">if</span> <span class="p">(</span><span class="n">existing</span> <span class="o">:=</span> <span class="k">await</span> <span class="n">claim_delivery</span><span class="p">(</span><span class="n">redis</span><span class="p">,</span> <span class="n">delivery</span><span class="p">,</span> <span class="n">job_id</span><span class="p">))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a>        <span class="n">previous</span> <span class="o">=</span> <span class="k">await</span> <span class="n">store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span>
+<a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a>        <span class="k">if</span> <span class="n">previous</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>              <span class="c1"># перша доставка ще не встигла створити завдання</span>
+<a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a>            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_409_CONFLICT</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"ця доставка ще обробляється"</span><span class="p">)</span>
+<a id="__codelineno-6-31" name="__codelineno-6-31" href="#__codelineno-6-31"></a>        <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">HTTP_200_OK</span>
+<a id="__codelineno-6-32" name="__codelineno-6-32" href="#__codelineno-6-32"></a>        <span class="k">return</span> <span class="n">previous</span>
+<a id="__codelineno-6-33" name="__codelineno-6-33" href="#__codelineno-6-33"></a>    <span class="n">job</span> <span class="o">=</span> <span class="k">await</span> <span class="n">store</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">scrape_request</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">scrape_request</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="n">job_id</span><span class="o">=</span><span class="n">job_id</span><span class="p">)</span>
+<a id="__codelineno-6-34" name="__codelineno-6-34" href="#__codelineno-6-34"></a>    <span class="n">background</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">run_scrape_job</span><span class="p">,</span> <span class="n">job</span><span class="o">.</span><span class="n">job_id</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">collect</span><span class="p">(</span><span class="n">scrape_request</span><span class="p">,</span> <span class="n">scrapers</span><span class="p">),</span> <span class="n">redis</span><span class="p">,</span> <span class="n">session_factory</span><span class="p">)</span>
+<a id="__codelineno-6-35" name="__codelineno-6-35" href="#__codelineno-6-35"></a>    <span class="k">return</span> <span class="n">job</span>
 </code></pre></div>
 <p>Тіло — не параметр <code>ScrapeRequest</code> у сигнатурі, а сирі байти <code>await request.body()</code>. Якби FastAPI розбирав JSON сам, він зробив би це <strong>до</strong> перевірки підпису, і непідписане сміття отримало б <code>422</code> замість <code>401</code>.</p>
+<p><code>job_id</code> створюється <strong>до</strong> <code>claim_delivery</code> (<code>new_job_id()</code> у <code>jobs.py</code>, а <code>JobStore.create</code> приймає готовий <code>job_id</code>): так Redis одним атомарним <code>SET NX</code> і «займає» доставку, і запам'ятовує, яке завдання їй належить. Повтор читає цей <code>job_id</code> і віддає статус того самого завдання.</p>
 <pre class="mermaid"><code>sequenceDiagram
     participant C as cron (знає секрет)
     participant A as атакувальник
     participant S as news_hub
     participant R as Redis
 
-    C-&gt;&gt;S: POST /api/webhooks/scrape&lt;br&gt;X-Webhook-Timestamp, X-Webhook-Signature
-    S-&gt;&gt;S: час у вікні 300 с? HMAC(час + тіло) збігається?
-    S-&gt;&gt;R: SET webhook:seen:«підпис» NX EX 600
+    C-&gt;&gt;S: POST /api/webhooks/scrape&lt;br&gt;Timestamp, Delivery d1, Signature
+    S-&gt;&gt;S: час у вікні 300 с? HMAC(час.d1.тіло) збігається?
+    S-&gt;&gt;R: SET webhook:delivery:d1 job1 NX EX 600
     R--&gt;&gt;S: OK (вперше)
-    S--&gt;&gt;C: 202 job_id — збір у фоні
-    A-&gt;&gt;S: той самий запит (перехоплений)
-    S-&gt;&gt;R: SET … NX
-    R--&gt;&gt;S: nil (уже був)
-    S--&gt;&gt;A: 409 повтор
-    A-&gt;&gt;S: те саме, тіло змінено
+    S--&gt;&gt;C: 202 job1 — збір у фоні
+    C-&gt;&gt;S: повтор після тайм-ауту: новий час і підпис, той самий d1
+    S-&gt;&gt;R: SET webhook:delivery:d1 … NX
+    R--&gt;&gt;S: nil — уже за job1
+    S--&gt;&gt;C: 200 job1 (той самий, збір не повторюється)
+    A-&gt;&gt;S: перехоплений запит, d1 замінено на d2
     S--&gt;&gt;A: 401 підпис не збігається</code></pre>
 <h2 id="result">Результат<a class="headerlink" href="#result" title="Permanent link">&para;</a></h2>
-<p>Відправник підписує запит функцією <code>news_hub.webhooks.sign</code>, як це зробив би cron; <code>WEBHOOK_SECRET</code> згенеровано в скрипті:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">signed</span><span class="p">(</span><span class="n">body</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="n">BODY</span><span class="p">,</span> <span class="n">secret</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="n">SECRET</span><span class="p">,</span> <span class="n">ts</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="n">ts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span> <span class="k">if</span> <span class="n">ts</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ts</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="k">return</span> <span class="p">{</span><span class="n">SIGNATURE_HEADER</span><span class="p">:</span> <span class="n">sign</span><span class="p">(</span><span class="n">secret</span><span class="p">,</span> <span class="n">ts</span><span class="p">,</span> <span class="n">body</span><span class="p">),</span> <span class="n">TIMESTAMP_HEADER</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">ts</span><span class="p">),</span> <span class="s2">"Content-Type"</span><span class="p">:</span> <span class="s2">"application/json"</span><span class="p">}</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">BODY</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">"source"</span><span class="p">:</span> <span class="s2">"snapshot"</span><span class="p">})</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">api</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/api/webhooks/scrape"</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">BODY</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">signed</span><span class="p">())</span>
+<p>Відправник — як його написав би власник cron, лише стандартна бібліотека; <code>WEBHOOK_SECRET</code> згенеровано в скрипті, застосунок — через <code>TestClient</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">signed</span><span class="p">(</span><span class="n">body</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="n">BODY</span><span class="p">,</span> <span class="n">secret</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="n">SECRET</span><span class="p">,</span> <span class="n">ts</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>           <span class="n">delivery</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="sd">"""Відправник: один id на подію; підпис — від часу, id і сирих байтів тіла."""</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="n">ts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span> <span class="k">if</span> <span class="n">ts</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ts</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="n">delivery</span> <span class="o">=</span> <span class="n">delivery</span> <span class="ow">or</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ts</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">delivery</span><span class="si">}</span><span class="s2">."</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span> <span class="o">+</span> <span class="n">body</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="n">signature</span> <span class="o">=</span> <span class="s2">"sha256="</span> <span class="o">+</span> <span class="n">hmac</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">secret</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    <span class="k">return</span> <span class="p">{</span><span class="s2">"X-Webhook-Signature"</span><span class="p">:</span> <span class="n">signature</span><span class="p">,</span> <span class="s2">"X-Webhook-Timestamp"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">ts</span><span class="p">),</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>            <span class="s2">"X-Webhook-Delivery"</span><span class="p">:</span> <span class="n">delivery</span><span class="p">,</span> <span class="s2">"Content-Type"</span><span class="p">:</span> <span class="s2">"application/json"</span><span class="p">}</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="n">BODY</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">"source"</span><span class="p">:</span> <span class="s2">"snapshot"</span><span class="p">})</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="n">h</span> <span class="o">=</span> <span class="n">signed</span><span class="p">()</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="n">api</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/api/webhooks/scrape"</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">BODY</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">h</span><span class="p">)</span>                       <span class="c1"># підписаний</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="n">api</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/api/webhooks/scrape"</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">BODY</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">h</span><span class="p">)</span>                       <span class="c1"># той самий ще раз</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="n">api</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/api/webhooks/scrape"</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">BODY</span><span class="p">,</span>                                  <span class="c1"># повтор: новий час і підпис</span>
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>         <span class="n">headers</span><span class="o">=</span><span class="n">signed</span><span class="p">(</span><span class="n">ts</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span> <span class="o">+</span> <span class="mi">5</span><span class="p">,</span> <span class="n">delivery</span><span class="o">=</span><span class="n">h</span><span class="p">[</span><span class="s2">"X-Webhook-Delivery"</span><span class="p">]))</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>заголовки: X-Webhook-Timestamp = 1794431479 | X-Webhook-Signature = sha256=a7a50d7d… довжина 71
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>підписаний                   → 202 queued
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>   news count: {'count': 168}
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>той самий ще раз             → 409 цей запит уже отримано (повтор)
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>змінене тіло                 → 401 підпис не збігається
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>інший порядок пробілів       → 401 підпис не збігається
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>без підпису                  → 401 потрібні заголовки X-Webhook-Signature і X-Webhook-Timestamp
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>чужий секрет                 → 401 підпис не збігається
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>годину тому                  → 401 запит старший за 300 с (або годинник відправника не той)
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>через 10 хв                  → 401 запит старший за 300 с (або годинник відправника не той)
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>непідписане сміття           → 401 потрібні заголовки X-Webhook-Signature і X-Webhook-Timestamp
-<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>підписане сміття             → 422 [{'type': 'json_invalid', 'loc': [], 'msg': 'Invalid JSON: key must be a string at line 1 column 2'}]
-<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>секрет не задано             → 503 webhook вимкнено: задай WEBHOOK_SECRET
-<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>ttl ключа повтору: 600
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>заголовки: X-Webhook-Signature = sha256=62cd745e0… | X-Webhook-Timestamp = 1794459937 | X-Webhook-Delivery = 76b129032c7246e9818492369ea0b4cf
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>підписаний                   → 202 queued job_id=1c92056c7928
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>   news count: {'count': 168}
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>той самий ще раз             → 200 done job_id=1c92056c7928
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>повтор: новий час і підпис   → 200 done job_id=1c92056c7928
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>нова доставка                → 202 queued job_id=722ea3f27ca4
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>змінене тіло                 → 401 підпис не збігається
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>змінений id доставки         → 401 підпис не збігається
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>без id доставки              → 401 X-Webhook-Delivery: 8–64 символи A-Z a-z 0-9 _ -
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>id ../../etc/passwd          → 401 X-Webhook-Delivery: 8–64 символи A-Z a-z 0-9 _ -
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>інший порядок пробілів       → 401 підпис не збігається
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>без підпису                  → 401 потрібні заголовки X-Webhook-Signature, X-Webhook-Timestamp і X-Webhook-Delivery
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>чужий секрет                 → 401 підпис не збігається
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>годину тому                  → 401 запит старший за 300 с (або годинник відправника не той)
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>через 10 хв                  → 401 запит старший за 300 с (або годинник відправника не той)
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>підписане сміття             → 422 [{'type': 'json_invalid', 'loc': [], 'msg': 'Invalid JSON: key must be a string at line 1 column 2'}]
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>ключ доставки: webhook:delivery:76b12903… = 1c92056c7928, ttl 600
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>секрет не задано             → 503 webhook вимкнено: задай WEBHOOK_SECRET
 </code></pre></div>
 <ul>
 <li><strong><code>202</code> без JWT.</strong> У webhook свій захист — підпис, тому він у списку публічних маршрутів (<a href="../security_tests/#public">тест «нічого не забули»</a>).</li>
+<li><strong>Повтор — <code>200</code>, <code>job_id</code> той самий, статус уже <code>done</code>.</strong> Збір не запускався вдруге: відповідь — статус першого завдання. Нова подія (новий id) — нове завдання.</li>
+<li><strong>«Змінений id доставки»</strong> — заголовок <code>X-Webhook-Delivery</code> замінено, підпис старий. Id входить у підпис, тож чужий перехоплений запит не перетворити на «нову» доставку.</li>
+<li><strong>Id з <code>../</code></strong> відкидається ще до перевірки підпису: у ключ Redis потрапляють лише <code>A-Z a-z 0-9 _ -</code>.</li>
 <li><strong>«Інший порядок пробілів»</strong> — той самий JSON <code>{"source":"snapshot"}</code>, але інші байти. Відправник мусить підписувати рівно ті байти, які надсилає.</li>
 <li><strong><code>422</code> лише для підписаного сміття</strong>: перевірка підпису йде першою, чужий запит не доходить навіть до розбору JSON.</li>
-<li><strong><code>sha256=</code> + 64 hex-символи</strong> — 71 символ заголовка.</li>
 </ul>
+<p>Той самий відправник у shell — <code>curl</code> і <code>openssl</code>; перевірено проти <code>uvicorn news_hub.api:app</code> з <code>WEBHOOK_SECRET</code> у середовищі:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nv">body</span><span class="o">=</span><span class="s1">'{"source": "snapshot"}'</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nv">ts</span><span class="o">=</span><span class="k">$(</span>date<span class="w"> </span>+%s<span class="k">)</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nv">delivery</span><span class="o">=</span><span class="k">$(</span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s1">'import uuid; print(uuid.uuid4().hex)'</span><span class="k">)</span><span class="w">     </span><span class="c1"># один id на подію; повтор — з тим самим</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="nv">sig</span><span class="o">=</span><span class="s2">"sha256=</span><span class="k">$(</span><span class="nb">printf</span><span class="w"> </span><span class="s1">'%s.%s.%s'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$ts</span><span class="s2">"</span><span class="w"> </span><span class="s2">"</span><span class="nv">$delivery</span><span class="s2">"</span><span class="w"> </span><span class="s2">"</span><span class="nv">$body</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>openssl<span class="w"> </span>dgst<span class="w"> </span>-sha256<span class="w"> </span>-hmac<span class="w"> </span><span class="s2">"</span><span class="nv">$WEBHOOK_SECRET</span><span class="s2">"</span><span class="w"> </span>-r<span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-d<span class="s1">' '</span><span class="w"> </span>-f1<span class="k">)</span><span class="s2">"</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>send<span class="o">()</span><span class="w"> </span><span class="o">{</span><span class="w"> </span>curl<span class="w"> </span>-s<span class="w"> </span>-w<span class="w"> </span><span class="s1">' %{http_code}\n'</span><span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/api/webhooks/scrape<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">    </span>-H<span class="w"> </span><span class="s2">"Content-Type: application/json"</span><span class="w"> </span>-H<span class="w"> </span><span class="s2">"X-Webhook-Timestamp: </span><span class="nv">$ts</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">    </span>-H<span class="w"> </span><span class="s2">"X-Webhook-Delivery: </span><span class="nv">$delivery</span><span class="s2">"</span><span class="w"> </span>-H<span class="w"> </span><span class="s2">"X-Webhook-Signature: </span><span class="nv">$sig</span><span class="s2">"</span><span class="w"> </span>--data-raw<span class="w"> </span><span class="s2">"</span><span class="nv">$body</span><span class="s2">"</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>send
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>send
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>{"job_id":"5f381a403581","kind":"scrape","status":"queued","source":"snapshot","mode":"async","news_found":0,"news_saved":0,"news_analyzed":0,"news_failed":0,"error":null,"created_at":"2026-11-12T05:06:10+00:00","finished_at":null} 202
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>{"job_id":"5f381a403581","kind":"scrape","status":"running","source":"snapshot","mode":"async","news_found":0,"news_saved":0,"news_analyzed":0,"news_failed":0,"error":null,"created_at":"2026-11-12T05:06:10+00:00","finished_at":null} 200
+</code></pre></div>
+<p><code>--data-raw "$body"</code> надсилає рівно ті байти, що підписав <code>printf</code>; <code>curl -d @file</code> прибрав би з файлу переноси рядків, і підпис, порахований від файлу, не зійшовся б.</p>
 <h2 id="telegram">Telegram: секретний заголовок<a class="headerlink" href="#telegram" title="Permanent link">&para;</a></h2>
 <p>Telegram (крок 9) так не підписує: він надсилає лише заголовок <code>X-Telegram-Bot-Api-Secret-Token</code>. Для нього в <code>webhooks.py</code> є окрема функція — теж з <code>compare_digest</code> і теж без секрету в URL:</p>
-<div class="highlight"><span class="filename">news_hub/webhooks.py</span><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify_secret_token</span><span class="p">(</span><span class="n">expected</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">received</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="sd">"""Для Telegram (крок 9): заголовок X-Telegram-Bot-Api-Secret-Token, порівняння без витоку часу."""</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="k">return</span> <span class="n">received</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">hmac</span><span class="o">.</span><span class="n">compare_digest</span><span class="p">(</span><span class="n">received</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span> <span class="n">expected</span><span class="p">)</span>
+<div class="highlight"><span class="filename">news_hub/webhooks.py</span><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify_secret_token</span><span class="p">(</span><span class="n">expected</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">received</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span><span class="sd">"""Для Telegram (крок 9): заголовок X-Telegram-Bot-Api-Secret-Token, порівняння без витоку часу."""</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="k">return</span> <span class="n">received</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">hmac</span><span class="o">.</span><span class="n">compare_digest</span><span class="p">(</span><span class="n">received</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span> <span class="n">expected</span><span class="p">)</span>
 </code></pre></div>
 <p>Підпис тіла кращий за секретний заголовок, але обирає відправник: приймаємо те, що він уміє, і робимо це якнайкраще.</p>
 <h2 id="rule">Правило<a class="headerlink" href="#rule" title="Permanent link">&para;</a></h2>
 <div class="admonition tip">
 <p class="admonition-title">Правило</p>
-<p>Вхідний webhook перевіряється <strong>до</strong> розбору тіла: HMAC-SHA256 від часу й сирих байтів, вікно часу, <code>SET NX</code> проти повтору. Секрети порівнюються <code>hmac.compare_digest</code>, а не <code>==</code>. Секрет не кладемо в URL і, де можна, не передаємо зовсім — лише підпис.</p>
+<p>Вхідний webhook перевіряється <strong>до</strong> розбору тіла: HMAC-SHA256 від часу, id доставки й сирих байтів, вікно часу, <code>SET NX</code> на id доставки. Повтор тієї самої доставки — <code>200</code> з тим самим завданням, а не друга робота і не помилка. Секрети порівнюються <code>hmac.compare_digest</code>, а не <code>==</code>. Секрет не кладемо в URL і, де можна, не передаємо зовсім — лише підпис.</p>
 </div>
 <p><strong>Далі:</strong> <a href="../security_tests/">Тести безпеки</a>.</p>
 

@@ -1,0 +1,4805 @@
+
+<!doctype html>
+<html lang="uk" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="FastAPI від типів і Pydantic до Docker, Compose і CI/CD — на прикладі новинного агрегатора">
+      
+      
+      
+        <link rel="canonical" href="https://nikoriakviktor.github.io/news_hub/05_databases/migrations/">
+      
+      
+        <link rel="prev" href="../connection_pool/">
+      
+      
+        <link rel="next" href="../../06_middleware_cache_jobs/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Міграції Alembic - News Hub — книга FastAPI</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#міграції-alembic-autogenerate-дані-зміни-без-зупинки" class="md-skip">
+          Перейти до змісту
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Хедер">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-header__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            News Hub — книга FastAPI
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Міграції Alembic
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Пошук" placeholder="Пошук" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Шукати">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистити" aria-label="Очистити" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Пошук розпочато
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Головна
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../00_getting_started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Як користуватися
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../01_http_and_rest/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Книга FastAPI
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorials/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Zero to Hero
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../deep_dive/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  News Hub Deep Dive
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../labs/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Практика
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Довідник
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../TEACHING_GUIDE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Викладачу
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Навігація" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="News Hub — книга FastAPI" class="md-nav__button md-logo" aria-label="News Hub — книга FastAPI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    News Hub — книга FastAPI
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/NikoriakViktor/news_hub" title="Перейти до вихідного коду" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    NikoriakViktor/news_hub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Головна
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../00_getting_started/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Як користуватися
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Книга FastAPI
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Книга FastAPI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../01_http_and_rest/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина I. HTTP і дизайн REST API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_1" id="__nav_3_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина I. HTTP і дизайн REST API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/http_anatomy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP-запит і відповідь
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/http_methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Методи HTTP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/status_codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Коди відповідей
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/rest_principles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Принципи REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/collections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Колекції і пагінація
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/versioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Версіонування API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Формат помилок
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/api_styles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Які бувають API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/http_clients/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP-клієнти
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/legacy_case/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Кейс: API v1 → v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01_http_and_rest/meteo_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архітектура meteo_api
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../02_typing_and_pydantic/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина II. Типи і Pydantic
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_2" id="__nav_3_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина II. Типи і Pydantic
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/type_hints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Анотації типів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/pydantic_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Моделі Pydantic 2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/strict_mode/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Режими lax і strict
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/validators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Валідатори і computed_field
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/special_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    URL, email і дати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/validation_error/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ValidationError
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pydantic-settings і .env
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/config_dict/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ConfigDict
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02_typing_and_pydantic/trust_boundary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Межа довіри
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../03_fastapi_core/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина III. Ядро FastAPI
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_3" id="__nav_3_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина III. Ядро FastAPI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/what_is_fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Що таке FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/routes_and_validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Маршрути і валідація
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Залежності і lifespan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/openapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/fastapi_flask_django/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FastAPI, Flask і Django
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_fastapi_core/fastapi_vs_drf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FastAPI і DRF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../04_async/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина IV. Async і конкурентність
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_4" id="__nav_3_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина IV. Async і конкурентність
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/concurrency_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Чекати чи рахувати
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/asgi_vs_wsgi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ASGI і WSGI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/endpoint_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Три типи ендпоінтів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/blocking_code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Блокуючий код
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04_async/concurrency_patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Паралельні запити
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_5" id="__nav_3_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sql_for_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQL для API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sqlalchemy_async/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLAlchemy async
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transactions_and_uow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Транзакції й Unit of Work
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../repository_pattern/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Патерн Repository
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../connection_pool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Пул з'єднань
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Міграції Alembic
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Міграції Alembic
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проблема
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ментальна модель
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Міграція з даними
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#not-null" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NOT NULL одразу — на таблиці з рядками
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#autogenerate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що бачить autogenerate
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Що бачить autogenerate">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#include-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Спільна база: autogenerate пропонує видалити чужі таблиці
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alembic-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alembic check у CI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#concurrently" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Індекс без блокування
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#locks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Блокування під час міграції
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#heads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Дві голови
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#downgrade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        downgrade — не кнопка «назад»
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#news-hub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        У News Hub
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Типові помилки
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Налагодження
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Безпека
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Питання
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../06_middleware_cache_jobs/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VI. Middleware, кеш і фонові задачі
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_6" id="__nav_3_6_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VI. Middleware, кеш і фонові задачі
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/middleware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Middleware
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/cors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CORS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/redis_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Redis для API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/caching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Стратегії кешу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/rate_limiting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rate limit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06_middleware_cache_jobs/background_jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фонові задачі й черги
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../07_testing/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VII. Тестування API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_7" id="__nav_3_7_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VII. Тестування API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/pytest_basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Основи pytest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/fixtures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фікстури
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/test_doubles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Підміни: mock і fake
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/testing_fastapi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Тестування FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/test_databases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Тести з базою даних
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07_testing/quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Якість тестів
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../08_security/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина VIII. Безпека API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_8" id="__nav_3_8_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина VIII. Безпека API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/passwords/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Паролі: хеш, сіль, вартість
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Автентифікація: сесії і JWT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/authorization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Авторизація: ролі, scopes, об'єкти
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/ssrf_and_outbound/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSRF і вихідні запити
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/webhooks_and_signatures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Webhook і підписи
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/secrets_and_headers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Секрети, заголовки, проксі
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08_security/owasp_api_top10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OWASP API Top 10
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_9" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../09_integrations/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина IX. Інтеграції: AI, LLM, Telegram
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_9" id="__nav_3_9_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина IX. Інтеграції: AI, LLM, Telegram
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/ai_dev_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI-агент у проєкті
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/llm_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/llm_reliability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Надійність LLM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/telegram_bots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telegram-бот
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09_integrations/websockets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WebSocket у FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_10" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../10_docker_and_ci/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Частина X. Docker, Compose і CI/CD
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_10" id="__nav_3_10_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Частина X. Docker, Compose і CI/CD
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/docker_image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker-образ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/compose/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker Compose
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/production_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сервер у production
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/ci_cd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD на GitHub Actions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10_docker_and_ci/microservices/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Мікросервіси: коли варто
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../tutorials/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zero to Hero
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../deep_dive/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    News Hub Deep Dive
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../labs/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Практика
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../reference/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Довідник
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TEACHING_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Викладачу
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Зміст">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Зміст
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проблема
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ментальна модель
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Міграція з даними
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#not-null" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NOT NULL одразу — на таблиці з рядками
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#autogenerate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що бачить autogenerate
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Що бачить autogenerate">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#include-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Спільна база: autogenerate пропонує видалити чужі таблиці
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alembic-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alembic check у CI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#concurrently" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Індекс без блокування
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#locks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Блокування під час міграції
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#heads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Дві голови
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#downgrade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        downgrade — не кнопка «назад»
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#news-hub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        У News Hub
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Типові помилки
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Налагодження
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Безпека
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Питання
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Що далі
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Навігація" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Головна
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../../01_http_and_rest/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Книга FastAPI
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Частина V. Бази даних: SQLAlchemy async і Alembic
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="міграції-alembic-autogenerate-дані-зміни-без-зупинки">Міграції Alembic: autogenerate, дані, зміни без зупинки<a class="headerlink" href="#міграції-alembic-autogenerate-дані-зміни-без-зупинки" title="Permanent link">&para;</a></h1>
+<h2 id="problem">Проблема<a class="headerlink" href="#problem" title="Permanent link">&para;</a></h2>
+<p><code>Base.metadata.create_all()</code> створює таблиці, яких немає, і не чіпає наявні. Робоча база з тисячами новин має отримати новий стовпець, індекс чи перейменування <strong>без втрати даних</strong>, на кожному сервері однаково й з можливістю відкотитися. Alembic зберігає зміни схеми як код. Але <code>alembic revision --autogenerate</code> — лише чернетка: перейменування він бачить як «видалити й додати» (з утратою даних), зміну <code>server_default</code> і <code>CHECK</code> не бачить зовсім, а в спільній базі пропонує видалити чужі таблиці. <code>NOT NULL</code> на заповненій таблиці падає, <code>CREATE INDEX</code> блокує запис, а нова версія застосунку з новим стовпцем ламає стару, яка ще працює під час розгортання.</p>
+<p>Основи Alembic на прикладі News Hub — <code>env.py</code>, перша міграція, <code>upgrade</code>/<code>downgrade</code>/<code>current</code>/<code>history</code>, <code>--sql</code>, transactional DDL — розібрано в <a href="../../tutorials/03_sqlalchemy_alembic/alembic/">кроці 3: Міграції Alembic</a>. Тут — що робити, коли схема змінюється на живій базі. Приклад — <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/databases/migrations_demo/env.py"><code>examples/databases/migrations_demo/</code></a> (ланцюжок 0001–0004) і <a href="https://github.com/NikoriakViktor/news_hub/blob/main/examples/databases/migrations_demo.py"><code>migrations_demo.py</code></a>, Alembic 1.20.1, SQLite і PostgreSQL 16 (окрема база <code>migrations</code>).</p>
+<h2 id="mental-model">Ментальна модель<a class="headerlink" href="#mental-model" title="Permanent link">&para;</a></h2>
+<p>Під час розгортання стара й нова версії застосунку працюють <strong>одночасно</strong> (старий контейнер ще обслуговує запити, новий уже стартує), а міграція виконується між ними. Тому кожна міграція має бути сумісна з <strong>обома</strong> версіями коду. Зміну, несумісну зі старою версією, розбивають на кроки: <strong>expand</strong> (додати нове, не ламаючи старого) → перехід коду → <strong>contract</strong> (прибрати старе).</p>
+<pre class="mermaid"><code>flowchart TD
+    classDef step     fill:#eceff1,stroke:#546e7a,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success  fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef error    fill:#ffebee,stroke:#c62828,stroke-width:3px;
+    classDef warning  fill:#fff8e1,stroke:#e65100,stroke-width:2px;
+
+    subgraph S0 ["1. до розгортання"]
+        direction LR
+        a0["схема 0001&lt;br&gt;news: id, url, title"] ~~~ a1["застосунок v1&lt;br&gt;про category не знає"]
+    end
+    subgraph S1 ["2. міграція 0002 — expand"]
+        direction LR
+        b0["ADD COLUMN category&lt;br&gt;NULL дозволено"] --&gt; b1["UPDATE … SET category&lt;br&gt;для наявних рядків"]
+    end
+    subgraph S2 ["3. v1 і v2 працюють разом"]
+        direction LR
+        c0["v1 вставляє&lt;br&gt;без category → NULL"] ~~~ c1["v2 пише&lt;br&gt;category завжди"]
+    end
+    subgraph S3 ["4. міграція 0003 — contract"]
+        direction LR
+        d0["дозаповнити NULL&lt;br&gt;від v1"] --&gt; d1["SET NOT NULL"]
+    end
+    S0 --&gt; S1 --&gt; S2 --&gt; S3
+
+    class a0,a1,c0 step
+    class b0,b1 warning
+    class c1 decision
+    class d0 warning
+    class d1 success</code></pre>
+<table>
+<thead>
+<tr>
+<th>Зміна</th>
+<th>Безпечна одразу?</th>
+<th>Як</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>нова таблиця, новий nullable-стовпець</td>
+<td>так</td>
+<td>одна міграція (як <code>0002</code> News Hub)</td>
+</tr>
+<tr>
+<td>новий <code>NOT NULL</code> стовпець</td>
+<td>ні: старий код вставляє без нього</td>
+<td>expand (nullable + дані) → contract (<code>NOT NULL</code>), або <code>server_default</code></td>
+</tr>
+<tr>
+<td>перейменувати стовпець</td>
+<td>ні: старий код читає стару назву</td>
+<td>новий стовпець → код пише в обидва → дані → код читає новий → видалити старий</td>
+</tr>
+<tr>
+<td>видалити стовпець</td>
+<td>ні, поки його читає хоч одна версія коду</td>
+<td>спершу код без стовпця, потім міграція</td>
+</tr>
+<tr>
+<td>індекс на великій таблиці</td>
+<td>блокує запис на час побудови</td>
+<td><code>CREATE INDEX CONCURRENTLY</code></td>
+</tr>
+<tr>
+<td>звузити тип, додати <code>CHECK</code></td>
+<td>ні, якщо є рядки, що не проходять</td>
+<td>перевірити й виправити дані, потім обмеження</td>
+</tr>
+</tbody>
+</table>
+<h2 id="data-migration">Міграція з даними<a class="headerlink" href="#data-migration" title="Permanent link">&para;</a></h2>
+<div class="highlight"><span class="filename">migrations_demo/versions/0002_category_expand.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Таблиця «як у цій міграції», а не імпорт моделі: модель зміниться, а міграція має працювати завжди.</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">news</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"news"</span><span class="p">,</span> <span class="n">sa</span><span class="o">.</span><span class="n">column</span><span class="p">(</span><span class="s2">"id"</span><span class="p">,</span> <span class="n">sa</span><span class="o">.</span><span class="n">Integer</span><span class="p">),</span> <span class="n">sa</span><span class="o">.</span><span class="n">column</span><span class="p">(</span><span class="s2">"url"</span><span class="p">,</span> <span class="n">sa</span><span class="o">.</span><span class="n">String</span><span class="p">),</span> <span class="n">sa</span><span class="o">.</span><span class="n">column</span><span class="p">(</span><span class="s2">"category"</span><span class="p">,</span> <span class="n">sa</span><span class="o">.</span><span class="n">String</span><span class="p">))</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">upgrade</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="k">with</span> <span class="n">op</span><span class="o">.</span><span class="n">batch_alter_table</span><span class="p">(</span><span class="s2">"news"</span><span class="p">)</span> <span class="k">as</span> <span class="n">batch</span><span class="p">:</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        <span class="n">batch</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="n">sa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">"category"</span><span class="p">,</span> <span class="n">sa</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="mi">100</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">op</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        <span class="n">news</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">news</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">category</span><span class="o">.</span><span class="n">is_</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        <span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="n">sa</span><span class="o">.</span><span class="n">case</span><span class="p">((</span><span class="n">news</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">url</span><span class="o">.</span><span class="n">like</span><span class="p">(</span><span class="s2">"%/economy/%"</span><span class="p">),</span> <span class="s2">"Економіка"</span><span class="p">),</span> <span class="n">else_</span><span class="o">=</span><span class="s2">"Новини"</span><span class="p">))</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><span class="filename">migrations_demo/versions/0003_category_contract.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">upgrade</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="c1"># рядки, які стара версія встигла вставити між 0002 і 0003</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">op</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">news</span><span class="o">.</span><span class="n">update</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">news</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">category</span><span class="o">.</span><span class="n">is_</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="s2">"Новини"</span><span class="p">))</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="k">with</span> <span class="n">op</span><span class="o">.</span><span class="n">batch_alter_table</span><span class="p">(</span><span class="s2">"news"</span><span class="p">)</span> <span class="k">as</span> <span class="n">batch</span><span class="p">:</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        <span class="n">batch</span><span class="o">.</span><span class="n">alter_column</span><span class="p">(</span><span class="s2">"category"</span><span class="p">,</span> <span class="n">existing_type</span><span class="o">=</span><span class="n">sa</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="mi">100</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre></div>
+<p><code>migrations_demo.py</code> імітує розгортання: дві новини до <code>0002</code>, одна вставлена «старою версією» між <code>0002</code> і <code>0003</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>--- 1. 0001, дані старої версії застосунку, потім 0002 (expand + data migration)
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    після 0002: [(1, 'Економіка'), (2, 'Новини'), (3, None)]
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    після head: [(1, 'Економіка'), (2, 'Новини'), (3, 'Новини')]
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>INFO  [alembic.runtime.migration] Running upgrade  -&gt; 0001, news — таблиця новин
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>INFO  [alembic.runtime.migration] Running upgrade 0001 -&gt; 0002, category: expand — новий стовпець nullable і заповнення наявних рядків (data migration)
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>INFO  [alembic.runtime.migration] Running upgrade 0002 -&gt; 0003, category: contract — NOT NULL, коли всі версії застосунку вже пишуть category
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>INFO  [alembic.runtime.migration] Running upgrade 0003 -&gt; 0004, індекс за title без блокування запису (PostgreSQL: CREATE INDEX CONCURRENTLY)
+</code></pre></div>
+<p>Однаково на SQLite і PostgreSQL.</p>
+<ul>
+<li><strong><code>sa.table(...)</code> замість <code>from app.tables import News</code>.</strong> Міграція — знімок схеми на свій момент. Модель через рік матиме інші стовпці (або її не буде), і міграція з імпортом моделі перестане працювати на новій базі.</li>
+<li><strong>Дані — одним <code>UPDATE</code>, а не циклом у Python.</strong> На мільйонах рядків і він довгий і блокує рядки: такі оновлення ділять на пачки (<code>WHERE id BETWEEN …</code>) і виконують окремо від зміни схеми.</li>
+<li><strong><code>0003</code> дозаповнює ще раз</strong>: між міграціями стара версія вставила рядок без <code>category</code> (<code>(3, None)</code>), і без цього <code>SET NOT NULL</code> упав би.</li>
+</ul>
+<h2 id="not-null"><code>NOT NULL</code> одразу — на таблиці з рядками<a class="headerlink" href="#not-null" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">Operations</span><span class="p">(</span><span class="n">MigrationContext</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">sync</span><span class="p">))</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">"news"</span><span class="p">,</span> <span class="n">Column</span><span class="p">(</span><span class="s2">"source"</span><span class="p">,</span> <span class="n">String</span><span class="p">(</span><span class="mi">100</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>--- 4. NOT NULL одразу, на таблиці з рядками
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    IntegrityError: column "source" of relation "news" contains null values          (PostgreSQL)
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    OperationalError: Cannot add a NOT NULL column with default value NULL            (SQLite)
+</code></pre></div>
+<p>На порожній базі розробника така міграція проходить, на робочій — падає. Варіанти: expand/contract, як вище, або <code>server_default=</code> — тоді база заповнює наявні рядки значенням за замовчуванням (у PostgreSQL 11+ — без переписування таблиці для константи).</p>
+<h2 id="autogenerate">Що бачить autogenerate<a class="headerlink" href="#autogenerate" title="Permanent link">&para;</a></h2>
+<p><code>migrations_demo.py</code> порівнює змінені моделі з базою на <code>head</code> тією самою функцією, яку викликає <code>alembic revision --autogenerate</code> (<code>compare_metadata</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>--- 3. що бачить autogenerate (модель проти бази на head)
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    перейменували title → headline   → ['add_column headline', 'remove_index ix_news_title', 'add_index ix_news_headline', 'remove_column title']
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    String(100) → String(200)        → ['modify_type news.category']
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    nullable=False → True            → ['modify_nullable news.category']
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    додали server_default            → нічого не знайдено
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    додали CHECK                     → нічого не знайдено
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    перейменували таблицю            → ['add_table articles', 'add_index ix_articles_title', 'remove_index ix_news_title', 'remove_table news']
+</code></pre></div>
+<p>Однаково на SQLite і PostgreSQL.</p>
+<table>
+<thead>
+<tr>
+<th>Зміна в моделі</th>
+<th>Autogenerate</th>
+<th>Що робити</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>нова таблиця, стовпець, індекс, <code>UNIQUE</code></td>
+<td>бачить</td>
+<td>прочитати міграцію</td>
+</tr>
+<tr>
+<td>тип (<code>String(100)</code> → <code>String(200)</code>)</td>
+<td>бачить (<code>compare_type=True</code> за замовчуванням з Alembic 1.12)</td>
+<td>перевірити, чи дані влазять у новий тип</td>
+</tr>
+<tr>
+<td><code>nullable</code></td>
+<td>бачить</td>
+<td>для <code>NOT NULL</code> — спершу дані</td>
+</tr>
+<tr>
+<td><strong>перейменування стовпця</strong></td>
+<td><code>add_column</code> + <code>remove_column</code> — <strong>дані втрачено</strong></td>
+<td>вручну: <code>op.alter_column("news", "title", new_column_name="headline")</code>, на живій базі — expand/contract</td>
+</tr>
+<tr>
+<td><strong>перейменування таблиці</strong></td>
+<td><code>add_table</code> + <code>remove_table</code></td>
+<td>вручну: <code>op.rename_table("news", "articles")</code></td>
+</tr>
+<tr>
+<td><code>server_default</code></td>
+<td>не бачить (<code>compare_server_default=False</code> за замовчуванням)</td>
+<td>дописати <code>op.alter_column(..., server_default=...)</code> вручну або ввімкнути порівняння в <code>env.py</code></td>
+</tr>
+<tr>
+<td><code>CheckConstraint</code></td>
+<td>не бачить</td>
+<td><code>op.create_check_constraint(...)</code> вручну</td>
+</tr>
+</tbody>
+</table>
+<p>Autogenerate порівнює <strong>модель з базою</strong>, а не модель з попередньою моделлю: у нього немає історії, тож «стовпець зник, з'явився інший такого ж типу» він не може відрізнити від перейменування. Тому кожну згенеровану міграцію читають перед комітом (<a href="../../tutorials/03_sqlalchemy_alembic/alembic/#autogenerate">крок 3: autogenerate — чернетка</a>).</p>
+<h3 id="include-object">Спільна база: autogenerate пропонує видалити чужі таблиці<a class="headerlink" href="#include-object" title="Permanent link">&para;</a></h3>
+<p>Коли <code>migrations_demo.py</code> вперше запустили в базі <code>postgres</code>, де вже лежали таблиці інших прикладів, <code>alembic check</code> упав:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>INFO  [alembic.autogenerate.compare.tables] Detected removed table 'audit'
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>INFO  [alembic.autogenerate.compare.tables] Detected removed table 'sources'
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>INFO  [alembic.autogenerate.compare.tables] Detected removed table 'balances'
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>alembic.util.exc.AutogenerateDiffsDetected: New upgrade operations detected: [('remove_table', Table('audit', MetaData(), …
+</code></pre></div>
+<p>Для autogenerate «таблиця в базі, якої немає в <code>Base.metadata</code>» — це «видалити таблицю». Згенерована з такої бази міграція містила б <code>op.drop_table</code> для чужих даних. Розв'язки: окрема база (або схема) на застосунок — так зроблено в прикладі (<code>createdb migrations</code>); або <code>include_name</code>/<code>include_object</code> у <code>context.configure(...)</code> в <code>env.py</code>, що пропускає таблиці не з <code>target_metadata</code>.</p>
+<h2 id="alembic-check"><code>alembic check</code> у CI<a class="headerlink" href="#alembic-check" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>--- 2. alembic check: модель і база збігаються?
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>No new upgrade operations detected.
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>INFO  [alembic.autogenerate.compare.tables] Detected added column 'news.summary'
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    AutogenerateDiffsDetected: New upgrade operations detected: [('add_column', None, 'news', Column('summary', String(length=300), table=&lt;ne
+</code></pre></div>
+<p>У моделі з'явився стовпець без міграції — <code>check</code> це бачить. З командного рядка:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>$ alembic -c migrations_demo/alembic.ini check            # база на 0003, модель — 0004
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>FAILED: Target database is not up to date.
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>$ echo $?
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>255
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>$ alembic -c migrations_demo/alembic.ini upgrade head &amp;&amp; alembic -c migrations_demo/alembic.ini check
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>No new upgrade operations detected.
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>$ echo $?
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>0
+</code></pre></div>
+<p><code>check</code> працює лише з базою на <code>head</code>, тому в CI спершу <code>alembic upgrade head</code> на <strong>чистій</strong> базі (перевіряє, що весь ланцюжок проходить), потім <code>alembic check</code>. Тести цього не замінять: тестові бази створюються з моделей (<code>create_all</code>), і стовпець там є. Як це зроблено в News Hub і що буде з «забутою» міграцією — <a href="../../tutorials/12_ci_cd/what_to_check/#alembic-check">крок 12: <code>alembic check</code></a>. Не забувай: <code>check</code> має ті самі сліпі зони, що й autogenerate (<code>server_default</code>, <code>CHECK</code>).</p>
+<h2 id="concurrently">Індекс без блокування<a class="headerlink" href="#concurrently" title="Permanent link">&para;</a></h2>
+<div class="highlight"><span class="filename">migrations_demo/versions/0004_title_index.py</span><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">upgrade</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    <span class="k">with</span> <span class="n">op</span><span class="o">.</span><span class="n">get_context</span><span class="p">()</span><span class="o">.</span><span class="n">autocommit_block</span><span class="p">():</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>        <span class="n">op</span><span class="o">.</span><span class="n">create_index</span><span class="p">(</span><span class="s2">"ix_news_title"</span><span class="p">,</span> <span class="s2">"news"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"title"</span><span class="p">],</span> <span class="n">postgresql_concurrently</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>$ alembic -c migrations_demo/alembic.ini upgrade 0003:0004 --sql
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>BEGIN;
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>-- Running upgrade 0003 -&gt; 0004
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>COMMIT;
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>CREATE INDEX CONCURRENTLY ix_news_title ON news (title);
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>BEGIN;
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>
+<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>UPDATE alembic_version SET version_num='0004' WHERE alembic_version.version_num = '0003';
+<a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>
+<a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>COMMIT;
+</code></pre></div>
+<ul>
+<li><strong>Звичайний <code>CREATE INDEX</code> блокує запис у таблицю</strong> на весь час побудови; на великій таблиці це хвилини недоступних <code>INSERT</code>/<code>UPDATE</code>.</li>
+<li><strong><code>CONCURRENTLY</code> будує індекс без блокування запису</strong>, але не може виконуватися в транзакції. Alembic на PostgreSQL загортає міграцію в транзакцію (transactional DDL), тому <code>autocommit_block()</code>: Alembic робить <code>COMMIT</code>, виконує оператор поза транзакцією й відкриває нову (видно в SQL вище).</li>
+<li><strong>Ціна — менше гарантій.</strong> Якщо <code>CONCURRENTLY</code> впав, лишається невалідний індекс (<code>\d news</code> покаже <code>INVALID</code>), а <code>alembic_version</code> — на попередній версії. Індекс видаляють і запускають міграцію знову. Тому таку операцію тримають в окремій міграції.</li>
+<li>На SQLite <code>postgresql_concurrently</code> ігнорується — звичайний <code>CREATE INDEX</code>, і <code>0004</code> проходить там теж.</li>
+</ul>
+<h2 id="locks">Блокування під час міграції<a class="headerlink" href="#locks" title="Permanent link">&para;</a></h2>
+<p><code>ALTER TABLE</code> бере найсильніше блокування таблиці (<code>ACCESS EXCLUSIVE</code>). Якщо таблицю зараз читає довга транзакція, міграція стоїть у черзі — а за нею стають <strong>усі</strong> нові запити до таблиці, навіть звичайні <code>SELECT</code>, і API зависає, хоча сама зміна миттєва. Захист — коротке очікування блокування в міграції:</p>
+<div class="highlight"><span class="filename">migrations_demo.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">text</span><span class="p">(</span><span class="s2">"BEGIN"</span><span class="p">))</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">text</span><span class="p">(</span><span class="s2">"SELECT count(*) FROM news"</span><span class="p">))</span>      <span class="c1"># звіт тримає ACCESS SHARE</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="k">await</span> <span class="n">migration</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">text</span><span class="p">(</span><span class="s2">"SET lock_timeout = '1s'"</span><span class="p">))</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="k">await</span> <span class="n">migration</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">text</span><span class="p">(</span><span class="s2">"ALTER TABLE news ADD COLUMN source varchar(100)"</span><span class="p">))</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>--- 7. ALTER TABLE за довгим запитом: lock_timeout (PostgreSQL)
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    через 1.0 с: DBAPIError: canceling statement due to lock timeout
+</code></pre></div>
+<p>Міграція не дочекалася блокування й упала через секунду, а не повісила API на весь час звіту. Її повторюють пізніше. У міграції це <code>op.execute("SET lock_timeout = '5s'")</code> на початку <code>upgrade()</code> або один раз в <code>env.py</code> для всіх міграцій PostgreSQL.</p>
+<h2 id="heads">Дві голови<a class="headerlink" href="#heads" title="Permanent link">&para;</a></h2>
+<p>Два розробники в різних гілках створили міграції від тієї самої <code>0004</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>--- 5. дві гілки з однаковим down_revision
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>Generating /tmp/tmpy5si_69t/migrations/versions/0005a_a_summary_column.py ...  done
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>Generating /tmp/tmpy5si_69t/migrations/versions/0005b_b_views_column.py ...  done
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>0005a (head)
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>0005b (head)
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>    CommandError: Multiple head revisions are present for given argument 'head'; please specify a specific target revision, '&lt;br
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>Generating /tmp/tmpy5si_69t/migrations/versions/0006_merge_a_and_b.py ...  done
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>INFO  [alembic.runtime.migration] Running upgrade 0004 -&gt; 0005b, b: views column
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>INFO  [alembic.runtime.migration] Running upgrade 0004 -&gt; 0005a, a: summary column
+<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>INFO  [alembic.runtime.migration] Running upgrade 0005a, 0005b -&gt; 0006, merge a and b
+<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>0006 (head) (mergepoint)
+</code></pre></div>
+<p>Після злиття гілок у git ланцюжок розгалузився: <code>alembic heads</code> показує дві голови, <code>upgrade head</code> відмовляється. <code>alembic merge heads -m "…"</code> створює порожню міграцію з <code>down_revision = ("0005a", "0005b")</code>. Порядок застосування гілок не гарантовано (тут <code>0005b</code> раніше <code>0005a</code>), тож вони не мають залежати одна від одної. <code>alembic heads</code> у CI з перевіркою «рівно одна голова» ловить це до злиття.</p>
+<h2 id="downgrade"><code>downgrade</code> — не кнопка «назад»<a class="headerlink" href="#downgrade" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>--- 6. downgrade до 0001: дані category втрачено
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>INFO  [alembic.runtime.migration] Running downgrade 0004 -&gt; 0003, індекс за title без блокування запису (PostgreSQL: CREATE INDEX CONCURRENTLY)
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>INFO  [alembic.runtime.migration] Running downgrade 0003 -&gt; 0002, category: contract — NOT NULL, коли всі версії застосунку вже пишуть category
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>INFO  [alembic.runtime.migration] Running downgrade 0002 -&gt; 0001, category: expand — новий стовпець nullable і заповнення наявних рядків (data migration)
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>    стовпці: ['id', 'url', 'title']
+</code></pre></div>
+<p><code>downgrade</code> повертає <strong>схему</strong>, а не дані: <code>category</code>, заповнена міграцією й користувачами, зникла разом зі стовпцем. Повторний <code>upgrade</code> заповнить її заново правилом з <code>0002</code>, а не тим, що вводили люди. На робочій базі відкат роблять новою міграцією «вперед» (виправлення), а від втрати даних захищає резервна копія перед міграцією (<a href="../../tutorials/11_compose_deploy/backup_restore/">крок 11</a>). <code>downgrade</code> корисний у розробці й у CI — як перевірка, що міграція оборотна.</p>
+<h2 id="news-hub">У News Hub<a class="headerlink" href="#news-hub" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Що зі сторінки</th>
+<th>У News Hub</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ланцюжок</td>
+<td><code>0001</code> (news) → <code>0002</code> (аналіз LLM) → <code>0003</code> (sources) → <code>0004</code> (subscriptions) (<a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/migrations/versions/0002_llm_analysis.py"><code>steps/12_ci_cd/migrations/versions/</code></a>)</td>
+</tr>
+<tr>
+<td>expand без contract</td>
+<td><code>0002</code> додає 5 стовпців, <strong>усі nullable</strong>: «наявні рядки лишаються без аналізу (NULL), дані не переписуються» — зміна сумісна зі старою версією коду</td>
+</tr>
+<tr>
+<td>перечитана автоміграція</td>
+<td><code>0001</code>: <code>sa.text('now()')</code> від autogenerate замінено на <code>sa.func.now()</code> (<a href="../../tutorials/03_sqlalchemy_alembic/alembic/#autogenerate">крок 3</a>); <code>0002</code>: docstring «згенеровано … і перечитано»</td>
+</tr>
+<tr>
+<td><code>batch_alter_table</code></td>
+<td><code>render_as_batch</code> для SQLite в <code>env.py</code>: SQLite не вміє <code>ALTER COLUMN</code></td>
+</tr>
+<tr>
+<td>окремий крок міграцій</td>
+<td>сервіс <code>migrate</code> (<code>alembic upgrade head</code>) у Compose; <code>api</code> стартує після його успішного завершення (<a href="../../tutorials/11_compose_deploy/startup_order/#change">крок 11</a>)</td>
+</tr>
+<tr>
+<td><code>alembic check</code> у CI</td>
+<td><code>alembic upgrade head</code> + <code>alembic check</code> на чистому PostgreSQL перед <code>pytest</code> (<a href="../../tutorials/12_ci_cd/what_to_check/#alembic-check">крок 12</a>)</td>
+</tr>
+<tr>
+<td><code>CONCURRENTLY</code>, <code>lock_timeout</code>, data migration</td>
+<td>не використовуються: індекси створено разом з таблицями, даних для перенесення не було</td>
+</tr>
+</tbody>
+</table>
+<p>Схема News Hub досі лише росла — нові таблиці й nullable-стовпці, тобто чистий expand. Перша зміна, що потребуватиме expand/contract, — будь-яке перейменування чи <code>NOT NULL</code> на <code>news</code>.</p>
+<h2 id="mistakes">Типові помилки<a class="headerlink" href="#mistakes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Помилка</th>
+<th>Наслідок</th>
+<th>Як правильно</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>автоміграція без читання</td>
+<td>перейменування стає <code>drop_column</code> — дані втрачено</td>
+<td>читати кожну; <code>op.alter_column(new_column_name=...)</code></td>
+</tr>
+<tr>
+<td><code>import</code> моделей у міграції</td>
+<td>стара міграція падає, коли модель змінилась</td>
+<td><code>sa.table(...)</code> / <code>sa.column(...)</code> у самій міграції</td>
+</tr>
+<tr>
+<td><code>NOT NULL</code> стовпець на заповненій таблиці</td>
+<td><code>contains null values</code> (PostgreSQL), <code>Cannot add a NOT NULL column</code> (SQLite)</td>
+<td>nullable → дані → <code>NOT NULL</code>, або <code>server_default</code></td>
+</tr>
+<tr>
+<td>перейменування за один крок</td>
+<td>стара версія коду падає під час розгортання</td>
+<td>expand/contract</td>
+</tr>
+<tr>
+<td><code>CREATE INDEX</code> на великій таблиці</td>
+<td>запис заблоковано на хвилини</td>
+<td><code>postgresql_concurrently=True</code> в <code>autocommit_block()</code></td>
+</tr>
+<tr>
+<td><code>ALTER TABLE</code> без <code>lock_timeout</code></td>
+<td>черга запитів за міграцією, API зависає</td>
+<td><code>SET lock_timeout</code> у міграції</td>
+</tr>
+<tr>
+<td>autogenerate у спільній базі</td>
+<td><code>drop_table</code> для чужих таблиць</td>
+<td>окрема база/схема або <code>include_object</code></td>
+</tr>
+<tr>
+<td>дві голови після злиття гілок</td>
+<td><code>Multiple head revisions are present</code></td>
+<td><code>alembic merge heads</code>; перевірка в CI</td>
+</tr>
+<tr>
+<td><code>downgrade</code> на робочій базі як «відкат»</td>
+<td>втрата даних нових стовпців</td>
+<td>виправлення новою міграцією; бекап перед міграцією</td>
+</tr>
+<tr>
+<td>міграції запускає кожен процес API при старті</td>
+<td>гонка кількох <code>upgrade</code> одночасно</td>
+<td>окремий крок (<code>migrate</code>) перед стартом API</td>
+</tr>
+<tr>
+<td>тести на <code>create_all</code> і жодного <code>upgrade head</code></td>
+<td>зламаний ланцюжок міграцій зелений у CI</td>
+<td><code>alembic upgrade head</code> + <code>alembic check</code> у CI</td>
+</tr>
+</tbody>
+</table>
+<h2 id="debugging">Налагодження<a class="headerlink" href="#debugging" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong><code>alembic upgrade head --sql</code></strong> (або <code>0003:0004 --sql</code>) — SQL без бази: перевірити, що саме виконається, і віддати адміністратору.</li>
+<li><strong><code>alembic current</code></strong>, <strong><code>alembic history --verbose</code></strong>, <strong><code>alembic heads</code></strong> — де база, який ланцюжок, скільки голів.</li>
+<li><strong><code>Target database is not up to date</code></strong> — <code>check</code> чи <code>revision --autogenerate</code> на базі не на <code>head</code>: спершу <code>upgrade head</code>.</li>
+<li><strong><code>Can't locate revision identified by '…'</code></strong> — у <code>alembic_version</code> версія, якої немає в <code>versions/</code> (міграцію видалили або перейменували після застосування). Не видаляй застосовані міграції.</li>
+<li><strong>Autogenerate «не бачить» таблиці</strong> — модуль з моделями не імпортовано в <code>env.py</code>, і <code>Base.metadata</code> порожній (<a href="../../tutorials/03_sqlalchemy_alembic/alembic/#env">крок 3</a>).</li>
+<li><strong>Міграція «висить»</strong> — у PostgreSQL <code>SELECT pid, wait_event_type, query FROM pg_stat_activity WHERE wait_event_type = 'Lock'</code>: міграція чекає блокування за довгим запитом.</li>
+</ul>
+<h2 id="security">Безпека<a class="headerlink" href="#security" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Бекап перед міграцією</strong> на робочій базі — і перевірене відновлення (<a href="../../tutorials/11_compose_deploy/backup_restore/">крок 11</a>). <code>downgrade</code> даних не повертає.</li>
+<li><strong>Окремий користувач для міграцій.</strong> Права на <code>CREATE</code>/<code>ALTER</code>/<code>DROP</code> — у міграцій, а не в користувача, від якого працює API.</li>
+<li><strong>Секрети не в <code>alembic.ini</code>.</strong> Адреса з паролем — зі змінної середовища (<code>DATABASE_URL</code> в <code>env.py</code>, як у News Hub); <code>alembic.ini</code> комітиться в git.</li>
+<li><strong>Data migration — теж код з даними користувачів.</strong> <code>op.execute</code> з f-рядком і значеннями з бази — та сама ін'єкція: <code>sa.table(...).update().values(...)</code> або <code>sa.text(...)</code> з параметрами.</li>
+</ul>
+<h2 id="questions">Питання<a class="headerlink" href="#questions" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Чому кожна міграція має бути сумісна і зі старою, і з новою версією застосунку?</li>
+<li>Як додати <code>NOT NULL</code> стовпець до таблиці з даними без зупинки API?</li>
+<li>Що робить autogenerate, якщо перейменувати стовпець у моделі? Як правильно?</li>
+<li>Які зміни autogenerate не бачить за замовчуванням?</li>
+<li>Чому в міграції не імпортують моделі застосунку?</li>
+<li>Навіщо <code>autocommit_block()</code> для <code>CREATE INDEX CONCURRENTLY</code> і що буде, якщо він впаде?</li>
+<li>Чому <code>alembic check</code> у CI запускають після <code>upgrade head</code> на чистій базі?</li>
+<li>Що робити з двома головами після злиття гілок?</li>
+<li>Чому <code>downgrade</code> — не спосіб відкотити невдалий реліз на робочій базі?</li>
+</ol>
+<details class="success">
+<summary>Відповіді</summary>
+<ol>
+<li>Під час розгортання обидві версії працюють одночасно, а міграція виконується між ними: якщо вона ламає стару версію, частина запитів падає, доки старі контейнери не зупиняться.</li>
+<li>Expand: додати nullable-стовпець і заповнити наявні рядки. Розгорнути код, що завжди пише стовпець. Contract: дозаповнити <code>NULL</code>, що встигла вставити стара версія, і <code>SET NOT NULL</code>. Або одразу з <code>server_default</code>.</li>
+<li><code>add_column</code> нового + <code>remove_column</code> старого — дані старого стовпця зникнуть. Вручну <code>op.alter_column(..., new_column_name=...)</code>, а на живій базі — expand/contract через новий стовпець.</li>
+<li><code>server_default</code>, <code>CheckConstraint</code>, перейменування (бачить як видалення й додавання).</li>
+<li>Міграція — знімок схеми на свій момент. Модель зміниться чи зникне, і стара міграція перестане працювати на новій базі; <code>sa.table(...)</code> описує таблицю такою, якою вона була.</li>
+<li><code>CONCURRENTLY</code> не можна виконати в транзакції, а Alembic на PostgreSQL загортає міграцію в транзакцію. Якщо впав — лишається невалідний індекс, його видаляють і повторюють міграцію.</li>
+<li><code>check</code> працює лише з базою на <code>head</code>; <code>upgrade head</code> на чистій базі ще й перевіряє, що весь ланцюжок проходить. Тести цього не перевіряють, бо їхні бази створюються з моделей.</li>
+<li><code>alembic merge heads</code> — порожня міграція з двома <code>down_revision</code>; гілки не мають залежати одна від одної, бо порядок їх застосування не гарантовано.</li>
+<li>Він повертає схему, а не дані: стовпці з даними користувачів зникають. Відкат — нова міграція вперед і бекап перед міграцією.</li>
+</ol>
+</details>
+<h2 id="next">Що далі<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>
+<p>Частина V завершена: <a href="../sql_for_api/">SQL для API</a> → <a href="../sqlalchemy_async/">SQLAlchemy async</a> → <a href="../transactions_and_uow/">транзакції</a> → <a href="../repository_pattern/">Repository</a> → <a href="../connection_pool/">пул</a> → міграції. Як усе це зібрано в News Hub — <a href="../../tutorials/03_sqlalchemy_alembic/">крок 3</a>; як міграції запускаються в Compose — <a href="../../tutorials/11_compose_deploy/startup_order/">крок 11</a>; як перевіряються в CI — <a href="../../tutorials/12_ci_cd/what_to_check/#alembic-check">крок 12</a>. Далі в книзі — <a href="../../06_middleware_cache_jobs/">Частина VI. Middleware, кеш, фонові задачі</a>.</p>
+<p><strong>Джерела:</strong> Alembic — <a href="https://alembic.sqlalchemy.org/en/latest/tutorial.html">Tutorial</a>, <a href="https://alembic.sqlalchemy.org/en/latest/autogenerate.html">Auto Generating Migrations</a> (розділи «What does Autogenerate Detect (and what does it not detect?)», «Controlling What to be Autogenerated»), <a href="https://alembic.sqlalchemy.org/en/latest/branches.html">Working with Branches</a>, <a href="https://alembic.sqlalchemy.org/en/latest/batch.html">Running “Batch” Migrations for SQLite</a>, <a href="https://alembic.sqlalchemy.org/en/latest/ops.html">Operation Reference</a>, <a href="https://alembic.sqlalchemy.org/en/latest/api/runtime.html">Runtime Objects — autocommit_block</a>; PostgreSQL — <a href="https://www.postgresql.org/docs/current/sql-createindex.html#SQL-CREATEINDEX-CONCURRENTLY">CREATE INDEX — Building Indexes Concurrently</a>, <a href="https://www.postgresql.org/docs/current/sql-altertable.html">ALTER TABLE</a>, <a href="https://www.postgresql.org/docs/current/explicit-locking.html">Explicit Locking</a>; Martin Fowler — <a href="https://martinfowler.com/bliki/ParallelChange.html">Parallel Change (expand/contract)</a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Футер" >
+        
+          
+          <a href="../connection_pool/" class="md-footer__link md-footer__link--prev" aria-label="Назад: Пул з&#39;єднань">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                Пул з'єднань
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../06_middleware_cache_jobs/" class="md-footer__link md-footer__link--next" aria-label="Вперед: Огляд">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                Огляд
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.path", "navigation.prune", "navigation.footer", "toc.follow", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0456\u0439\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u0421\u043a\u043e\u043f\u0456\u044e\u0432\u0430\u0442\u0438 \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0429\u0435 1 \u0437\u0431\u0456\u0433 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.more.other": "\u0429\u0435 # \u0437\u0431\u0456\u0433\u0456\u0432 \u043d\u0430 \u0446\u0456\u0439 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456", "search.result.none": "\u0417\u0431\u0456\u0433\u0456\u0432 \u043d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0437\u0431\u0456\u0433", "search.result.other": "\u0417\u043d\u0430\u0439\u0434\u0435\u043d\u043e # \u0437\u0431\u0456\u0433\u0456\u0432", "search.result.placeholder": "\u0420\u043e\u0437\u043f\u043e\u0447\u043d\u0456\u0442\u044c \u043f\u0438\u0441\u0430\u0442\u0438 \u0434\u043b\u044f \u043f\u043e\u0448\u0443\u043a\u0443", "search.result.term.missing": "\u041d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e \u0437\u0430\u043f\u0438\u0442\u0443", "select.version": "\u041e\u0431\u0440\u0430\u0442\u0438 \u0432\u0435\u0440\u0441\u0456\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

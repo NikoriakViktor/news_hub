@@ -3993,6 +3993,18 @@
           
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -4052,6 +4064,24 @@
           
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -4109,6 +4139,24 @@
       
         
           
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
         
       
     
@@ -4463,7 +4511,7 @@
 <p>Після злиття в <code>main</code> образ з цього коміту публікується в GitHub Container Registry:</p>
 <div class="highlight"><span class="filename">news_hub.yml → job publish</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="w">  </span><span class="nt">publish</span><span class="p">:</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">публікація образу в ghcr.io</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">needs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">tests</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">min-versions</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">postgres</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">types</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">docker</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">needs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">tests</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">min-versions</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">postgres</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">types</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">supply-chain</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">docker</span><span class="p p-Indicator">]</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">github.event_name == 'push' &amp;&amp; github.ref == 'refs/heads/main'</span>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="nt">runs-on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ubuntu-latest</span>
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="nt">timeout-minutes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span>
@@ -4518,7 +4566,7 @@
 <ul>
 <li><strong>Тег <code>sha-…</code></strong> відповідає на питання «яка версія зараз на сервері?»: кожен образ прив'язаний до коміту. <code>latest</code> зручний, але сам по собі нічого не каже й перезаписується з кожним злиттям.</li>
 <li><strong>Нижній регістр.</strong> Реєстр приймає лише імена в нижньому регістрі, а власник репозиторію — <code>NikoriakViktor</code>. <code>metadata-action</code> переводить ім'я сам: для цього репозиторію образ — <code>ghcr.io/nikoriakviktor/news_hub/news_hub</code>. <code>docker push ghcr.io/NikoriakViktor/…</code> реєстр відхилив би.</li>
-<li><strong>Той самий коміт, але не той самий образ.</strong> <code>publish</code> — окрема машина: він збирає образ заново з того самого коміту, а не бере зібраний у job <code>docker</code> (там образ лишився на іншій машині). <code>Dockerfile</code> той самий, але версії пакетів з <code>requirements.txt</code> ставляться в момент збірки. Щоб публікувати <strong>саме</strong> перевірений образ, його збирають один раз і передають далі (артефакт або тимчасовий тег у реєстрі) — складніше, тут цього немає.</li>
+<li><strong>Той самий коміт, але не той самий образ.</strong> <code>publish</code> — окрема машина: він збирає образ заново з того самого коміту, а не бере зібраний у job <code>docker</code> (там образ лишився на іншій машині). <code>Dockerfile</code> той самий, і пакети теж: з кроку 12 образ ставить <code>requirements.lock</code> з <code>--require-hashes</code> — ті самі версії й ті самі файли, що в job <code>docker</code> (<a href="../what_to_check/#lock">розділ 2</a>). Але базовий образ <code>python:3.12-slim</code> — тег, який з часом указує на нові збірки, і байт-у-байт образ інший. Щоб публікувати <strong>саме</strong> перевірений образ, його збирають один раз і передають далі (артефакт або тимчасовий тег у реєстрі) — складніше, тут цього немає.</li>
 <li>На PR цей job — <code>skipped</code> (<a href="../order_and_parallel/#trace-pr">трасування</a>). Прогонів <code>publish</code> у цьому репозиторії на момент написання ще не було.</li>
 </ul>
 <div class="admonition warning">
@@ -4536,7 +4584,7 @@
     participant C as ghcr.io
     participant S as сервер
     D-&gt;&gt;G: git push у гілку PR
-    G-&gt;&gt;R: pull_request (paths збігся): 6 jobs, 7 запусків
+    G-&gt;&gt;R: pull_request (paths збігся): 7 jobs, 8 запусків
     R--&gt;&gt;G: статуси jobs → галочка чи хрестик у PR
     D-&gt;&gt;G: merge у main (після рев'ю)
     G-&gt;&gt;R: push у main: ті самі jobs + publish

@@ -3869,6 +3869,18 @@
           
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -3928,6 +3940,24 @@
           
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -3985,6 +4015,24 @@
       
         
           
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
         
       
     
@@ -4310,12 +4358,12 @@
 <td><a href="startup_order/">Порядок запуску: healthy, а не «запущено»</a></td>
 </tr>
 <tr>
-<td>nginx перед API, мережі <code>backend</code> і <code>edge</code>, <code>FORWARDED_ALLOW_IPS</code></td>
+<td>nginx перед API, мережі <code>backend</code> і <code>edge</code>, <code>FORWARDED_ALLOW_IPS</code>, <code>server_tokens off</code></td>
 <td><code>nginx/nginx.conf</code>, <code>docker-compose.yml</code></td>
 <td><a href="nginx_real_ip/">nginx і справжній IP клієнта</a></td>
 </tr>
 <tr>
-<td><code>.env</code> поза git, значення з <code>$</code> в одинарних лапках, перевірка повного bcrypt-хешу</td>
+<td><code>.env</code> поза git, значення з <code>$</code> в одинарних лапках, перевірка повного bcrypt-хешу; <code>DOCS_ENABLED=false</code> на сервері</td>
 <td><code>.env.example</code>, <code>.gitignore</code>, <code>news_hub/security.py</code></td>
 <td><a href="env_secrets/">Секрети в <code>.env</code></a></td>
 </tr>
@@ -4352,7 +4400,7 @@
     end
     subgraph NEW ["крок 11: docker compose up -d --wait"]
         direction LR
-        U["клієнт, Telegram"] -- ":80" --&gt; N["nginx&lt;br&gt;172.28.0.10"]
+        U["клієнт, Telegram"] -- ":80" --&gt; N["nginx&lt;br&gt;типово 172.28.0.10"]
         N -- "X-Forwarded-For&lt;br&gt;мережа edge" --&gt; A["api&lt;br&gt;uvicorn"]
         M["migrate&lt;br&gt;один раз"] --&gt; PG["postgres&lt;br&gt;том pgdata"]
         A --&gt; PG
@@ -4440,7 +4488,7 @@
 <tbody>
 <tr>
 <td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/docker-compose.yml"><code>docker-compose.yml</code></a></td>
-<td><code>x-app</code>, сервіси <code>postgres</code>, <code>redis</code>, <code>migrate</code>, <code>api</code>, <code>nginx</code>, <code>bot</code> (профіль <code>polling</code>), <code>twin</code> (профіль <code>twin</code>); мережі <code>backend</code>, <code>edge</code></td>
+<td><code>x-app</code>, сервіси <code>postgres</code>, <code>redis</code>, <code>migrate</code>, <code>api</code>, <code>nginx</code>, <code>bot</code> (профіль <code>polling</code>), <code>twin</code> (профіль <code>twin</code>); мережі <code>backend</code>, <code>edge</code>; <code>DOCS_ENABLED: ${DOCS_ENABLED:-false}</code> для <code>api</code></td>
 <td>переписаний: у кроці 10 — лише <code>db</code> і <code>redis</code> для розробки</td>
 </tr>
 <tr>
@@ -4450,12 +4498,12 @@
 </tr>
 <tr>
 <td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/nginx/nginx.conf"><code>nginx/nginx.conf</code></a></td>
-<td><code>upstream</code> на <code>api:8000</code>, <code>/nginx-health</code>, <code>X-Forwarded-For $remote_addr</code>, <code>client_max_body_size 1m</code>, <code>proxy_read_timeout 65s</code></td>
+<td><code>upstream</code> на <code>api:8000</code>, <code>/nginx-health</code>, <code>X-Forwarded-For $remote_addr</code>, <code>client_max_body_size 1m</code>, <code>proxy_read_timeout 65s</code>, <code>server_tokens off</code></td>
 <td>новий</td>
 </tr>
 <tr>
 <td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/11_compose_deploy/.env.example"><code>.env.example</code></a></td>
-<td>усі змінні стеку; правило про <code>$</code> і одинарні лапки</td>
+<td>усі змінні стеку (зокрема <code>LOGIN_FAIL_*</code>, <code>DOCS_ENABLED</code>); правило про <code>$</code> і одинарні лапки</td>
 <td>новий</td>
 </tr>
 <tr>
@@ -4514,7 +4562,7 @@
 <h2 id="run">Запуск<a class="headerlink" href="#run" title="Permanent link">&para;</a></h2>
 <p>З папки кроку <code>steps/11_compose_deploy</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-dev.txt
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>pytest<span class="w"> </span>-q<span class="w">                             </span><span class="c1"># 343 passed, 8 deselected</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>pytest<span class="w"> </span>-q<span class="w">                             </span><span class="c1"># 363 passed, 8 deselected</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>mypy<span class="w"> </span>--strict<span class="w"> </span>news_hub<span class="w">                </span><span class="c1"># Success: no issues found in 26 source files</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>cp<span class="w"> </span>.env.example<span class="w"> </span>.env<span class="w">                  </span><span class="c1"># заповнити: POSTGRES_PASSWORD, рядки з python -m news_hub.security</span>
@@ -4536,9 +4584,12 @@
 <p>Усі виводи — зі справжніх запусків Docker Compose v2.40 (Docker 29.1) на машині, де вже працювали інші проєкти.
 Тому стек запускався з іменем проєкту <code>-p newshub-step11-bookcheck</code> (контейнери звуться
 <code>newshub-step11-bookcheck-api-1</code>, а не <code>news_hub-api-1</code>), з <code>HTTP_PORT=8091</code> (порт 80 був зайнятий) і з
-файлом-доповненням, що міняє підмережу <code>edge</code> на <code>10.28.0.0/24</code>: <code>172.28.0.0/24</code> перетиналась з уже наявною
-мережею Docker (див. <a href="checkpoint/#mistakes">Типові помилки</a>). Тому в журналах адреса nginx — <code>10.28.0.10</code>, а не
-<code>172.28.0.10</code>. Решта файлів — без змін. Кроки на справжньому сервері не виконувались: див. <a href="deploy/">Деплой</a>.</p>
+підмережею <code>edge</code> <code>10.28.0.0/24</code> замість типової <code>172.28.0.0/24</code>, яка перетиналась з уже наявною мережею Docker
+(див. <a href="checkpoint/#mistakes">Типові помилки</a>). Тому в журналах адреса nginx — <code>10.28.0.10</code>, а не <code>172.28.0.10</code>.
+Тоді підмережу міняв окремий файл-доповнення Compose; тепер для цього є змінні <code>EDGE_SUBNET</code> і <code>NGINX_IP</code> у <code>.env</code>
+(<a href="nginx_real_ip/#change">nginx і справжній IP клієнта</a>), і <code>docker-compose.yml</code> не змінюється: smoke-тест
+кроку 12 з <code>EDGE_SUBNET=10.231.9.0/24 NGINX_IP=10.231.9.10</code> пройшов усі перевірки. Кроки на справжньому сервері
+не виконувались: див. <a href="deploy/">Деплой</a>.</p>
 </div>
 <h2 id="diff">Порівняння з кроком 10<a class="headerlink" href="#diff" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>git<span class="w"> </span>diff<span class="w"> </span>--no-index<span class="w"> </span>--stat<span class="w"> </span>steps/10_docker<span class="w"> </span>steps/11_compose_deploy

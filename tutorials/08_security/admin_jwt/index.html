@@ -2865,6 +2865,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#login-lockout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Невдалі входи на одне ім'я
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#threadpool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        bcrypt у пулі потоків
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-headers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Заголовки безпеки й /docs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#limits" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4015,6 +4048,18 @@
           
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -4074,6 +4119,24 @@
           
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -4131,6 +4194,24 @@
       
         
           
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
         
       
     
@@ -4303,6 +4384,39 @@
     <span class="md-ellipsis">
       
         Ліміт спроб входу
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#login-lockout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Невдалі входи на одне ім'я
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#threadpool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        bcrypt у пулі потоків
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-headers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Заголовки безпеки й /docs
       
     </span>
   </a>
@@ -4640,8 +4754,13 @@
 </tr>
 <tr>
 <td>без обмеження спроб</td>
-<td>5 спроб входу за 300 с з однієї адреси → <code>429</code></td>
-<td>bcrypt сповільнює кожну спробу, ліміт — їхню кількість</td>
+<td>5 спроб входу за 300 с з однієї адреси → <code>429</code>; 20 невдач на одне ім'я з усіх адрес за 900 с → <code>429</code></td>
+<td>bcrypt сповільнює кожну спробу, ліміти — їхню кількість (<a href="#login-lockout">нижче</a>)</td>
+</tr>
+<tr>
+<td><code>verify_password</code> прямо в <code>async def</code></td>
+<td>bcrypt — у пулі потоків (<code>run_in_threadpool</code>)</td>
+<td>0,2 с bcrypt інакше зупиняють цикл подій для всіх запитів (<a href="#threadpool">нижче</a>)</td>
 </tr>
 </tbody>
 </table>
@@ -4734,13 +4853,27 @@
 <a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/api/admin/token"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">TokenResponse</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"admin"</span><span class="p">],</span> <span class="n">summary</span><span class="o">=</span><span class="s2">"Вхід адміна → JWT"</span><span class="p">,</span>
 <a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>          <span class="n">responses</span><span class="o">=</span><span class="p">{</span><span class="mi">401</span><span class="p">:</span> <span class="p">{</span><span class="s2">"description"</span><span class="p">:</span> <span class="s2">"неправильне ім'я або пароль"</span><span class="p">},</span>
 <a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>                     <span class="mi">429</span><span class="p">:</span> <span class="p">{</span><span class="s2">"description"</span><span class="p">:</span> <span class="s2">"забагато спроб входу"</span><span class="p">}})</span>
-<a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">admin_token</span><span class="p">(</span><span class="n">body</span><span class="p">:</span> <span class="n">TokenRequest</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">AdminSettingsDep</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TokenResponse</span><span class="p">:</span>
-<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="w">    </span><span class="sd">"""Одна відповідь на «немає такого імені» і «не той пароль» — не підказуємо, що саме не так."""</span>
-<a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">authenticate</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">body</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="n">body</span><span class="o">.</span><span class="n">password</span><span class="p">):</span>
-<a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a>        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"неправильне ім'я або пароль"</span><span class="p">)</span>
-<a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a>    <span class="k">return</span> <span class="n">TokenResponse</span><span class="p">(</span><span class="n">access_token</span><span class="o">=</span><span class="n">create_access_token</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">body</span><span class="o">.</span><span class="n">username</span><span class="p">),</span>
-<a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a>                         <span class="n">expires_in</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">expire_minutes</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+<a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">admin_token</span><span class="p">(</span><span class="n">body</span><span class="p">:</span> <span class="n">TokenRequest</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">AdminSettingsDep</span><span class="p">,</span> <span class="n">redis</span><span class="p">:</span> <span class="n">RedisDep</span><span class="p">,</span>
+<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a>                      <span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TokenResponse</span><span class="p">:</span>
+<a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="w">    </span><span class="sd">"""Одна відповідь на «немає такого імені» і «не той пароль» — не підказуємо, що саме не так.</span>
+<a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a>
+<a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a><span class="sd">    Два ліміти: middleware — спроби з однієї адреси, LoginGuard — невдачі на одне ім'я з усіх адрес.</span>
+<a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="sd">    bcrypt (~0,2 с) — у пулі потоків: інакше кожна спроба входу зупиняла б цикл подій для всіх запитів.</span>
+<a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="sd">    """</span>
+<a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a>    <span class="n">guard</span> <span class="o">=</span> <span class="n">LoginGuard</span><span class="p">(</span><span class="n">redis</span><span class="p">)</span>
+<a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a>    <span class="n">wait</span> <span class="o">=</span> <span class="k">await</span> <span class="n">guard</span><span class="o">.</span><span class="n">retry_after</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">username</span><span class="p">)</span>
+<a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a>    <span class="k">if</span> <span class="n">wait</span><span class="p">:</span>
+<a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a>        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_429_TOO_MANY_REQUESTS</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"Retry-After"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">wait</span><span class="p">)},</span>
+<a id="__codelineno-18-20" name="__codelineno-18-20" href="#__codelineno-18-20"></a>                            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"забагато невдалих входів під цим іменем; спробуй через </span><span class="si">{</span><span class="n">wait</span><span class="si">}</span><span class="s2"> с"</span><span class="p">)</span>
+<a id="__codelineno-18-21" name="__codelineno-18-21" href="#__codelineno-18-21"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="k">await</span> <span class="n">run_in_threadpool</span><span class="p">(</span><span class="n">authenticate</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">body</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="n">body</span><span class="o">.</span><span class="n">password</span><span class="p">):</span>
+<a id="__codelineno-18-22" name="__codelineno-18-22" href="#__codelineno-18-22"></a>        <span class="k">await</span> <span class="n">guard</span><span class="o">.</span><span class="n">failed</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">username</span><span class="p">)</span>
+<a id="__codelineno-18-23" name="__codelineno-18-23" href="#__codelineno-18-23"></a>        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"неправильне ім'я або пароль"</span><span class="p">)</span>
+<a id="__codelineno-18-24" name="__codelineno-18-24" href="#__codelineno-18-24"></a>    <span class="k">await</span> <span class="n">guard</span><span class="o">.</span><span class="n">succeeded</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">username</span><span class="p">)</span>
+<a id="__codelineno-18-25" name="__codelineno-18-25" href="#__codelineno-18-25"></a>    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"Cache-Control"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"no-store"</span>           <span class="c1"># токен не кешують ні браузер, ні проксі</span>
+<a id="__codelineno-18-26" name="__codelineno-18-26" href="#__codelineno-18-26"></a>    <span class="k">return</span> <span class="n">TokenResponse</span><span class="p">(</span><span class="n">access_token</span><span class="o">=</span><span class="n">create_access_token</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">body</span><span class="o">.</span><span class="n">username</span><span class="p">),</span>
+<a id="__codelineno-18-27" name="__codelineno-18-27" href="#__codelineno-18-27"></a>                         <span class="n">expires_in</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">expire_minutes</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
 </code></pre></div>
+<p><code>LoginGuard</code> і <code>run_in_threadpool</code> розібрано <a href="#login-lockout">нижче</a>. <code>Cache-Control: no-store</code> — бо відповідь з токеном не має осідати ні в кеші браузера, ні в кеші проксі між клієнтом і сервером: там її прочитав би наступний, хто отримає ту саму сторінку з кешу. Тест — рядок <code>assert response.headers["Cache-Control"] == "no-store"</code> у <code>test_login_and_use_token</code>. Без заголовка цей тест падає з <code>KeyError</code> (перевірено поломкою в копії кроку).</p>
 <h2 id="result">Результат: від анонімного запиту до адміна<a class="headerlink" href="#result" title="Permanent link">&para;</a></h2>
 <p>Через <code>TestClient</code>, одноразові секрети згенеровано в скрипті:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">r</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">"/api/news"</span><span class="p">)</span>                                                             <span class="c1"># 1</span>
@@ -4797,23 +4930,222 @@
 <a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a>        <span class="k">return</span> <span class="s2">"login"</span>
 <a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a>    <span class="o">...</span>
 <a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a>
-<a id="__codelineno-23-13" name="__codelineno-23-13" href="#__codelineno-23-13"></a>    <span class="n">limits</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"scrape"</span><span class="p">:</span> <span class="p">(</span><span class="n">RATE_LIMIT_REQUESTS</span><span class="p">,</span> <span class="n">RATE_LIMIT_WINDOW</span><span class="p">),</span> <span class="s2">"analyze"</span><span class="p">:</span> <span class="p">(</span><span class="n">ANALYZE_RATE_LIMIT</span><span class="p">,</span> <span class="n">RATE_LIMIT_WINDOW</span><span class="p">),</span>
-<a id="__codelineno-23-14" name="__codelineno-23-14" href="#__codelineno-23-14"></a>              <span class="s2">"login"</span><span class="p">:</span> <span class="p">(</span><span class="n">LOGIN_RATE_LIMIT</span><span class="p">,</span> <span class="n">LOGIN_RATE_WINDOW</span><span class="p">)}</span>
+<a id="__codelineno-23-13" name="__codelineno-23-13" href="#__codelineno-23-13"></a><span class="c1"># дія → (запитів, за скільки секунд); ключ лічильника — rate:&lt;дія&gt;:&lt;клієнт&gt;</span>
+<a id="__codelineno-23-14" name="__codelineno-23-14" href="#__codelineno-23-14"></a><span class="n">LIMITS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"scrape"</span><span class="p">:</span> <span class="p">(</span><span class="n">RATE_LIMIT_REQUESTS</span><span class="p">,</span> <span class="n">RATE_LIMIT_WINDOW</span><span class="p">),</span> <span class="s2">"analyze"</span><span class="p">:</span> <span class="p">(</span><span class="n">ANALYZE_RATE_LIMIT</span><span class="p">,</span> <span class="n">RATE_LIMIT_WINDOW</span><span class="p">),</span>
+<a id="__codelineno-23-15" name="__codelineno-23-15" href="#__codelineno-23-15"></a>          <span class="s2">"login"</span><span class="p">:</span> <span class="p">(</span><span class="n">LOGIN_RATE_LIMIT</span><span class="p">,</span> <span class="n">LOGIN_RATE_WINDOW</span><span class="p">)}</span>
 </code></pre></div>
+<p><code>LIMITS</code> — одна таблиця на рівні модуля, а не словник усередині <code>rate_limit</code>: з кроку 9 ліміт збору звідси бере й Telegram-бот.</p>
 <p>Тест <code>test_login_brute_force_is_rate_limited</code>: сім неправильних паролів дають <code>[401] * 5 + [429, 429]</code>, а потім навіть <strong>правильний</strong> пароль — <code>429</code>. Лічильник рахує всі спроби, і вдалі теж. Шоста спроба:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>429 {'detail': 'забагато запитів: 5 за 300 с; спробуй через 300 с'} Retry-After: 300 X-RateLimit-Limit: 5
 </code></pre></div>
 <p>Ключ ліміту — адреса клієнта (<code>request.client.host</code>). За проксі всі запити приходять з адреси проксі, а заголовок <code>X-Forwarded-For</code> клієнт може підробити. Як nginx передає справжню адресу — <a href="../../11_compose_deploy/">крок 11</a>.</p>
+<h2 id="login-lockout">Невдалі входи на одне ім'я<a class="headerlink" href="#login-lockout" title="Permanent link">&para;</a></h2>
+<p><strong>Задача.</strong> Ліміт вище рахує спроби з <strong>однієї адреси</strong>. Адмін у <code>news_hub</code> один, його ім'я за замовчуванням — <code>admin</code>. Атакувальник з тисячею адрес (ботнет, пул проксі) має по 5 спроб на кожну за 5 хвилин — 1000 паролів за 5 хвилин, і ліміт на адресу цього не бачить. Перша версія кроку мала лише його; знайшла це рецензія безпеки, а не тест: тести перевіряли одну адресу.</p>
+<p><strong>Зміна.</strong> Другий лічильник — на <strong>ім'я</strong>, з усіх адрес разом. Рахуються лише невдалі входи; вдалий скидає лічильник:</p>
+<div class="highlight"><span class="filename">news_hub/security.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="n">LOGIN_FAIL_LIMIT</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"LOGIN_FAIL_LIMIT"</span><span class="p">,</span> <span class="s2">"20"</span><span class="p">))</span>       <span class="c1"># невдалих входів на одне ім'я за вікно</span>
+<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="n">LOGIN_FAIL_WINDOW</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"LOGIN_FAIL_WINDOW"</span><span class="p">,</span> <span class="s2">"900"</span><span class="p">))</span>    <span class="c1"># секунд</span>
+<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>
+<a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a>
+<a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="k">class</span><span class="w"> </span><span class="nc">LoginGuard</span><span class="p">:</span>
+<a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redis</span><span class="p">:</span> <span class="n">Redis</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">LOGIN_FAIL_LIMIT</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">LOGIN_FAIL_WINDOW</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_redis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">window</span> <span class="o">=</span> <span class="n">redis</span><span class="p">,</span> <span class="n">limit</span><span class="p">,</span> <span class="n">window</span>
+<a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a>
+<a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a>    <span class="nd">@staticmethod</span>
+<a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">key</span><span class="p">(</span><span class="n">username</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a>        <span class="k">return</span> <span class="s2">"login:fail:"</span> <span class="o">+</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">username</span><span class="o">.</span><span class="n">casefold</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">32</span><span class="p">]</span>
+<a id="__codelineno-25-12" name="__codelineno-25-12" href="#__codelineno-25-12"></a>
+<a id="__codelineno-25-13" name="__codelineno-25-13" href="#__codelineno-25-13"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">retry_after</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<a id="__codelineno-25-14" name="__codelineno-25-14" href="#__codelineno-25-14"></a><span class="w">        </span><span class="sd">"""0 — можна пробувати; інакше — скільки секунд вхід під цим іменем закритий."""</span>
+<a id="__codelineno-25-15" name="__codelineno-25-15" href="#__codelineno-25-15"></a>        <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
+<a id="__codelineno-25-16" name="__codelineno-25-16" href="#__codelineno-25-16"></a>        <span class="n">count</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_redis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+<a id="__codelineno-25-17" name="__codelineno-25-17" href="#__codelineno-25-17"></a>        <span class="k">if</span> <span class="n">count</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">int</span><span class="p">(</span><span class="n">count</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">:</span>
+<a id="__codelineno-25-18" name="__codelineno-25-18" href="#__codelineno-25-18"></a>            <span class="k">return</span> <span class="mi">0</span>
+<a id="__codelineno-25-19" name="__codelineno-25-19" href="#__codelineno-25-19"></a>        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_redis</span><span class="o">.</span><span class="n">ttl</span><span class="p">(</span><span class="n">key</span><span class="p">)),</span> <span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-25-20" name="__codelineno-25-20" href="#__codelineno-25-20"></a>
+<a id="__codelineno-25-21" name="__codelineno-25-21" href="#__codelineno-25-21"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">failed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-25-22" name="__codelineno-25-22" href="#__codelineno-25-22"></a>        <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_redis</span><span class="o">.</span><span class="n">pipeline</span><span class="p">(</span><span class="n">transaction</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">pipe</span><span class="p">:</span>      <span class="c1"># INCR + EXPIRE NX — разом, як у RateLimiter</span>
+<a id="__codelineno-25-23" name="__codelineno-25-23" href="#__codelineno-25-23"></a>            <span class="n">pipe</span><span class="o">.</span><span class="n">incr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">(</span><span class="n">username</span><span class="p">))</span>
+<a id="__codelineno-25-24" name="__codelineno-25-24" href="#__codelineno-25-24"></a>            <span class="n">pipe</span><span class="o">.</span><span class="n">expire</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">(</span><span class="n">username</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-25-25" name="__codelineno-25-25" href="#__codelineno-25-25"></a>            <span class="k">await</span> <span class="n">pipe</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<a id="__codelineno-25-26" name="__codelineno-25-26" href="#__codelineno-25-26"></a>
+<a id="__codelineno-25-27" name="__codelineno-25-27" href="#__codelineno-25-27"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">succeeded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-25-28" name="__codelineno-25-28" href="#__codelineno-25-28"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_redis</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">(</span><span class="n">username</span><span class="p">))</span>
+</code></pre></div>
+<ul>
+<li><strong>Перевірка — до bcrypt.</strong> Закрите ім'я відповідає <code>429</code> одразу: перебір не витрачає навіть процесорного часу сервера.</li>
+<li><strong>Ім'я в ключі — хешем, після <code>casefold()</code>.</strong> У Redis не потрапляє довільний рядок від клієнта, а <code>ADMIN</code> і <code>admin</code> — той самий лічильник: регістром ліміт не обійти.</li>
+<li><strong>Чуже ім'я рахується так само.</strong> Відповідь для <code>editor</code> і для <code>admin</code> однакова, тож за лімітом не вгадаєш, яке ім'я справжнє.</li>
+</ul>
+<p><strong>Результат.</strong> <code>TestClient</code>, у другій частині ліміт на адресу піднято до 1000 — так одна адреса тесту імітує тисячу:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>--- 1. одна адреса: ліміт middleware
+<a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>[401, 401, 401, 401, 401, 429, 429]
+<a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>--- 2. «тисяча адрес»: ліміт на адресу знято, лишається лічильник на ім'я
+<a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>20 невдалих: [401] × 20
+<a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>429 {'detail': 'забагато невдалих входів під цим іменем; спробуй через 900 с'} Retry-After: 900
+<a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a>ADMIN: 429
+<a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a>editor: 401 {'detail': "неправильне ім'я або пароль"}
+<a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a>ключ у Redis: ['login:fail:8c6976e5b5410415bde908bd4dee15df', 'login:fail:1553cc62ff246044c683a61e203e6554']
+<a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a>--- 3. вікно минуло: вдалий вхід скидає лічильник
+<a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a>після 1 невдачі: 1
+<a id="__codelineno-26-11" name="__codelineno-26-11" href="#__codelineno-26-11"></a>200 Cache-Control: no-store
+<a id="__codelineno-26-12" name="__codelineno-26-12" href="#__codelineno-26-12"></a>після успіху: None
+</code></pre></div>
+<p>Двадцять перша спроба — з <strong>правильним</strong> паролем, і все одно <code>429</code>: інакше підбір просто чекав би на вгаданий пароль. Тести — <code>test_login_lockout_counts_failures_per_name_from_any_address</code> (API: 20 × <code>401</code>, потім <code>429</code> з <code>Retry-After</code>, інше ім'я не закрите) і <code>test_login_guard_counts_per_name_and_resets_on_success</code> (unit: регістр, скидання, хеш у ключі). Якщо в копії кроку прибрати <code>await guard.failed(...)</code>, падає перший: <code>1 failed, 293 passed</code>.</p>
+<p><strong>Ціна.</strong> Атакувальник може навмисно закрити вхід і справжньому адміну — на 15 хвилин, поки живе ключ. Для єдиного адміна це краще, ніж необмежений підбір; <code>LOGIN_FAIL_LIMIT</code> і <code>LOGIN_FAIL_WINDOW</code> — змінні середовища.</p>
+<table>
+<thead>
+<tr>
+<th>Ліміт</th>
+<th>Ключ</th>
+<th>Що рахує</th>
+<th>За замовчуванням</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>middleware <code>login</code></td>
+<td><code>rate:login:&lt;адреса&gt;</code></td>
+<td>усі спроби з однієї адреси</td>
+<td>5 за 300 с</td>
+</tr>
+<tr>
+<td><code>LoginGuard</code></td>
+<td><code>login:fail:&lt;sha256(ім'я)[:32]&gt;</code></td>
+<td>невдалі входи під одним ім'ям з усіх адрес</td>
+<td>20 за 900 с</td>
+</tr>
+</tbody>
+</table>
+<h2 id="threadpool">bcrypt у пулі потоків<a class="headerlink" href="#threadpool" title="Permanent link">&para;</a></h2>
+<p><strong>Задача.</strong> <code>admin_token</code> — <code>async def</code>, а <code>bcrypt.checkpw</code> — звичайна функція, що 0,2 с рахує на процесорі. Викликана прямо, вона зупиняє <strong>цикл подій</strong>: поки йде перевірка пароля, uvicorn не обслуговує жодного іншого запиту. П'ять одночасних спроб входу — секунда, коли застосунок не відповідає навіть на <code>GET /health</code>.</p>
+<p><strong>Зміна.</strong> <code>await run_in_threadpool(authenticate, settings, body.username, body.password)</code>: bcrypt іде в пул потоків, а цикл подій вільний (дослід з bcrypt у циклі подій — <a href="../../../04_async/blocking_code/#bcrypt">Блокуючий код</a>).</p>
+<p><strong>Результат.</strong> uvicorn, хеш з 12 раундами, 5 входів одночасно і <code>GET /health</code> через 50 мс після них; по 5 запусків:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>до (bcrypt у циклі подій):
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>входи: [401, 401, 401, 401, 401]; GET /health → 200 за 1.091 с
+<a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>входи: [401, 401, 401, 401, 401]; GET /health → 200 за 0.158 с
+<a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>входи: [401, 401, 401, 401, 401]; GET /health → 200 за 1.051 с
+<a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>входи: [401, 401, 401, 401, 401]; GET /health → 200 за 0.159 с
+<a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>входи: [401, 401, 401, 401, 401]; GET /health → 200 за 0.978 с
+<a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a>після (run_in_threadpool):
+<a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a>входи: [401, 401, 401, 401, 401]; GET /health → 200 за 0.003 с
+<a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a>входи: [401, 401, 401, 401, 401]; GET /health → 200 за 0.003 с
+<a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a>входи: [401, 401, 401, 401, 401]; GET /health → 200 за 0.003 с
+<a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a>входи: [401, 401, 401, 401, 401]; GET /health → 200 за 0.004 с
+<a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a>входи: [429, 429, 429, 429, 429]; GET /health → 200 за 0.002 с
+</code></pre></div>
+<p>До — від 0,16 до 1,09 с очікування (залежно від того, скільки перевірок пароля встигло стати в чергу перед <code>/health</code>), після — 2–4 мс. Останній рядок — двадцять перша невдача на ім'я <code>admin</code>: спрацював <code>LoginGuard</code>.</p>
+<p>Тестом цього не видно: якщо в копії кроку повернути прямий виклик <code>authenticate</code>, <code>pytest</code> дає <code>294 passed</code>. Як і <code>compare_digest</code>, це питання часу, а не результату, — тому правило записане в <code>CLAUDE.md</code> кроку.</p>
+<h2 id="security-headers">Заголовки безпеки й /docs<a class="headerlink" href="#security-headers" title="Permanent link">&para;</a></h2>
+<p><strong>Задача.</strong> API віддає JSON, але відповідь читає браузер (теорія — <a href="../../../08_security/secrets_and_headers/#security-headers">Заголовки безпеки</a>). Без підказок він може «вгадати», що JSON — це HTML (і виконати скрипт з поля новини), вбудувати сторінку API в чужий фрейм або передати адресу в <code>Referer</code> стороннім сайтам. А <code>/docs</code> і <code>/openapi.json</code> на публічному сервері — карта всіх ендпоінтів для будь-кого.</p>
+<p><strong>Зміна 1: заголовки на кожній відповіді.</strong> Окремий middleware між <code>request_context</code> (зовнішній) і <code>rate_limit</code>, тож заголовки отримує і <code>429</code>, і <code>401</code>:</p>
+<div class="highlight"><span class="filename">news_hub/middleware.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="n">SECURITY_HEADERS</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>    <span class="s2">"X-Content-Type-Options"</span><span class="p">:</span> <span class="s2">"nosniff"</span><span class="p">,</span>        <span class="c1"># JSON — це JSON, а не «може, HTML»</span>
+<a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>    <span class="s2">"X-Frame-Options"</span><span class="p">:</span> <span class="s2">"DENY"</span><span class="p">,</span>                  <span class="c1"># не вбудовувати в чужі сторінки (clickjacking)</span>
+<a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a>    <span class="s2">"Referrer-Policy"</span><span class="p">:</span> <span class="s2">"no-referrer"</span><span class="p">,</span>
+<a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>    <span class="s2">"Cross-Origin-Opener-Policy"</span><span class="p">:</span> <span class="s2">"same-origin"</span><span class="p">,</span>
+<a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a><span class="p">}</span>
+<a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="n">API_CSP</span> <span class="o">=</span> <span class="s2">"default-src 'none'; frame-ancestors 'none'"</span>   <span class="c1"># API віддає дані, а не сторінки: нічого не вантажити</span>
+<a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="n">DOCS_PATHS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"/docs"</span><span class="p">,</span> <span class="s2">"/redoc"</span><span class="p">)</span>
+<a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a>
+<a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a>
+<a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a><span class="k">class</span><span class="w"> </span><span class="nc">SecurityHeadersMiddleware</span><span class="p">:</span>
+<a id="__codelineno-28-12" name="__codelineno-28-12" href="#__codelineno-28-12"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">:</span> <span class="n">ASGIApp</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-28-13" name="__codelineno-28-13" href="#__codelineno-28-13"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">app</span>
+<a id="__codelineno-28-14" name="__codelineno-28-14" href="#__codelineno-28-14"></a>
+<a id="__codelineno-28-15" name="__codelineno-28-15" href="#__codelineno-28-15"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">:</span> <span class="n">Scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">:</span> <span class="n">Receive</span><span class="p">,</span> <span class="n">send</span><span class="p">:</span> <span class="n">Send</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-28-16" name="__codelineno-28-16" href="#__codelineno-28-16"></a>        <span class="k">if</span> <span class="n">scope</span><span class="p">[</span><span class="s2">"type"</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">"http"</span><span class="p">:</span>
+<a id="__codelineno-28-17" name="__codelineno-28-17" href="#__codelineno-28-17"></a>            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">)</span>
+<a id="__codelineno-28-18" name="__codelineno-28-18" href="#__codelineno-28-18"></a>            <span class="k">return</span>
+<a id="__codelineno-28-19" name="__codelineno-28-19" href="#__codelineno-28-19"></a>        <span class="n">is_docs</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">scope</span><span class="p">[</span><span class="s2">"path"</span><span class="p">])</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">DOCS_PATHS</span><span class="p">)</span>
+<a id="__codelineno-28-20" name="__codelineno-28-20" href="#__codelineno-28-20"></a>
+<a id="__codelineno-28-21" name="__codelineno-28-21" href="#__codelineno-28-21"></a>        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">send_with_headers</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="n">Message</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-28-22" name="__codelineno-28-22" href="#__codelineno-28-22"></a>            <span class="k">if</span> <span class="n">message</span><span class="p">[</span><span class="s2">"type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"http.response.start"</span><span class="p">:</span>
+<a id="__codelineno-28-23" name="__codelineno-28-23" href="#__codelineno-28-23"></a>                <span class="n">headers</span> <span class="o">=</span> <span class="n">MutableHeaders</span><span class="p">(</span><span class="n">scope</span><span class="o">=</span><span class="n">message</span><span class="p">)</span>
+<a id="__codelineno-28-24" name="__codelineno-28-24" href="#__codelineno-28-24"></a>                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">SECURITY_HEADERS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<a id="__codelineno-28-25" name="__codelineno-28-25" href="#__codelineno-28-25"></a>                    <span class="n">headers</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+<a id="__codelineno-28-26" name="__codelineno-28-26" href="#__codelineno-28-26"></a>                <span class="k">if</span> <span class="ow">not</span> <span class="n">is_docs</span><span class="p">:</span>
+<a id="__codelineno-28-27" name="__codelineno-28-27" href="#__codelineno-28-27"></a>                    <span class="n">headers</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"Content-Security-Policy"</span><span class="p">,</span> <span class="n">API_CSP</span><span class="p">)</span>
+<a id="__codelineno-28-28" name="__codelineno-28-28" href="#__codelineno-28-28"></a>            <span class="k">await</span> <span class="n">send</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+<a id="__codelineno-28-29" name="__codelineno-28-29" href="#__codelineno-28-29"></a>
+<a id="__codelineno-28-30" name="__codelineno-28-30" href="#__codelineno-28-30"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send_with_headers</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><span class="filename">news_hub/api.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="c1"># Middleware: останній зареєстрований — зовнішній. Запит іде request_context → SecurityHeaders → rate_limit</span>
+<a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="c1"># → invalidate_cache → ендпоінт, відповідь — у зворотному порядку (тож і 429 отримує заголовки безпеки).</span>
+<a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="n">app</span><span class="o">.</span><span class="n">middleware</span><span class="p">(</span><span class="s2">"http"</span><span class="p">)(</span><span class="n">invalidate_cache</span><span class="p">)</span>
+<a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="n">app</span><span class="o">.</span><span class="n">middleware</span><span class="p">(</span><span class="s2">"http"</span><span class="p">)(</span><span class="n">rate_limit</span><span class="p">)</span>
+<a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a><span class="n">app</span><span class="o">.</span><span class="n">add_middleware</span><span class="p">(</span><span class="n">SecurityHeadersMiddleware</span><span class="p">)</span>
+<a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a><span class="n">app</span><span class="o">.</span><span class="n">middleware</span><span class="p">(</span><span class="s2">"http"</span><span class="p">)(</span><span class="n">request_context</span><span class="p">)</span>
+</code></pre></div>
+<p><code>/docs</code> і <code>/redoc</code> — без CSP: Swagger UI вантажить скрипти й стилі з CDN, і <code>default-src 'none'</code> зробив би сторінку порожньою. Інші заголовки на них є.</p>
+<p><strong>Чому чистий ASGI, а не ще один <code>@app.middleware("http")</code>.</strong> Перша версія цього middleware була третім шаром <code>app.middleware("http")</code>. Кожен такий шар (<code>BaseHTTPMiddleware</code>) змінює, <strong>коли</strong> закінчуються фонові задачі відносно відповіді, — і тести фонового аналізу іноді почали падати з <code>KeyError: 'job_id'</code>. Виміряно на кроці 8, <code>pytest -m integration</code>: старий код — 0 падінь з 8 запусків, з третім шаром <code>BaseHTTPMiddleware</code> — 3 з 20, з чистим ASGI — 0 з 25. Це гонка за часом: на повному <code>pytest</code> кроку 12 і з <code>BaseHTTPMiddleware</code> випало 0 з 6, тож один зелений запуск нічого не доводить. Цьому шару не потрібне ні тіло запиту, ні тіло відповіді: він лише дописує заголовки в перше ASGI-повідомлення <code>http.response.start</code> і нічого не змінює в тому, як іде відповідь. Нестабільний тест тут був не «шумом», а сигналом: зміна торкнулась порядку виконання, навіть якщо кожен окремий запуск міг пройти.</p>
+<p><strong>Результат.</strong> <code>TestClient</code>, чотири відповіді:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>GET /api/news → 200
+<a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>    x-content-type-options: nosniff
+<a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a>    x-frame-options: DENY
+<a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a>    referrer-policy: no-referrer
+<a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a>    cross-origin-opener-policy: same-origin
+<a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a>    content-security-policy: default-src 'none'; frame-ancestors 'none'
+<a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a>GET /api/news/999999 → 404
+<a id="__codelineno-30-8" name="__codelineno-30-8" href="#__codelineno-30-8"></a>    x-content-type-options: nosniff
+<a id="__codelineno-30-9" name="__codelineno-30-9" href="#__codelineno-30-9"></a>    x-frame-options: DENY
+<a id="__codelineno-30-10" name="__codelineno-30-10" href="#__codelineno-30-10"></a>    referrer-policy: no-referrer
+<a id="__codelineno-30-11" name="__codelineno-30-11" href="#__codelineno-30-11"></a>    cross-origin-opener-policy: same-origin
+<a id="__codelineno-30-12" name="__codelineno-30-12" href="#__codelineno-30-12"></a>    content-security-policy: default-src 'none'; frame-ancestors 'none'
+<a id="__codelineno-30-13" name="__codelineno-30-13" href="#__codelineno-30-13"></a>DELETE /api/news → 401
+<a id="__codelineno-30-14" name="__codelineno-30-14" href="#__codelineno-30-14"></a>    x-content-type-options: nosniff
+<a id="__codelineno-30-15" name="__codelineno-30-15" href="#__codelineno-30-15"></a>    x-frame-options: DENY
+<a id="__codelineno-30-16" name="__codelineno-30-16" href="#__codelineno-30-16"></a>    referrer-policy: no-referrer
+<a id="__codelineno-30-17" name="__codelineno-30-17" href="#__codelineno-30-17"></a>    cross-origin-opener-policy: same-origin
+<a id="__codelineno-30-18" name="__codelineno-30-18" href="#__codelineno-30-18"></a>    content-security-policy: default-src 'none'; frame-ancestors 'none'
+<a id="__codelineno-30-19" name="__codelineno-30-19" href="#__codelineno-30-19"></a>GET /docs → 200
+<a id="__codelineno-30-20" name="__codelineno-30-20" href="#__codelineno-30-20"></a>    x-content-type-options: nosniff
+<a id="__codelineno-30-21" name="__codelineno-30-21" href="#__codelineno-30-21"></a>    x-frame-options: DENY
+<a id="__codelineno-30-22" name="__codelineno-30-22" href="#__codelineno-30-22"></a>    referrer-policy: no-referrer
+<a id="__codelineno-30-23" name="__codelineno-30-23" href="#__codelineno-30-23"></a>    cross-origin-opener-policy: same-origin
+<a id="__codelineno-30-24" name="__codelineno-30-24" href="#__codelineno-30-24"></a>    content-security-policy: —
+</code></pre></div>
+<p>Тест — <code>test_security_headers_on_every_answer</code>: ті самі три відповіді API і <code>/docs</code> без CSP. Без <code>app.add_middleware(SecurityHeadersMiddleware)</code> він падає: <code>1 failed, 293 passed</code>.</p>
+<p>HSTS (<code>Strict-Transport-Security</code>) застосунок не ставить: його ставить той, хто знімає TLS (nginx, крок 11), і лише на <code>https</code>.</p>
+<p><strong>Зміна 2: <code>/docs</code> вимикається змінною середовища.</strong></p>
+<div class="highlight"><span class="filename">news_hub/api.py (фрагмент)</span><pre><span></span><code><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">docs_enabled</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="w">    </span><span class="sd">"""/docs, /redoc і /openapi.json: локально — так; на публічному сервері — DOCS_ENABLED=false (Compose)."""</span>
+<a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a>    <span class="n">value</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"DOCS_ENABLED"</span><span class="p">,</span> <span class="s2">"true"</span><span class="p">)</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span>
+<a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a>    <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"0"</span><span class="p">,</span> <span class="s2">"false"</span><span class="p">,</span> <span class="s2">"no"</span><span class="p">,</span> <span class="s2">"off"</span><span class="p">}</span>
+<a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a>
+<a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a>
+<a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a><span class="n">DOCS</span> <span class="o">=</span> <span class="n">docs_enabled</span><span class="p">()</span>
+<a id="__codelineno-31-8" name="__codelineno-31-8" href="#__codelineno-31-8"></a>
+<a id="__codelineno-31-9" name="__codelineno-31-9" href="#__codelineno-31-9"></a><span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span>
+<a id="__codelineno-31-10" name="__codelineno-31-10" href="#__codelineno-31-10"></a>    <span class="n">title</span><span class="o">=</span><span class="s2">"news_hub API"</span><span class="p">,</span>
+<a id="__codelineno-31-11" name="__codelineno-31-11" href="#__codelineno-31-11"></a>    <span class="n">docs_url</span><span class="o">=</span><span class="s2">"/docs"</span> <span class="k">if</span> <span class="n">DOCS</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-31-12" name="__codelineno-31-12" href="#__codelineno-31-12"></a>    <span class="n">redoc_url</span><span class="o">=</span><span class="s2">"/redoc"</span> <span class="k">if</span> <span class="n">DOCS</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-31-13" name="__codelineno-31-13" href="#__codelineno-31-13"></a>    <span class="n">openapi_url</span><span class="o">=</span><span class="s2">"/openapi.json"</span> <span class="k">if</span> <span class="n">DOCS</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-31-14" name="__codelineno-31-14" href="#__codelineno-31-14"></a>    <span class="o">...</span>
+<a id="__codelineno-31-15" name="__codelineno-31-15" href="#__codelineno-31-15"></a><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>DOCS_ENABLED не задано:
+<a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>/docs           → 200
+<a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>/redoc          → 200
+<a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a>/openapi.json   → 200
+<a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a>/api/news/count → 200
+<a id="__codelineno-32-6" name="__codelineno-32-6" href="#__codelineno-32-6"></a>DOCS_ENABLED=false:
+<a id="__codelineno-32-7" name="__codelineno-32-7" href="#__codelineno-32-7"></a>/docs           → 404
+<a id="__codelineno-32-8" name="__codelineno-32-8" href="#__codelineno-32-8"></a>/redoc          → 404
+<a id="__codelineno-32-9" name="__codelineno-32-9" href="#__codelineno-32-9"></a>/openapi.json   → 404
+<a id="__codelineno-32-10" name="__codelineno-32-10" href="#__codelineno-32-10"></a>/api/news/count → 200
+</code></pre></div>
+<p>Локально документація лишається увімкненою — нею користуються весь цей крок. На сервері її вимикає Compose (<a href="../../11_compose_deploy/env_secrets/">крок 11</a>). Вимкнений <code>/docs</code> — не захист сам по собі: закриті ендпоінти однаково вимагають токен. Але карта API не лежить у відкритому доступі. Тест — <code>test_docs_enabled</code> (7 значень: <code>true</code>, <code>1</code>, порожнє, <code>false</code>, <code>0</code>, <code>Off</code>, <code>no</code>).</p>
 <h2 id="limits">Межі цього рішення<a class="headerlink" href="#limits" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Токен не відкликати.</strong> Сервер нічого не зберігає, тож украдений токен діє до <code>exp</code> (30 хв). Захист — короткий строк дії і заміна <code>JWT_SECRET</code>, яка анулює <strong>всі</strong> токени одразу.</li>
+<li><strong>Блокування входу — і для справжнього адміна.</strong> 20 невдач під ім'ям <code>admin</code> з будь-яких адрес закривають вхід на 15 хв. Це свідомий обмін: краще 15 хвилин без входу, ніж необмежений підбір.</li>
 <li><strong>Один адмін.</strong> Ім'я і хеш — у середовищі, ролей більше нема. Для кількох користувачів потрібна таблиця користувачів; <code>role</code> у токені вже готова до цього.</li>
 <li><strong>Секрет у пам'яті процесу.</strong> Хто прочитав змінні середовища сервера, той підпише токен. Секрети — лише в середовищі й сховищах секретів CI, не в образі й не в git (кроки 10–12).</li>
 </ul>
 <h2 id="rule">Правило<a class="headerlink" href="#rule" title="Permanent link">&para;</a></h2>
 <div class="admonition tip">
 <p class="admonition-title">Правило</p>
-<p>Пароль — лише bcrypt-хеш у середовищі; секрет JWT — довгий, випадковий, без значення за замовчуванням; погані налаштування зупиняють старт. Алгоритм — у коді, <code>decode</code> вимагає <code>exp</code>. Перевірка — залежністю <code>dependencies=[AdminDep]</code>: <code>401</code> — не знаємо, хто це, <code>403</code> — знаємо, але не можна. Одна відповідь на чуже ім'я і чужий пароль, і ліміт спроб.</p>
+<p>Пароль — лише bcrypt-хеш у середовищі; секрет JWT — довгий, випадковий, без значення за замовчуванням; погані налаштування зупиняють старт. Алгоритм — у коді, <code>decode</code> вимагає <code>exp</code>. Перевірка — залежністю <code>dependencies=[AdminDep]</code>: <code>401</code> — не знаємо, хто це, <code>403</code> — знаємо, але не можна. Одна відповідь на чуже ім'я і чужий пароль; два ліміти — на адресу і на ім'я; bcrypt — у пулі потоків, відповідь з токеном — <code>no-store</code>. Заголовки безпеки — чистим ASGI-middleware на кожній відповіді, <code>/docs</code> на сервері вимкнено.</p>
 </div>
 <p><strong>Далі:</strong> <a href="../ssrf/">SSRF: куди ходить сервер</a>.</p>
 

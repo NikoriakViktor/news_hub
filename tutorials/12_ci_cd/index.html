@@ -3869,6 +3869,18 @@
           
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -3928,6 +3940,24 @@
           
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -3985,6 +4015,24 @@
       
         
           
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
         
       
     
@@ -4277,13 +4325,14 @@
 <p><strong>Передумови:</strong> <a href="../11_compose_deploy/">Крок 11. Docker Compose і деплой</a> — є стек nginx → api → PostgreSQL + Redis, міграції окремим сервісом, бекап.</p>
 </blockquote>
 <h2 id="where">Де ми зараз<a class="headerlink" href="#where" title="Permanent link">&para;</a></h2>
-<p>За одинадцять кроків у <code>news_hub</code> з'явилось 343 тести (SQLite у пам'яті, fakeredis, локальні aiohttp-сервери, двійник Telegram, FakeLLM), <code>mypy --strict</code>, тести образу <code>pytest -m docker</code> (крок 10) і стек у Compose (крок 11). Кожна з цих перевірок ловить свій клас помилок.</p>
+<p>За одинадцять кроків у <code>news_hub</code> з'явилось 363 тести (SQLite у пам'яті, fakeredis, локальні aiohttp-сервери, двійник Telegram, FakeLLM), <code>mypy --strict</code>, тести образу <code>pytest -m docker</code> (крок 10) і стек у Compose (крок 11). Кожна з цих перевірок ловить свій клас помилок.</p>
 <p>Але всі вони працюють, лише коли хтось <strong>не забуває</strong> їх запустити. Забути легко: змінив одну функцію, «це ж дрібниця», push — і зламав те, що ламатися не мало. А деякі перевірки локально майже ніхто не запускає: тести на справжній PostgreSQL, на Python 3.10, з найменшими дозволеними версіями залежностей.</p>
 <h2 id="problem">Проблема<a class="headerlink" href="#problem" title="Permanent link">&para;</a></h2>
 <p>Потрібен автомат, який:</p>
 <ul>
 <li>на <strong>кожну</strong> зміну сам збирає проєкт і проганяє всі перевірки — і показує результат прямо в pull request: зелена галочка чи червоний хрестик з журналом;</li>
 <li>перевіряє в кількох середовищах: дві версії Python, мінімальні версії залежностей, справжні PostgreSQL і Redis, зібраний образ і весь стек;</li>
+<li>перевіряє й те, що не є нашим кодом: точні версії пакетів в образі, відомі вразливості в них, секрети в історії git;</li>
 <li>не запускається, коли змінились файли, що до проєкту не стосуються, і не витрачає хвилини на застарілі прогони;</li>
 <li>має лише ті права, які потрібні, і не світить секрети в журналах;</li>
 <li>з <code>main</code> публікує готовий до встановлення артефакт — образ Docker у реєстрі.</li>
@@ -4305,8 +4354,8 @@
 <td><a href="triggers/">Коли CI запускається</a></td>
 </tr>
 <tr>
-<td>шість jobs: matrix Python 3.10 / 3.13, мінімальні версії через <code>uv</code>, PostgreSQL + Redis і <code>alembic check</code>, <code>mypy --strict</code>, образ + smoke</td>
-<td><code>news_hub.yml</code>, <code>scripts/smoke.sh</code>, <code>scripts/make_env.py</code></td>
+<td>сім jobs: matrix Python 3.10 / 3.13, мінімальні версії через <code>uv</code>, PostgreSQL + Redis і <code>alembic check</code>, <code>mypy --strict</code>, залежності й секрети (lock, <code>pip-audit</code>, gitleaks), образ + smoke</td>
+<td><code>news_hub.yml</code>, <code>requirements.lock</code>, <code>.gitleaks.toml</code>, <code>Dockerfile</code>, <code>scripts/smoke.sh</code>, <code>scripts/make_env.py</code></td>
 <td><a href="what_to_check/">Що саме перевіряти</a></td>
 </tr>
 <tr>
@@ -4340,7 +4389,7 @@
     subgraph NEW ["крок 12: перевірки — на кожен PR"]
         direction LR
         D1["розробник&lt;br&gt;push у гілку PR"] --&gt; GA["GitHub Actions&lt;br&gt;news_hub.yml"]
-        GA --&gt; J["tests ×2, min-versions,&lt;br&gt;postgres, types → docker"]
+        GA --&gt; J["tests ×2, min-versions, postgres,&lt;br&gt;types, supply-chain → docker"]
         J --&gt; PR{"усі jobs&lt;br&gt;зелені?"}
         PR -- "так" --&gt; MG["merge у main"]
         PR -- "ні" --&gt; FX["червоний хрестик&lt;br&gt;і журнал у PR"]
@@ -4355,7 +4404,7 @@
     class PB success</code></pre>
 <ul>
 <li><strong>Workflow лише вирішує, коли й де.</strong> Кожен job запускає ті самі команди, що й ти локально: <code>pytest</code>, <code>mypy --strict news_hub</code>, <code>pytest -m docker</code>, <code>./scripts/smoke.sh</code>. Нової логіки перевірок у YAML немає.</li>
-<li><strong>Код застосунку не змінився.</strong> Від кроку 11 до 12 у <code>news_hub/</code> змінився лише номер версії в <code>api.py</code> (<code>0.12.0</code>). Додались два скрипти й workflow.</li>
+<li><strong>Код застосунку не змінився.</strong> Від кроку 11 до 12 у <code>news_hub/</code> змінився лише номер версії в <code>api.py</code> (<code>0.12.0</code>). Додались два скрипти, <code>requirements.lock</code>, workflow і <code>.gitleaks.toml</code>; <code>Dockerfile</code> ставить залежності з lock.</li>
 <li><strong>CD тут — це публікація образу</strong>, а не деплой. Сервер оновлюється, як у кроці 11, свідомою командою; <a href="permissions_and_publish/#auto-deploy">чому так</a>.</li>
 </ul>
 <h2 id="files">Файли кроку<a class="headerlink" href="#files" title="Permanent link">&para;</a></h2>
@@ -4370,12 +4419,22 @@
 <tbody>
 <tr>
 <td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/.github/workflows/news_hub.yml"><code>.github/workflows/news_hub.yml</code></a></td>
-<td>6 jobs: <code>tests</code> (matrix), <code>min-versions</code>, <code>postgres</code>, <code>types</code>, <code>docker</code>, <code>publish</code></td>
+<td>7 jobs: <code>tests</code> (matrix), <code>min-versions</code>, <code>postgres</code>, <code>types</code>, <code>supply-chain</code>, <code>docker</code>, <code>publish</code></td>
+<td>новий (у корені репозиторію)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/requirements.lock"><code>requirements.lock</code></a></td>
+<td>точні версії з sha256: 80 записів, 70 пакетів; <code>uv pip compile --universal --python-version 3.10 --generate-hashes</code></td>
+<td>новий</td>
+</tr>
+<tr>
+<td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/.gitleaks.toml"><code>.gitleaks.toml</code></a></td>
+<td>стандартні правила gitleaks + allowlist чотирьох навчальних значень, кожне точним рядком</td>
 <td>новий (у корені репозиторію)</td>
 </tr>
 <tr>
 <td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/scripts/smoke.sh"><code>scripts/smoke.sh</code></a></td>
-<td>весь стек через nginx: готовність, вхід, <code>401</code> без токена, збір, база без портів; завжди <code>down -v</code></td>
+<td>весь стек через nginx: готовність, вхід, <code>401</code> без токена, збір, <code>/docs</code> → 404, заголовки безпеки, nginx без версії, база без портів; завжди <code>down -v</code></td>
 <td>новий</td>
 </tr>
 <tr>
@@ -4385,12 +4444,12 @@
 </tr>
 <tr>
 <td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/CLAUDE.md"><code>CLAUDE.md</code></a></td>
-<td>команда smoke, де живе CI, правило «нижня межа в <code>requirements.txt</code> — справжня»</td>
+<td>команда smoke, де живе CI, правило «нижня межа в <code>requirements.txt</code> — справжня», lock після зміни <code>requirements.txt</code>, allowlist gitleaks</td>
 <td>змінений</td>
 </tr>
 <tr>
 <td><a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/docker-compose.yml"><code>docker-compose.yml</code></a>, <a href="https://github.com/NikoriakViktor/news_hub/blob/main/steps/12_ci_cd/Dockerfile"><code>Dockerfile</code></a></td>
-<td>тег образу <code>news_hub:12</code></td>
+<td>тег образу <code>news_hub:12</code>; <code>Dockerfile</code> — <code>pip install --require-hashes -r requirements.lock</code></td>
 <td>змінений</td>
 </tr>
 <tr>
@@ -4410,7 +4469,7 @@
 <h2 id="reading-order">Порядок читання<a class="headerlink" href="#reading-order" title="Permanent link">&para;</a></h2>
 <ol>
 <li><a href="triggers/">Коли CI запускається</a> — анатомія workflow, тригери, <code>paths</code>, <code>concurrency</code>.</li>
-<li><a href="what_to_check/">Що саме перевіряти</a> — шість jobs і що ловить кожен; мінімальні версії, <code>alembic check</code>, smoke.</li>
+<li><a href="what_to_check/">Що саме перевіряти</a> — сім jobs і що ловить кожен; мінімальні версії, <code>alembic check</code>, lock, <code>pip-audit</code>, gitleaks, smoke.</li>
 <li><a href="order_and_parallel/">Порядок і паралельність</a> — граф <code>needs</code>, хвилі, <code>fail-fast</code>.</li>
 <li><a href="permissions_and_publish/">Права, секрети, публікація</a> — <code>GITHUB_TOKEN</code>, <code>::add-mask::</code>, образ у <code>ghcr.io</code>, автоматичний деплой чи ні.</li>
 <li><a href="checkpoint/">Контрольна точка</a> — перевірки, практика, самоперевірка.</li>
@@ -4419,42 +4478,49 @@
 <h2 id="run">Запуск<a class="headerlink" href="#run" title="Permanent link">&para;</a></h2>
 <p>Усе, що робить CI, запускається локально тими самими командами. З папки кроку <code>steps/12_ci_cd</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-dev.txt
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>pytest<span class="w"> </span>-m<span class="w"> </span>unit<span class="w"> </span>-q<span class="w">                 </span><span class="c1"># 203 passed, 148 deselected — так починає job tests</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>pytest<span class="w"> </span>-q<span class="w">                         </span><span class="c1"># 343 passed, 8 deselected</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>pytest<span class="w"> </span>-m<span class="w"> </span>unit<span class="w"> </span>-q<span class="w">                 </span><span class="c1"># 212 passed, 159 deselected — так починає job tests</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>pytest<span class="w"> </span>-q<span class="w">                         </span><span class="c1"># 363 passed, 8 deselected</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>mypy<span class="w"> </span>--strict<span class="w"> </span>news_hub<span class="w">            </span><span class="c1"># Success: no issues found in 26 source files</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>pytest<span class="w"> </span>-m<span class="w"> </span>docker<span class="w"> </span>-q<span class="w">               </span><span class="c1"># 6 passed (потрібен Docker)</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="nv">ADMIN_PASSWORD</span><span class="o">=</span>…<span class="w"> </span>python<span class="w"> </span>scripts/make_env.py<span class="w">   </span><span class="c1"># .env з випадковими секретами (якщо .env ще немає)</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="nv">ADMIN_PASSWORD</span><span class="o">=</span>…<span class="w"> </span>./scripts/smoke.sh<span class="w">            </span><span class="c1"># стек через nginx; наприкінці «smoke: усе гаразд» і down -v</span>
 </code></pre></div>
+<p>Job <code>supply-chain</code> локально (<code>uv</code>; gitleaks — з кореня репозиторію, через Docker):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>compile<span class="w"> </span>requirements.txt<span class="w"> </span>--universal<span class="w"> </span>--python-version<span class="w"> </span><span class="m">3</span>.10<span class="w"> </span>--generate-hashes<span class="w"> </span>-o<span class="w"> </span>requirements.lock
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>git<span class="w"> </span>diff<span class="w"> </span>--exit-code<span class="w"> </span>--<span class="w"> </span>requirements.lock<span class="w">     </span><span class="c1"># нічого — lock відповідає requirements.txt</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>uvx<span class="w"> </span>pip-audit<span class="o">==</span><span class="m">2</span>.10.1<span class="w"> </span>-r<span class="w"> </span>requirements.lock<span class="w"> </span>--require-hashes<span class="w"> </span>--disable-pip<span class="w"> </span>--progress-spinner<span class="w"> </span>off<span class="w">   </span><span class="c1"># No known vulnerabilities found</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nb">cd</span><span class="w"> </span>../..<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">:/repo:ro"</span><span class="w"> </span>ghcr.io/gitleaks/gitleaks:v8.30.1<span class="w"> </span>git<span class="w"> </span>/repo<span class="w"> </span>--config<span class="w"> </span>/repo/.gitleaks.toml<span class="w"> </span>--redact<span class="w"> </span>--no-banner<span class="w">   </span><span class="c1"># no leaks found</span>
+</code></pre></div>
 <p>Job <code>postgres</code> локально — з PostgreSQL 16 і Redis 7 (окремими контейнерами або з <code>docker-compose.dev.yml</code> кроку 11):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEST_DATABASE_URL</span><span class="o">=</span>postgresql+asyncpg://news:news@localhost:5432/news_hub_test
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEST_REDIS_URL</span><span class="o">=</span>redis://localhost:6379/15
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">DATABASE_URL</span><span class="o">=</span><span class="nv">$TEST_DATABASE_URL</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>alembic<span class="w"> </span>upgrade<span class="w"> </span>head<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>alembic<span class="w"> </span>check<span class="w">     </span><span class="c1"># No new upgrade operations detected.</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>pytest<span class="w"> </span>-q<span class="w">                                 </span><span class="c1"># 343 passed</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEST_DATABASE_URL</span><span class="o">=</span>postgresql+asyncpg://news:news@localhost:5432/news_hub_test
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEST_REDIS_URL</span><span class="o">=</span>redis://localhost:6379/15
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">DATABASE_URL</span><span class="o">=</span><span class="nv">$TEST_DATABASE_URL</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>alembic<span class="w"> </span>upgrade<span class="w"> </span>head<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>alembic<span class="w"> </span>check<span class="w">     </span><span class="c1"># No new upgrade operations detected.</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>pytest<span class="w"> </span>-q<span class="w">                                 </span><span class="c1"># 363 passed</span>
 </code></pre></div>
 <p>Job <code>min-versions</code> — через <a href="https://docs.astral.sh/uv/"><code>uv</code></a>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv<span class="w"> </span>venv<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.10<span class="w"> </span>.venv
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--resolution<span class="w"> </span>lowest-direct<span class="w"> </span>-r<span class="w"> </span>requirements-dev.txt
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>.venv/bin/pytest<span class="w"> </span>-q<span class="w">                       </span><span class="c1"># 343 passed</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>uv<span class="w"> </span>venv<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.10<span class="w"> </span>.venv
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--resolution<span class="w"> </span>lowest-direct<span class="w"> </span>-r<span class="w"> </span>requirements-dev.txt
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>.venv/bin/pytest<span class="w"> </span>-q<span class="w">                       </span><span class="c1"># 363 passed</span>
 </code></pre></div>
-<p>Усі ці числа — з локального запуску 2026-11-11 (виводи й нюанси — у <a href="checkpoint/#check">контрольній точці</a>). Завершених прогонів GitHub Actions для цього workflow на момент написання ще не було: перший прогін стояв у черзі.</p>
+<p>Усі ці числа — з локального запуску 2026-11-12 (виводи й нюанси — у <a href="checkpoint/#check">контрольній точці</a>). Завершених прогонів GitHub Actions для цього workflow на момент написання ще не було: перший прогін стояв у черзі.</p>
 <h2 id="diff">Порівняння з кроком 11<a class="headerlink" href="#diff" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>git<span class="w"> </span>diff<span class="w"> </span>--no-index<span class="w"> </span>--stat<span class="w"> </span>steps/11_compose_deploy<span class="w"> </span>steps/12_ci_cd
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>git<span class="w"> </span>diff<span class="w"> </span>--no-index<span class="w"> </span>steps/11_compose_deploy/scripts<span class="w"> </span>steps/12_ci_cd/scripts
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>git<span class="w"> </span>diff<span class="w"> </span>--no-index<span class="w"> </span>--stat<span class="w"> </span>steps/11_compose_deploy<span class="w"> </span>steps/12_ci_cd
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>git<span class="w"> </span>diff<span class="w"> </span>--no-index<span class="w"> </span>steps/11_compose_deploy/scripts<span class="w"> </span>steps/12_ci_cd/scripts
 </code></pre></div>
 <p>На чистій копії репозиторію (без <code>__pycache__</code>):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a> steps/{11_compose_deploy =&gt; 12_ci_cd}/CLAUDE.md    |  5 ++-
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a> steps/{11_compose_deploy =&gt; 12_ci_cd}/Dockerfile   |  6 +--
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a> steps/{11_compose_deploy =&gt; 12_ci_cd}/README.md    | 29 +++++++++----
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a> .../docker-compose.yml                             |  4 +-
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a> .../news_hub/api.py                                |  2 +-
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a> /dev/null =&gt; steps/12_ci_cd/scripts/make_env.py    | 43 +++++++++++++++++++
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a> /dev/null =&gt; steps/12_ci_cd/scripts/smoke.sh       | 48 ++++++++++++++++++++++
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a> 7 files changed, 122 insertions(+), 15 deletions(-)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a> steps/{11_compose_deploy =&gt; 12_ci_cd}/CLAUDE.md    |   13 +-
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a> steps/{11_compose_deploy =&gt; 12_ci_cd}/Dockerfile   |   15 +-
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a> steps/{11_compose_deploy =&gt; 12_ci_cd}/README.md    |   37 +-
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a> .../docker-compose.yml                             |    4 +-
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a> .../news_hub/api.py                                |    2 +-
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a> /dev/null =&gt; steps/12_ci_cd/requirements.lock      | 3035 ++++++++++++++++++++
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a> /dev/null =&gt; steps/12_ci_cd/scripts/make_env.py    |   43 +
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a> /dev/null =&gt; steps/12_ci_cd/scripts/smoke.sh       |   54 +
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a> 8 files changed, 3182 insertions(+), 21 deletions(-)
 </code></pre></div>
-<p>Головна зміна кроку — поза папкою: <code>.github/workflows/news_hub.yml</code>. Workflow живе в корені репозиторію, бо GitHub шукає їх лише в <code>.github/workflows/</code>; на папку кроку він посилається через <code>env.PROJECT: steps/12_ci_cd</code> і <code>defaults.run.working-directory</code>.</p>
+<p>3035 рядків lock — це хеші: по кілька sha256 на кожну з 80 версій. Головна зміна кроку — поза папкою: <code>.github/workflows/news_hub.yml</code> (і <code>.gitleaks.toml</code> поруч). Workflow живе в корені репозиторію, бо GitHub шукає їх лише в <code>.github/workflows/</code>; на папку кроку він посилається через <code>env.PROJECT: steps/12_ci_cd</code> і <code>defaults.run.working-directory</code>.</p>
 <h2 id="next">Що далі<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>
 <p>Це останній крок Zero to Hero: <code>news_hub</code> пройшов шлях від парсера HTML до сервісу, який перевіряє кожну свою зміну. Далі:</p>
 <ul>

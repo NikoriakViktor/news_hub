@@ -4043,6 +4043,18 @@
           
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -4102,6 +4114,24 @@
           
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -4159,6 +4189,24 @@
       
         
           
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
         
       
     
@@ -4477,52 +4525,68 @@
 <h2 id="check">Перевір, що крок робочий<a class="headerlink" href="#check" title="Permanent link">&para;</a></h2>
 <p>Усе, що робить CI, — локально тими самими командами. З папки <code>steps/12_ci_cd</code>, як jobs <code>tests</code> і <code>types</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$ pytest -m unit -q -p no:cacheprovider
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>203 passed, 148 deselected in 12.46s
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>212 passed, 159 deselected in 8.46s
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>$ pytest -q -p no:cacheprovider
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>343 passed, 8 deselected in 29.66s
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>363 passed, 8 deselected in 23.68s
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>$ mypy --strict news_hub
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Success: no issues found in 26 source files
 </code></pre></div>
 <p>Matrix <code>tests</code> — на обох версіях Python (окремі venv через <code>uv</code>, найновіші версії пакетів):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Python 3.10.19:  203 passed, 148 deselected · 343 passed, 8 deselected
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Python 3.13.17:  203 passed, 148 deselected · 343 passed, 8 deselected
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Python 3.10.19:  212 passed, 159 deselected · 363 passed, 8 deselected
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Python 3.13.17:  212 passed, 159 deselected · 363 passed, 8 deselected
 </code></pre></div>
 <p>Job <code>min-versions</code> (Python 3.10, <code>uv pip install --resolution lowest-direct</code>):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>$ .venv/bin/pytest -q
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>343 passed, 8 deselected, 30 warnings
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>363 passed, 8 deselected, 30 warnings in 17.70s
 </code></pre></div>
 <p>Job <code>postgres</code> (PostgreSQL 16 і Redis 7 у контейнерах, змінні <code>TEST_DATABASE_URL</code>, <code>TEST_REDIS_URL</code>, <code>DATABASE_URL</code>):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>$ alembic upgrade head &amp;&amp; alembic check
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>...
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>No new upgrade operations detected.
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>$ pytest -q
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>343 passed, 8 deselected
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>363 passed, 8 deselected in 35.17s
+</code></pre></div>
+<p>Job <code>supply-chain</code> (lock — з папки кроку, gitleaks — з кореня репозиторію):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>$ uv pip compile requirements.txt --universal --python-version 3.10 --generate-hashes -o requirements.lock
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>$ git diff --exit-code -- requirements.lock &amp;&amp; echo "lock відповідає requirements.txt"
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>lock відповідає requirements.txt
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>$ uvx pip-audit==2.10.1 -r requirements.lock --require-hashes --disable-pip --progress-spinner off
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>No known vulnerabilities found
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>$ docker run --rm -v "$PWD:/repo:ro" ghcr.io/gitleaks/gitleaks:v8.30.1 git /repo --config /repo/.gitleaks.toml --redact --no-banner
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>5:27AM INF 25 commits scanned.
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>5:27AM INF scanned ~5916657 bytes (5.92 MB) in 10.6s
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>5:27AM INF no leaks found
 </code></pre></div>
 <p>Job <code>docker</code> (потрібен Docker):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>$ pytest -m docker -q
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>6 passed, 345 deselected in 45.39s
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>$ ADMIN_PASSWORD=… HTTP_PORT=18082 python scripts/make_env.py
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>створено …/.env
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>$ ADMIN_PASSWORD=… ./scripts/smoke.sh
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>...
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>✓ готовність через nginx
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>✓ nginx відповідає
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>✓ вхід адміна
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>✓ запис без токена
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>✓ збір зі знімка
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>✓ новини в PostgreSQL
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>✓ база й Redis без портів назовні
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>smoke: усе гаразд
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>$ pytest -m docker -q
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>6 passed, 365 deselected in 26.50s
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>$ ADMIN_PASSWORD=… HTTP_PORT=18082 python scripts/make_env.py
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>створено …/.env
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>$ ADMIN_PASSWORD=… ./scripts/smoke.sh
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>...
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>✓ готовність через nginx
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>✓ nginx відповідає
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>✓ вхід адміна
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>✓ запис без токена
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>✓ збір зі знімка
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>✓ новини в PostgreSQL
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>✓ /docs на сервері закрито (DOCS_ENABLED=false)
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>✓ заголовки безпеки через nginx
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>✓ nginx без версії
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>✓ база й Redis без портів назовні
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>smoke: усе гаразд
 </code></pre></div>
-<p>Усе — запуск 2026-11-11. Job <code>publish</code> локально не відтворюється: він пушить у <code>ghcr.io</code> з токеном прогону. Сам workflow на GitHub на момент написання ще не завершив жодного прогону — перший стояв у черзі.</p>
+<p>Тести, mypy, <code>supply-chain</code> і <code>pytest -m docker</code> — запуск 2026-11-12 (<code>pytest -m docker</code> — з копії з нормальними правами файлів, див. <a href="#mistakes">типові помилки</a>); smoke — запуск після виправлень безпеки кроків 8–12, з трьома новими перевірками. Job <code>publish</code> локально не відтворюється: він пушить у <code>ghcr.io</code> з токеном прогону. Сам workflow на GitHub на момент написання ще не завершив жодного прогону — перший стояв у черзі.</p>
 <h2 id="checklist">Чекліст<a class="headerlink" href="#checklist" title="Permanent link">&para;</a></h2>
 <ul class="task-list">
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Можеш пояснити, чому в <code>pull_request</code> немає <code>branches</code>, а в <code>push</code> — є.</li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Знаєш, які з трьох workflows запустяться на PR, що змінює лише <code>docs/</code>, і на PR, що змінює <code>steps/12_ci_cd/news_hub/api.py</code>.</li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>pytest -q</code> → 343 passed, <code>mypy --strict news_hub</code> → <code>Success</code>, <code>pytest -m docker -q</code> → 6 passed.</li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Мінімальні версії через <code>uv</code> → 343 passed; знаєш, яку помилку дасть межа <code>fastapi&gt;=0.115</code>.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>pytest -q</code> → 363 passed, <code>mypy --strict news_hub</code> → <code>Success</code>, <code>pytest -m docker -q</code> → 6 passed.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Мінімальні версії через <code>uv</code> → 363 passed; знаєш, яку помилку дасть межа <code>fastapi&gt;=0.115</code>.</li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>alembic check</code> на чистій базі → <code>No new upgrade operations detected.</code></li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>./scripts/smoke.sh</code> закінчується <code>smoke: усе гаразд</code>, після нього <code>docker ps -a</code> не показує контейнерів стеку.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>./scripts/smoke.sh</code> закінчується <code>smoke: усе гаразд</code> (зокрема <code>/docs</code> → 404, <code>nosniff</code> і <code>Server: nginx</code> без версії), після нього <code>docker ps -a</code> не показує контейнерів стеку.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>uv pip compile …</code> не змінює <code>requirements.lock</code>; <code>pip-audit</code> по lock → <code>No known vulnerabilities found</code>; gitleaks по всій історії → <code>no leaks found</code>.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Можеш пояснити, навіщо і <code>requirements.txt</code> з <code>&gt;=</code>, і <code>requirements.lock</code> з точними версіями, і чому lock — <code>--universal --python-version 3.10</code>.</li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Можеш намалювати три хвилі jobs і сказати, що станеться з <code>docker</code> і <code>publish</code>, якщо впаде <code>pytest · Python 3.10</code>.</li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Знаєш, які права має токен у <code>tests</code> і в <code>publish</code>, і чому <code>contents: read</code> у <code>publish</code> повторено.</li>
 </ul>
@@ -4568,8 +4632,8 @@
 </tr>
 <tr>
 <td><code>failed to create network …_edge: … Pool overlaps with other one on this address space</code></td>
-<td>інша мережа Docker на машині вже займає <code>172.28.0.0/…</code> (у <code>docker-compose.yml</code> — <code>subnet: 172.28.0.0/24</code>)</td>
-<td><code>docker network ls</code>, <code>docker network inspect</code>; прибери чужу мережу або в локальній копії зміни підмережу й <code>FORWARDED_ALLOW_IPS</code> разом</td>
+<td>інша мережа Docker на машині вже займає <code>172.28.0.0/…</code> (у <code>docker-compose.yml</code> типово — <code>subnet: ${EDGE_SUBNET:-172.28.0.0/24}</code>)</td>
+<td><code>docker network ls</code>, <code>docker network inspect</code>; прибери чужу мережу або задай у <code>.env</code> (чи в оточенні shell) <code>EDGE_SUBNET</code> і <code>NGINX_IP</code> з вільної підмережі, напр. <code>EDGE_SUBNET=10.231.9.0/24 NGINX_IP=10.231.9.10 ./scripts/smoke.sh</code></td>
 </tr>
 <tr>
 <td><code>test_runs_as_non_root_and_cannot_change_code</code>: <code>assert 0 != 0</code></td>
@@ -4591,6 +4655,31 @@
 <td>у <code>docker-compose.yml</code> для <code>postgres</code> / <code>redis</code> додано <code>ports</code></td>
 <td>порти бази — лише в <code>docker-compose.dev.yml</code> (крок 11), не в основному файлі</td>
 </tr>
+<tr>
+<td><code>✗ /docs на сервері закрито (DOCS_ENABLED=false): очікували 404, отримали 200</code></td>
+<td>у <code>.env</code> стоїть <code>DOCS_ENABLED=true</code> або з <code>docker-compose.yml</code> прибрано <code>DOCS_ENABLED: ${DOCS_ENABLED:-false}</code></td>
+<td>на сервері документацію не публікуємо; для локального стеку — окремий <code>.env</code></td>
+</tr>
+<tr>
+<td>job <code>supply-chain</code>: <code>git diff --exit-code</code> показує зміни в <code>requirements.lock</code></td>
+<td><code>requirements.txt</code> змінено, а lock не перегенеровано</td>
+<td><code>uv pip compile requirements.txt --universal --python-version 3.10 --generate-hashes -o requirements.lock</code> і закомітити обидва</td>
+</tr>
+<tr>
+<td><code>ERROR: Hashes are required in --require-hashes mode, but they are missing from some requirements</code> у збірці образу</td>
+<td>рядок у lock дописано руками, без хешу</td>
+<td>lock лише генерувати, не редагувати</td>
+</tr>
+<tr>
+<td><code>pip-audit</code>: <code>Found N known vulnerabilities in M packages</code></td>
+<td>для версії з lock опубліковано вразливість</td>
+<td><code>uv pip compile … --upgrade-package &lt;пакет&gt;</code>, тести, новий lock</td>
+</tr>
+<tr>
+<td>gitleaks: <code>leaks found: N</code></td>
+<td>у коміті — схожий на секрет рядок</td>
+<td>справжній секрет — <strong>замінити</strong> (ротація) і лише потім прибрати з історії; навчальне значення — точним рядком в allowlist <code>.gitleaks.toml</code></td>
+</tr>
 </tbody>
 </table>
 <h2 id="practice">Практика<a class="headerlink" href="#practice" title="Permanent link">&para;</a></h2>
@@ -4601,7 +4690,7 @@
 <li><strong>Яка гілка.</strong> За замовчуванням бейдж показує статус останнього прогону на гілці за замовчуванням (<code>main</code>); <code>?branch=…</code> — іншої гілки.</li>
 <li><strong>Куди клікати.</strong> Бейдж — посилання на сторінку workflow, де видно всі прогони.</li>
 </ol>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>[<span class="nt">![news_hub — CI/CD</span>](<span class="na">https://github.com/NikoriakViktor/news_hub/actions/workflows/news_hub.yml/badge.svg</span>)](https://github.com/NikoriakViktor/news_hub/actions/workflows/news_hub.yml)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>[<span class="nt">![news_hub — CI/CD</span>](<span class="na">https://github.com/NikoriakViktor/news_hub/actions/workflows/news_hub.yml/badge.svg</span>)](https://github.com/NikoriakViktor/news_hub/actions/workflows/news_hub.yml)
 </code></pre></div>
 <p>Бейдж має сенс лише після першого завершеного прогону в <code>main</code>: доки прогонів немає, показувати нічого. І він показує статус <strong>останнього</strong> прогону: якщо push у <code>main</code> змінив лише <code>docs/</code>, workflow не запустився і бейдж показує попередній результат.</p>
 <h3 id="modify">Зміни приклад<a class="headerlink" href="#modify" title="Permanent link">&para;</a></h3>
@@ -4614,8 +4703,8 @@
 <summary>Що покаже запуск</summary>
 <ol>
 <li>Workflow не запуститься зовсім (скрипт з <a href="../triggers/#result">розділу 1</a>: <code>pull_request  feature-a  …  ні</code>). У PR не буде ні галочки, ні хрестика — і його можна злити без перевірки.</li>
-<li><code>pytest · мінімальні версії (Python 3.10)</code>: <code>uv</code> ставить <code>fastapi==0.115.0</code>, і збір тестів падає на <code>news_hub/api.py:185</code> з <code>TypeError: Depends() got an unexpected keyword argument 'scope'</code>. Решта jobs зелені: вони ставлять найновішу FastAPI.</li>
-<li>Шість перевірок зелені, сьома — <code>✗ база й Redis без портів назовні: очікували , отримали 127.0.0.1:55452-&gt;5432/tcp</code>; далі <code>docker compose ps -a</code> і журнали, потім <code>down -v</code>. Код виходу 1 — job <code>docker</code> червоний, <code>publish</code> не запуститься.</li>
+<li><code>pytest · мінімальні версії (Python 3.10)</code>: <code>uv</code> ставить <code>fastapi==0.115.0</code>, і збір тестів падає на <code>news_hub/api.py:201</code> з <code>TypeError: Depends() got an unexpected keyword argument 'scope'</code>. Решта jobs зелені: вони ставлять найновішу FastAPI.</li>
+<li>Дев'ять перевірок зелені, десята — <code>✗ база й Redis без портів назовні: очікували , отримали 127.0.0.1:55452-&gt;5432/tcp</code>; далі <code>docker compose ps -a</code> і журнали, потім <code>down -v</code>. Код виходу 1 — job <code>docker</code> червоний, <code>publish</code> не запуститься.</li>
 </ol>
 </details>
 <h3 id="coverage-artifact">Спробуй самостійно: покриття як артефакт<a class="headerlink" href="#coverage-artifact" title="Permanent link">&para;</a></h3>
@@ -4630,22 +4719,22 @@
 </ul>
 <h3 id="find-bug">Знайди помилку<a class="headerlink" href="#find-bug" title="Permanent link">&para;</a></h3>
 <p>Workflow для <code>news_hub</code>. На PR він зелений.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">on</span><span class="p">:</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">push</span><span class="p">:</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">pull_request</span><span class="p">:</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="nt">branches</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">main</span><span class="p p-Indicator">]</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="nt">jobs</span><span class="p">:</span>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span><span class="nt">test</span><span class="p">:</span>
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">    </span><span class="nt">runs-on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ubuntu-latest</span>
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span><span class="nt">env</span><span class="p">:</span>
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">      </span><span class="nt">GEMINI_API_KEY</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">AIzaSyD-demo-key-not-real-0000000000000</span>
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
-<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/checkout@v5</span>
-<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/setup-python@v6</span>
-<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">        </span><span class="nt">with</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">python-version</span><span class="p">:</span><span class="w"> </span><span class="s">"3.13"</span><span class="p p-Indicator">}</span>
-<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pip install -r steps/12_ci_cd/requirements.txt</span>
-<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cd steps/12_ci_cd &amp;&amp; pytest || true</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">on</span><span class="p">:</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">push</span><span class="p">:</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nt">pull_request</span><span class="p">:</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="nt">branches</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">main</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="nt">jobs</span><span class="p">:</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">  </span><span class="nt">test</span><span class="p">:</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">    </span><span class="nt">runs-on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ubuntu-latest</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">    </span><span class="nt">env</span><span class="p">:</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">      </span><span class="nt">GEMINI_API_KEY</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">AIzaSyD-demo-key-not-real-0000000000000</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/checkout@v5</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/setup-python@v6</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="w">        </span><span class="nt">with</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">python-version</span><span class="p">:</span><span class="w"> </span><span class="s">"3.13"</span><span class="p p-Indicator">}</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pip install -r steps/12_ci_cd/requirements.txt</span>
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cd steps/12_ci_cd &amp;&amp; pytest || true</span>
 </code></pre></div>
 <p>Знайди чотири проблеми.</p>
 <details class="success">
@@ -4693,7 +4782,11 @@
 </tr>
 <tr>
 <td>система</td>
-<td>тести образу + smoke стеку через nginx — те, чого не бачать тести коду</td>
+<td>тести образу + smoke стеку через nginx — те, чого не бачать тести коду (зокрема <code>/docs</code> закрито, заголовки безпеки, nginx без версії)</td>
+</tr>
+<tr>
+<td>залежності й секрети</td>
+<td><code>requirements.txt</code> — діапазони, <code>requirements.lock</code> — точні версії з sha256 для образу (<code>--require-hashes</code>); CI: lock відповідає, <code>pip-audit</code>, gitleaks по всій історії; <code>publish</code> чекає й на це</td>
 </tr>
 <tr>
 <td>порядок</td>
@@ -4723,6 +4816,8 @@
 <li>Звідки <code>publish</code> бере право писати в ghcr.io і чому це право не в усього workflow?</li>
 <li>Що зробить <code>echo "::add-mask::$password"</code> і навіщо після нього <code>&gt;&gt; "$GITHUB_ENV"</code>?</li>
 <li>Чи публікує <code>publish</code> той самий образ, що пройшов smoke?</li>
+<li>Навіщо <code>requirements.lock</code>, якщо є <code>requirements.txt</code>? Чому не закріпити точні версії просто в <code>requirements.txt</code>?</li>
+<li>Навіщо gitleaks уся історія (<code>fetch-depth: 0</code>), якщо секрет уже видалено з файлу?</li>
 </ol>
 <details class="success">
 <summary>Відповіді</summary>
@@ -4734,7 +4829,9 @@
 <li>Щоб не витрачати найдовший job на образ і smoke, якщо код уже не пройшов тести, — і щоб у PR була одна червона причина, а не лавина наслідків (<code>docker</code> стає <code>skipped</code>).</li>
 <li>З <code>GITHUB_TOKEN</code> цього прогону з <code>permissions: packages: write</code> лише в job <code>publish</code>, який іде лише на push у <code>main</code>. Решта jobs запускають код з PR — їм досить читати. Писати токен може лише в пакети свого репозиторію — тому в імені образу є <code>${{ github.repository }}</code>.</li>
 <li>Далі в журналі job це значення замінюється на <code>***</code>, навіть якщо якась команда його надрукує. <code>$GITHUB_ENV</code> передає змінну наступним крокам job: кожен <code>run:</code> — окрема оболонка, а <code>smoke.sh</code> потрібен <code>ADMIN_PASSWORD</code>.</li>
-<li>Ні: з того самого коміту, але зібраний заново на іншій машині. <code>Dockerfile</code> той самий, версії пакетів визначаються в момент збірки.</li>
+<li>Ні: з того самого коміту, але зібраний заново на іншій машині. Пакети ті самі — образ ставить <code>requirements.lock</code> з <code>--require-hashes</code>, — але базовий <code>python:3.12-slim</code> — тег, що з часом указує на нові збірки, тож байт-у-байт це інший образ.</li>
+<li><code>requirements.txt</code> обіцяє діапазон, з яким <code>news_hub</code> працює, і CI перевіряє обидва його краї: <code>min-versions</code> — нижній, <code>tests</code> — найновіші версії. Lock — одна точка з цього діапазону, яка їде в образ: усі 70 пакетів (і залежності залежностей) з точними версіями й sha256, однакові для <code>docker</code> і <code>publish</code>, і <code>pip-audit</code> перевіряє саме їх. Точні версії в <code>requirements.txt</code> прибрали б перевірку діапазону. <code>--universal --python-version 3.10</code> — бо проєкт обіцяє Python 3.10+, а для 10 пакетів версії на 3.10 і на 3.11+ різні.</li>
+<li>Видалений з файлу секрет лишається в старому коміті, і його бачить кожен, хто склонує репозиторій. Перевірка лише останнього коміту такого не побачить. Знайдений справжній секрет — замінити (ротація), бо «вже видалили» не означає «ніхто не бачив».</li>
 </ol>
 </details>
 <h2 id="next">Що далі<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>
